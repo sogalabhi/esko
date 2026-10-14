@@ -1,0 +1,15 @@
+# Adults and children 4+ years. DRVs: 21 CFR 101.9(c)(9); RDIs: 21 CFR 101.9(c)(8)(iv).
+# All 12 verified against the eCFR current text of 21 CFR 101.9.
+daily_values:
+  - {nutrient: total_fat, amount: 78, unit: g, source: "21 CFR 101.9(c)(9)", quote: "Fat Grams (g) 78"}
+  - {nutrient: saturated_fat, amount: 20, unit: g, source: "21 CFR 101.9(c)(9)", quote: "Saturated fat Grams (g) 20"}
+  - {nutrient: cholesterol, amount: 300, unit: mg, source: "21 CFR 101.9(c)(9)", quote: "Cholesterol Milligrams (mg) 300"}
+  - {nutrient: sodium, amount: 2300, unit: mg, source: "21 CFR 101.9(c)(9)", quote: "Sodium Milligrams (mg) 2,300"}
+  - {nutrient: total_carbohydrate, amount: 275, unit: g, source: "21 CFR 101.9(c)(9)", quote: "Total carbohydrate Grams (g) 275"}
+  - {nutrient: dietary_fiber, amount: 28, unit: g, source: "21 CFR 101.9(c)(9)", quote: "Dietary fiber Grams (g) 28"}
+  - {nutrient: added_sugars, amount: 50, unit: g, source: "21 CFR 101.9(c)(9)", quote: "Added sugars Grams (g) 50"}
+  - {nutrient: protein, amount: 50, unit: g, source: "21 CFR 101.9(c)(9)", quote: "Protein Grams (g) 50"}
+  - {nutrient: vitamin_d, amount: 20, unit: mcg, source: "21 CFR 101.9(c)(8)(iv)", quote: "Vitamin D Micrograms (mcg) 20"}
+  - {nutrient: calcium, amount: 1300, unit: mg, source: "21 CFR 101.9(c)(8)(iv)", quote: "Calcium Milligrams (mg) 1,300"}
+  - {nutrient: iron, amount: 18, unit: mg, source: "21 CFR 101.9(c)(8)(iv)", quote: "Iron Milligrams (mg) 18"}
+  - {nutrient: potassium, amount: 4700, unit: mg, source: "21 CFR 101.9(c)(8)(iv)", quote: "Potassium Milligrams (mg) 4,700"}

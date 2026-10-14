@@ -1,0 +1,7 @@
+id: us
+name: United States
+regulators: [FDA]
+units: [g, oz]
+currency: USD
+number_format: us
+languages: [English]

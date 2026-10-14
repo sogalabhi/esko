@@ -1,0 +1,8 @@
+# Company rules layer: stricter-than-law rules (USDA Organic, Certified Vegan conditions). No rules yet.
+id: company
+name: Company rules
+regulators: []
+units: [g, oz]
+currency: USD
+number_format: us
+languages: [English]

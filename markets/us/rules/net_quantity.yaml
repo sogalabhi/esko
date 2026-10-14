@@ -1,0 +1,18 @@
+id: us.net_quantity.dual_units_bottom30
+market: us
+source:
+  regulation: 21 CFR 101.105
+  clause: 101.105(f)
+  url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/subpart-G/section-101.105
+  quote: "The declaration shall appear as a distinct item on the principal display panel, in the bottom 30 percent of the area of the label panel"
+summary: Net quantity goes in the bottom 30% of the principal display panel, in both US (oz) and metric (g) units.
+status: in_force
+applies_if:
+  fact_present: net_quantity
+requires:
+  item: net_quantity
+  panel: front
+check_type: present
+stricter_than_law: false
+approved: false
+notes: "Example rule. Quote and clause drafted from memory, not fetched; a person must verify against the eCFR text before approving. Dual US + metric units per 101.105(j)."

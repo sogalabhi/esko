@@ -1,0 +1,4 @@
+source: "FALCPA (Pub. L. 108-282) as amended by the FASTER Act (Pub. L. 117-11), 21 U.S.C. 321(qq)"
+url: https://www.fda.gov/food/food-allergies/food-allergen-labeling-and-consumer-protection-act-2004-falcpa
+allergens: [milk, eggs, fish, crustacean_shellfish, tree_nuts, peanuts, wheat, soybeans, sesame]
+notes: "Sesame added by the FASTER Act, effective 1 Jan 2023. List taken from FDA guidance, not re-fetched from the statute text."
