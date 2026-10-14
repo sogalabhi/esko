@@ -1,50 +1,25 @@
-import { useEffect, useState } from 'react'
-
-type Health = { status: string; ai: { provider: string; model: string; keySet: boolean } }
-type State = { kind: 'loading' } | { kind: 'ok'; health: Health } | { kind: 'down' }
+import { Navigate, Route, Routes } from 'react-router'
+import { Facts } from './screens/Facts'
+import { AppShell, NotBuilt } from './shell/AppShell'
+import { ProjectProvider } from './state/project'
 
 export default function App() {
-  const [state, setState] = useState<State>({ kind: 'loading' })
-
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/health')
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status))
-        return r.json() as Promise<Health>
-      })
-      .then((health) => !cancelled && setState({ kind: 'ok', health }))
-      .catch(() => !cancelled && setState({ kind: 'down' }))
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
   return (
-    <main className="mx-auto max-w-xl px-6 py-16">
-      <h1 className="text-[28px] font-semibold">BriefForge</h1>
-      <p className="mt-1 text-ink-2">Packaging files in, a proven design brief out.</p>
-      <section className="mt-8 rounded-card border border-border bg-surface p-6">
-        {state.kind === 'loading' && <p className="text-ink-2">Checking backend</p>}
-        {state.kind === 'ok' && (
-          <>
-            <p className="flex items-center gap-2 font-medium text-ok">
-              <span className="inline-block h-2 w-2 rounded-full bg-ok" />
-              Backend OK
-            </p>
-            <p className="mt-2 font-mono text-[12px] text-ink-2">
-              {state.health.ai.provider} / {state.health.ai.model}
-              {state.health.ai.keySet ? '' : ' (no key set)'}
-            </p>
-          </>
-        )}
-        {state.kind === 'down' && (
-          <p className="flex items-center gap-2 font-medium text-bad">
-            <span className="inline-block h-2 w-2 rounded-full bg-bad" />
-            Backend unreachable
-          </p>
-        )}
-      </section>
-    </main>
+    <ProjectProvider>
+      <AppShell>
+        <Routes>
+          <Route path="/" element={<Navigate to="/facts" replace />} />
+          <Route path="/evidence" element={<NotBuilt title="Evidence" phase="4" />} />
+          <Route path="/facts" element={<Facts />} />
+          <Route path="/questions" element={<NotBuilt title="Questions" phase="4" />} />
+          <Route path="/pack" element={<NotBuilt title="Pack" phase="6" />} />
+          <Route path="/brief" element={<NotBuilt title="Brief" phase="5" />} />
+          <Route path="/rules" element={<NotBuilt title="Rules map" phase="7" />} />
+          <Route path="/claims" element={<NotBuilt title="Claims" phase="7" />} />
+          <Route path="/trust" element={<NotBuilt title="Trust" phase="8" />} />
+          <Route path="*" element={<NotBuilt title="Page not found" phase="—" />} />
+        </Routes>
+      </AppShell>
+    </ProjectProvider>
   )
 }

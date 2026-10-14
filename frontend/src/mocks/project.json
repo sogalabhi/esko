@@ -1,0 +1,2902 @@
+{
+  "_note": "Mock for UI development (docs/UI.md §9). Fact values and quotes come from Esko's Dancing Fish sample files; panel coordinates (mm) are approximate. Rules are ILLUSTRATIVE summaries, not legal text.",
+  "files": [
+    {
+      "id": "f-carton",
+      "name": "DancingFish_Granola_Berry_US_Carton.pdf",
+      "type": "pdf",
+      "pages": 1,
+      "status": "done",
+      "skipped": [
+        {
+          "item": "Guide text: 'Art orientation', 'Copy free', panel labels",
+          "reason": "Print-guide text, not pack copy"
+        },
+        {
+          "item": "Layers: Cut, Crease, Dimensions",
+          "reason": "Dieline guide layers"
+        },
+        {
+          "item": "Hidden EU 'Typical Values per 100g' table",
+          "reason": "Covered by the US Nutrition Facts panel; not visible in print"
+        }
+      ]
+    },
+    {
+      "id": "f-sheet",
+      "name": "DancingFish_Granola_BerryCrunch_US_Content_Sheet.xlsx",
+      "type": "sheet",
+      "pages": 1,
+      "status": "done",
+      "skipped": [
+        {
+          "item": "Columns D–G, rows 46–61 (per-pack formulas)",
+          "reason": "Derived values, not source facts"
+        }
+      ]
+    }
+  ],
+  "facts": [
+    {
+      "id": "f-product-name",
+      "group": "identity",
+      "field": "Product name",
+      "value": "Granola Berry Crunch",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E8"
+          },
+          "quote": "Granola Berry Crunch",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Front",
+            "page": 1,
+            "bbox": [
+              258,
+              196,
+              98,
+              22
+            ]
+          },
+          "quote": "BERRY CRUNCH",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-brand",
+      "group": "identity",
+      "field": "Brand",
+      "value": "Dancing Fish",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B13"
+          },
+          "quote": "Dancing Fish",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-identity",
+      "group": "identity",
+      "field": "Statement of identity",
+      "value": "GRANOLA — BERRY CRUNCH",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B23"
+          },
+          "quote": "GRANOLA — BERRY CRUNCH",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-label-id",
+      "group": "identity",
+      "field": "Label ID",
+      "value": "DF-GRAN-BERRY-US-001",
+      "unit": null,
+      "state": "ai_suggested",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B2"
+          },
+          "quote": "DF-GRAN-BERRY-US-001",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C2"
+          },
+          "quote": "confirm with label management",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-bpn",
+      "group": "identity",
+      "field": "BPN",
+      "value": "DF-BERRY-480G-US",
+      "unit": null,
+      "state": "ai_suggested",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E11"
+          },
+          "quote": "DF-BERRY-480G-US",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "F11"
+          },
+          "quote": "Assumed from FR BPN pattern (DF-BERRY-480G) with a US suffix",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-ingredients",
+      "group": "ingredients",
+      "field": "Ingredient list",
+      "value": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              20,
+              200,
+              130,
+              40
+            ]
+          },
+          "quote": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B26"
+          },
+          "quote": "INGREDIENTS: Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Sunflower Seeds, Vegetable Oils (in varying proportions), Dried Blueberries, Cranberries, Sunflower Seeds, Honey (9%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-honey-pct",
+      "group": "ingredients",
+      "field": "Honey %",
+      "value": "1",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              20,
+              200,
+              130,
+              40
+            ]
+          },
+          "quote": "Honey (1%)",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B26"
+          },
+          "quote": "Honey (9%)",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-sweeteners",
+      "group": "ingredients",
+      "field": "Nutritive sweeteners",
+      "value": "Honey, Coconut Sugar",
+      "unit": null,
+      "state": "ai_suggested",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E15"
+          },
+          "quote": "Honey, Coconut Sugar",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-allergen-statement",
+      "group": "allergens",
+      "field": "Allergen statement",
+      "value": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              20,
+              244,
+              130,
+              18
+            ]
+          },
+          "quote": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B24"
+          },
+          "quote": "ALLERGEN INFORMATION:\nMay Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-contains",
+      "group": "allergens",
+      "field": "\"Contains\" statement",
+      "value": null,
+      "unit": null,
+      "state": "missing",
+      "sources": []
+    },
+    {
+      "id": "f-servings",
+      "group": "nutrition",
+      "field": "Servings per container",
+      "value": "8",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              152,
+              66,
+              7
+            ]
+          },
+          "quote": "8 servings per container",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B34"
+          },
+          "quote": "8",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-serving-size",
+      "group": "nutrition",
+      "field": "Serving size",
+      "value": "85",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              160,
+              66,
+              7
+            ]
+          },
+          "quote": "85",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B36"
+          },
+          "quote": "Not clearly legible in extracted artwork text",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-calories",
+      "group": "nutrition",
+      "field": "Calories",
+      "value": "166",
+      "unit": "kcal",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              176,
+              66,
+              7
+            ]
+          },
+          "quote": "Calories 166",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B47"
+          },
+          "quote": "166",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-fat",
+      "group": "nutrition",
+      "field": "Total Fat",
+      "value": "15",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              184,
+              66,
+              7
+            ]
+          },
+          "quote": "Total Fat 15g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B48"
+          },
+          "quote": "15g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-fat-dv",
+      "group": "nutrition",
+      "field": "Total Fat · % Daily Value",
+      "value": "2.2",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              184,
+              66,
+              7
+            ]
+          },
+          "quote": "Total Fat 15g 2.2%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C48"
+          },
+          "quote": "2.2%*",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-satfat",
+      "group": "nutrition",
+      "field": "Saturated Fat",
+      "value": "5",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              192,
+              66,
+              7
+            ]
+          },
+          "quote": "Saturated Fat 5g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B49"
+          },
+          "quote": "5g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-satfat-dv",
+      "group": "nutrition",
+      "field": "Saturated Fat · % Daily Value",
+      "value": "8",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              192,
+              66,
+              7
+            ]
+          },
+          "quote": "Saturated Fat 5g 8%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C49"
+          },
+          "quote": "8%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-transfat",
+      "group": "nutrition",
+      "field": "Trans Fat",
+      "value": "8",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              200,
+              66,
+              7
+            ]
+          },
+          "quote": "Trans Fat 8g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B50"
+          },
+          "quote": "8g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-chol",
+      "group": "nutrition",
+      "field": "Cholesterol",
+      "value": "45",
+      "unit": "mg",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              208,
+              66,
+              7
+            ]
+          },
+          "quote": "Cholesterol 45mg",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B51"
+          },
+          "quote": "45mg",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-chol-dv",
+      "group": "nutrition",
+      "field": "Cholesterol · % Daily Value",
+      "value": "26",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              208,
+              66,
+              7
+            ]
+          },
+          "quote": "Cholesterol 45mg 26%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C51"
+          },
+          "quote": "26%*",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-sodium",
+      "group": "nutrition",
+      "field": "Sodium",
+      "value": "23",
+      "unit": "mg",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              216,
+              66,
+              7
+            ]
+          },
+          "quote": "Sodium 23mg",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B52"
+          },
+          "quote": "25mg",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-sodium-dv",
+      "group": "nutrition",
+      "field": "Sodium · % Daily Value",
+      "value": "12",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              216,
+              66,
+              7
+            ]
+          },
+          "quote": "Sodium 23mg 12%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C52"
+          },
+          "quote": "12%*",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-carb",
+      "group": "nutrition",
+      "field": "Total Carbohydrate",
+      "value": "66",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              224,
+              66,
+              7
+            ]
+          },
+          "quote": "Total Carbohydrate 66g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B53"
+          },
+          "quote": "15g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-carb-dv",
+      "group": "nutrition",
+      "field": "Total Carbohydrate · % Daily Value",
+      "value": "18",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              224,
+              66,
+              7
+            ]
+          },
+          "quote": "Total Carbohydrate 66g 18%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C53"
+          },
+          "quote": "18%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-fiber",
+      "group": "nutrition",
+      "field": "Dietary Fiber",
+      "value": "3",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              232,
+              66,
+              7
+            ]
+          },
+          "quote": "Dietary Fiber 3g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B54"
+          },
+          "quote": "3g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-fiber-dv",
+      "group": "nutrition",
+      "field": "Dietary Fiber · % Daily Value",
+      "value": "5",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              232,
+              66,
+              7
+            ]
+          },
+          "quote": "Dietary Fiber 3g 5%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C54"
+          },
+          "quote": "5%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-sugars",
+      "group": "nutrition",
+      "field": "Total Sugars",
+      "value": "18",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              240,
+              66,
+              7
+            ]
+          },
+          "quote": "Total Sugars 18g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B55"
+          },
+          "quote": "18g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-added",
+      "group": "nutrition",
+      "field": "Incl. Added Sugars",
+      "value": "0",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              248,
+              66,
+              7
+            ]
+          },
+          "quote": "Incl. 0g Added Sugars",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B56"
+          },
+          "quote": "0g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-added-dv",
+      "group": "nutrition",
+      "field": "Incl. Added Sugars · % Daily Value",
+      "value": "0",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              248,
+              66,
+              7
+            ]
+          },
+          "quote": "Incl. 0g Added Sugars 0%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C56"
+          },
+          "quote": "0%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-protein",
+      "group": "nutrition",
+      "field": "Protein",
+      "value": "34",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              256,
+              66,
+              7
+            ]
+          },
+          "quote": "Protein 34g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B57"
+          },
+          "quote": "34g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-vitd",
+      "group": "nutrition",
+      "field": "Vitamin D",
+      "value": "89",
+      "unit": "mcg",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              264,
+              66,
+              7
+            ]
+          },
+          "quote": "Vitamin D 89mcg",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B58"
+          },
+          "quote": "89mcg",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-vitd-dv",
+      "group": "nutrition",
+      "field": "Vitamin D · % Daily Value",
+      "value": "12",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              264,
+              66,
+              7
+            ]
+          },
+          "quote": "Vitamin D 89mcg 12%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C58"
+          },
+          "quote": "12%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-calcium",
+      "group": "nutrition",
+      "field": "Calcium",
+      "value": "206",
+      "unit": "mg",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              272,
+              66,
+              7
+            ]
+          },
+          "quote": "Calcium 206mg",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B59"
+          },
+          "quote": "206mg",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-calcium-dv",
+      "group": "nutrition",
+      "field": "Calcium · % Daily Value",
+      "value": "48",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              272,
+              66,
+              7
+            ]
+          },
+          "quote": "Calcium 206mg 48%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C59"
+          },
+          "quote": "48%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-iron",
+      "group": "nutrition",
+      "field": "Iron",
+      "value": "5",
+      "unit": "mg",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              280,
+              66,
+              7
+            ]
+          },
+          "quote": "Iron 5mg",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B60"
+          },
+          "quote": "5mg",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-iron-dv",
+      "group": "nutrition",
+      "field": "Iron · % Daily Value",
+      "value": "20",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              280,
+              66,
+              7
+            ]
+          },
+          "quote": "Iron 5mg 20%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C60"
+          },
+          "quote": "20%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-potassium",
+      "group": "nutrition",
+      "field": "Potassium",
+      "value": "23",
+      "unit": "mg",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              288,
+              66,
+              7
+            ]
+          },
+          "quote": "Potassium 23mg",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B61"
+          },
+          "quote": "23mg",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-potassium-dv",
+      "group": "nutrition",
+      "field": "Potassium · % Daily Value",
+      "value": "11",
+      "unit": "%",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              384,
+              288,
+              66,
+              7
+            ]
+          },
+          "quote": "Potassium 23mg 11%",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "C61"
+          },
+          "quote": "11%",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-eu-ri",
+      "group": "nutrition",
+      "field": "Reference-intake icons (EU style)",
+      "value": "197kJ/46kcal · Fat 3.8g · Saturates 1.1g · Sugars 2.4g · Salt 0.4g",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              56,
+              150,
+              94,
+              22
+            ]
+          },
+          "quote": "197kJ 46kcal",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-net-qty",
+      "group": "quantity",
+      "field": "Net quantity",
+      "value": "480",
+      "unit": "g",
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              118,
+              288,
+              32,
+              8
+            ]
+          },
+          "quote": "480g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B35"
+          },
+          "quote": "480g",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-net-qty-oz",
+      "group": "quantity",
+      "field": "Net quantity in oz (front)",
+      "value": null,
+      "unit": null,
+      "state": "missing",
+      "sources": []
+    },
+    {
+      "id": "f-upc",
+      "group": "quantity",
+      "field": "UPC",
+      "value": "1 20000 00003 6",
+      "unit": null,
+      "state": "pass",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E12"
+          },
+          "quote": "1 20000 00003 6",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-claim-nas",
+      "group": "claims",
+      "field": "Claim: No Added Sugar",
+      "value": "NO ADDED SUGAR",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Top flap · Back",
+            "page": 1,
+            "bbox": [
+              30,
+              88,
+              110,
+              34
+            ]
+          },
+          "quote": "NO ADDED SUGAR",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E18"
+          },
+          "quote": "No Added Sugar",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-claim-oven",
+      "group": "claims",
+      "field": "Claim: Oven Baked",
+      "value": "OVEN BAKED",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Top flap · Back",
+            "page": 1,
+            "bbox": [
+              30,
+              88,
+              110,
+              34
+            ]
+          },
+          "quote": "OVEN BAKED",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E17"
+          },
+          "quote": "Oven Baked",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-claim-gmo",
+      "group": "claims",
+      "field": "Claim: GMO Free",
+      "value": "GMO FREE",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Top flap · Back",
+            "page": 1,
+            "bbox": [
+              30,
+              88,
+              110,
+              34
+            ]
+          },
+          "quote": "GMO FREE",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E18"
+          },
+          "quote": "GMO free",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-mark-vegan",
+      "group": "claims",
+      "field": "Certified Vegan mark",
+      "value": "Certified Vegan (vegan.org)",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B29"
+          },
+          "quote": "Certified Vegan (vegan.org)",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Front",
+            "page": 1,
+            "bbox": [
+              338,
+              262,
+              30,
+              28
+            ]
+          },
+          "quote": "Certified Vegan",
+          "quoteChecked": false
+        }
+      ]
+    },
+    {
+      "id": "f-dietary-vegan",
+      "group": "claims",
+      "field": "Dietary information",
+      "value": "Suitable for Vegans.",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              20,
+              266,
+              120,
+              7
+            ]
+          },
+          "quote": "DIETARY INFORMATION: Suitable for Vegans.",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-mark-organic",
+      "group": "claims",
+      "field": "USDA Organic mark",
+      "value": "USDA Organic",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B29"
+          },
+          "quote": "USDA Organic",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              22,
+              150,
+              26,
+              26
+            ]
+          },
+          "quote": "USDA Organic",
+          "quoteChecked": false
+        }
+      ]
+    },
+    {
+      "id": "f-marketing-copy",
+      "group": "claims",
+      "field": "Marketing copy",
+      "value": "Start tapping, swishing & shaking your tail fins!",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B27"
+          },
+          "quote": "Start tapping, swishing & shaking your tail fins!",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-producer",
+      "group": "company",
+      "field": "Produced by",
+      "value": "Dancing Fish Granola Co.",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              20,
+              280,
+              90,
+              7
+            ]
+          },
+          "quote": "PRODUCED BY DANCING FISH GRANOLA CO.",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-address",
+      "group": "company",
+      "field": "Address (city, state, ZIP)",
+      "value": null,
+      "unit": null,
+      "state": "missing",
+      "sources": []
+    },
+    {
+      "id": "f-package-type",
+      "group": "packaging",
+      "field": "Package type",
+      "value": "Carton",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B37"
+          },
+          "quote": "Carton",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "f-panel-format",
+      "group": "packaging",
+      "field": "Nutrition panel format",
+      "value": "US FDA Standard (Vertical)",
+      "unit": null,
+      "state": "confirmed",
+      "sources": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B33"
+          },
+          "quote": "US FDA Standard (Vertical)",
+          "quoteChecked": true
+        }
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "c-honey",
+      "kind": "value",
+      "severity": "high",
+      "owner": "rnd",
+      "factIds": [
+        "f-honey-pct",
+        "f-ingredients"
+      ],
+      "left": {
+        "value": "9%",
+        "sources": [
+          {
+            "fileId": "f-sheet",
+            "where": {
+              "sheet": "Content Sheet - US",
+              "cell": "B26"
+            },
+            "quote": "Honey (9%)",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "1%",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                200,
+                130,
+                40
+              ]
+            },
+            "quote": "Honey (1%)",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-us-101-4",
+      "explanation": "The content sheet and the carton give different honey percentages.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 200,
+          "w": 130,
+          "h": 40
+        }
+      ]
+    },
+    {
+      "id": "c-ingredients",
+      "kind": "list",
+      "severity": "high",
+      "owner": "rnd",
+      "factIds": [
+        "f-ingredients"
+      ],
+      "left": {
+        "value": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                200,
+                130,
+                40
+              ]
+            },
+            "quote": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "INGREDIENTS: Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Sunflower Seeds, Vegetable Oils (in varying proportions), Dried Blueberries, Cranberries, Sunflower Seeds, Honey (9%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+        "sources": [
+          {
+            "fileId": "f-sheet",
+            "where": {
+              "sheet": "Content Sheet - US",
+              "cell": "B26"
+            },
+            "quote": "INGREDIENTS: Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Sunflower Seeds, Vegetable Oils (in varying proportions), Dried Blueberries, Cranberries, Sunflower Seeds, Honey (9%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-us-101-4",
+      "explanation": "Walnuts, flax seeds, dried strawberries and pumpkin seeds are on the carton but not in the sheet; the sheet lists Sunflower Seeds twice.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 200,
+          "w": 130,
+          "h": 40
+        }
+      ]
+    },
+    {
+      "id": "c-carbs",
+      "kind": "value",
+      "severity": "high",
+      "owner": "rnd",
+      "factIds": [
+        "f-carb"
+      ],
+      "left": {
+        "value": "15 g",
+        "sources": [
+          {
+            "fileId": "f-sheet",
+            "where": {
+              "sheet": "Content Sheet - US",
+              "cell": "B53"
+            },
+            "quote": "15g",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "66 g",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                224,
+                66,
+                7
+              ]
+            },
+            "quote": "Total Carbohydrate 66g",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "Total carbohydrate differs between the sheet and the carton.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 224,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-added-sugar",
+      "kind": "rule",
+      "severity": "high",
+      "owner": "legal",
+      "factIds": [
+        "f-claim-nas",
+        "f-added",
+        "f-ingredients",
+        "f-sweeteners"
+      ],
+      "left": {
+        "value": "\"NO ADDED SUGAR\" and \"Incl. 0g Added Sugars\"",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Top flap · Back",
+              "page": 1,
+              "bbox": [
+                30,
+                88,
+                110,
+                34
+              ]
+            },
+            "quote": "NO ADDED SUGAR",
+            "quoteChecked": true
+          },
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                248,
+                66,
+                7
+              ]
+            },
+            "quote": "Incl. 0g Added Sugars",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar)",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                200,
+                130,
+                40
+              ]
+            },
+            "quote": "Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar)",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-us-101-60c",
+      "explanation": "Honey, coconut sugar and cane sugar are added sugars under US rules, so the claim and the 0 g line cannot both stand.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Top flap · Back",
+          "x": 30,
+          "y": 88,
+          "w": 110,
+          "h": 34
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 248,
+          "w": 66,
+          "h": 7
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 200,
+          "w": 130,
+          "h": 40
+        }
+      ]
+    },
+    {
+      "id": "c-vegan",
+      "kind": "meaning",
+      "severity": "high",
+      "owner": "rnd",
+      "factIds": [
+        "f-mark-vegan",
+        "f-dietary-vegan",
+        "f-ingredients",
+        "f-chol"
+      ],
+      "left": {
+        "value": "Certified Vegan mark; \"Suitable for Vegans.\"",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Front",
+              "page": 1,
+              "bbox": [
+                338,
+                262,
+                30,
+                28
+              ]
+            },
+            "quote": "Certified Vegan",
+            "quoteChecked": false
+          },
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                266,
+                120,
+                7
+              ]
+            },
+            "quote": "DIETARY INFORMATION: Suitable for Vegans.",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "Honey (1%); Cholesterol 45mg",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                200,
+                130,
+                40
+              ]
+            },
+            "quote": "Honey (1%)",
+            "quoteChecked": true
+          },
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                208,
+                66,
+                7
+              ]
+            },
+            "quote": "Cholesterol 45mg",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-co-vegan",
+      "explanation": "Honey is not vegan, and plant foods have no cholesterol; the vegan claims conflict with the recipe.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Front",
+          "x": 338,
+          "y": 262,
+          "w": 30,
+          "h": 28
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 266,
+          "w": 120,
+          "h": 7
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 200,
+          "w": 130,
+          "h": 40
+        }
+      ]
+    },
+    {
+      "id": "c-allergens",
+      "kind": "rule",
+      "severity": "high",
+      "owner": "legal",
+      "factIds": [
+        "f-allergen-statement",
+        "f-ingredients",
+        "f-contains"
+      ],
+      "left": {
+        "value": "Almonds, Pecans, Walnuts in ingredients",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                200,
+                130,
+                40
+              ]
+            },
+            "quote": "Almonds, Pecans, Walnuts",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "Only \"May Contain Almonds … Pecan Nuts … Walnuts\"; no \"Contains\" statement",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                244,
+                130,
+                18
+              ]
+            },
+            "quote": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-us-falcpa",
+      "explanation": "Tree nuts that are ingredients must be declared as present, not as possible traces.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 244,
+          "w": 130,
+          "h": 18
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 200,
+          "w": 130,
+          "h": 40
+        }
+      ]
+    },
+    {
+      "id": "c-dv-fat",
+      "kind": "math",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-fat",
+        "f-fat-dv"
+      ],
+      "left": {
+        "value": "printed 2.2%",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                184,
+                66,
+                7
+              ]
+            },
+            "quote": "Total Fat 15g 2.2%",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "correct ≈19% (15 g ÷ 78 g DV)",
+        "sources": []
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "% Daily Value for total fat does not match the printed amount.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 184,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-dv-vitd",
+      "kind": "math",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-vitd",
+        "f-vitd-dv"
+      ],
+      "left": {
+        "value": "printed 12%",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                264,
+                66,
+                7
+              ]
+            },
+            "quote": "Vitamin D 89mcg 12%",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "correct ≈445% (89 mcg ÷ 20 mcg DV)",
+        "sources": []
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "% Daily Value for vitamin D does not match the printed amount.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 264,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-dv-calcium",
+      "kind": "math",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-calcium",
+        "f-calcium-dv"
+      ],
+      "left": {
+        "value": "printed 48%",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                272,
+                66,
+                7
+              ]
+            },
+            "quote": "Calcium 206mg 48%",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "correct ≈16% (206 mg ÷ 1300 mg DV)",
+        "sources": []
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "% Daily Value for calcium does not match the printed amount.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 272,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-calories",
+      "kind": "math",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-calories",
+        "f-fat",
+        "f-carb",
+        "f-protein"
+      ],
+      "left": {
+        "value": "166 kcal",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                176,
+                66,
+                7
+              ]
+            },
+            "quote": "Calories 166",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "≈535 kcal (15×9 + 66×4 + 34×4)",
+        "sources": []
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "Calories do not add up from fat, carbohydrate and protein.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 176,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-serving",
+      "kind": "math",
+      "severity": "medium",
+      "owner": "rnd",
+      "factIds": [
+        "f-serving-size",
+        "f-servings",
+        "f-net-qty"
+      ],
+      "left": {
+        "value": "85 (no unit)",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                160,
+                66,
+                7
+              ]
+            },
+            "quote": "85",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "60 g (480 g ÷ 8 servings)",
+        "sources": []
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "Serving size has no unit and does not match net quantity divided by servings.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 160,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-sodium",
+      "kind": "value",
+      "severity": "medium",
+      "owner": "rnd",
+      "factIds": [
+        "f-sodium"
+      ],
+      "left": {
+        "value": "25 mg",
+        "sources": [
+          {
+            "fileId": "f-sheet",
+            "where": {
+              "sheet": "Content Sheet - US",
+              "cell": "B52"
+            },
+            "quote": "25mg",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "23 mg",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Left",
+              "page": 1,
+              "bbox": [
+                384,
+                216,
+                66,
+                7
+              ]
+            },
+            "quote": "Sodium 23mg",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "Sodium differs between the sheet and the carton.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 384,
+          "y": 216,
+          "w": 66,
+          "h": 7
+        }
+      ]
+    },
+    {
+      "id": "c-eu-format",
+      "kind": "rule",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-eu-ri",
+        "f-allergen-statement"
+      ],
+      "left": {
+        "value": "kJ, reference-intake icons, \"Saturates\", \"Salt\", \"Cereals Containing Gluten\"",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                56,
+                150,
+                94,
+                22
+              ]
+            },
+            "quote": "197kJ 46kcal",
+            "quoteChecked": true
+          },
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                244,
+                130,
+                18
+              ]
+            },
+            "quote": "Cereals Containing Gluten",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "US format: Nutrition Facts only, kcal, \"Saturated Fat\", \"Sodium\"",
+        "sources": []
+      },
+      "ruleId": "r-us-101-9",
+      "explanation": "EU-style nutrition and allergen wording is on a US pack.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 56,
+          "y": 150,
+          "w": 94,
+          "h": 22
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 244,
+          "w": 130,
+          "h": 18
+        }
+      ]
+    },
+    {
+      "id": "c-net-qty",
+      "kind": "rule",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-net-qty",
+        "f-net-qty-oz"
+      ],
+      "left": {
+        "value": "\"480g\" on the back panel only",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                118,
+                288,
+                32,
+                8
+              ]
+            },
+            "quote": "480g",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "oz and g on the front panel, e.g. NET WT 16.9 OZ (480g)",
+        "sources": []
+      },
+      "ruleId": "r-us-101-105",
+      "explanation": "US net quantity must be on the principal display panel in both oz and metric.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 118,
+          "y": 288,
+          "w": 32,
+          "h": 8
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Front",
+          "x": 246,
+          "y": 286,
+          "w": 60,
+          "h": 10
+        }
+      ]
+    },
+    {
+      "id": "c-address",
+      "kind": "rule",
+      "severity": "medium",
+      "owner": "legal",
+      "factIds": [
+        "f-producer",
+        "f-address"
+      ],
+      "left": {
+        "value": "\"PRODUCED BY DANCING FISH GRANOLA CO.\"",
+        "sources": [
+          {
+            "fileId": "f-carton",
+            "where": {
+              "panel": "Back",
+              "page": 1,
+              "bbox": [
+                20,
+                280,
+                90,
+                7
+              ]
+            },
+            "quote": "PRODUCED BY DANCING FISH GRANOLA CO.",
+            "quoteChecked": true
+          }
+        ]
+      },
+      "right": {
+        "value": "Name plus city, state and ZIP code required",
+        "sources": []
+      },
+      "ruleId": "r-us-101-5",
+      "explanation": "The maker is named but no place of business is given.",
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 20,
+          "y": 280,
+          "w": 90,
+          "h": 7
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "q-vegan",
+      "text": "Honey is in the recipe, and the pack says Certified Vegan. What should change?",
+      "why": "Honey is not vegan; the vegan mark and back-panel text conflict with the ingredients.",
+      "ruleIds": [
+        "r-co-vegan"
+      ],
+      "factIds": [
+        "f-mark-vegan",
+        "f-dietary-vegan",
+        "f-ingredients"
+      ],
+      "unlocks": 4,
+      "answers": [
+        "Keep honey, remove vegan claims",
+        "Replace honey (R&D to confirm)"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "q-nas",
+      "text": "The pack says No Added Sugar, but honey and coconut sugar are added sugars under US rules. Remove the claim?",
+      "why": "Honey, coconut sugar and cane sugar are added sugars, so the claim is not allowed.",
+      "ruleIds": [
+        "r-us-101-60c"
+      ],
+      "factIds": [
+        "f-claim-nas",
+        "f-added",
+        "f-ingredients"
+      ],
+      "unlocks": 3,
+      "answers": [
+        "Remove the claim",
+        "Change the recipe (R&D to confirm)"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "q-honey",
+      "text": "Which honey % is correct: 9% (sheet) or 1% (carton)?",
+      "why": "The ingredient list must give one percentage, and the sheet and carton disagree.",
+      "ruleIds": [
+        "r-us-101-4"
+      ],
+      "factIds": [
+        "f-honey-pct"
+      ],
+      "unlocks": 2,
+      "answers": [
+        "9% (sheet)",
+        "1% (carton)"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "q-serving",
+      "text": "What is the real serving size in grams?",
+      "why": "The panel prints \"85\" with no unit; 480 g ÷ 8 servings = 60 g.",
+      "ruleIds": [
+        "r-us-101-9"
+      ],
+      "factIds": [
+        "f-serving-size",
+        "f-servings",
+        "f-net-qty"
+      ],
+      "unlocks": 2,
+      "answers": [
+        "40 g",
+        "60 g"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "q-address",
+      "text": "Company address for the label (city, state, ZIP)?",
+      "why": "US labels must show where the maker is; no file has the address.",
+      "ruleIds": [
+        "r-us-101-5"
+      ],
+      "factIds": [
+        "f-producer",
+        "f-address"
+      ],
+      "unlocks": 1,
+      "answers": [],
+      "status": "open"
+    },
+    {
+      "id": "q-allergens",
+      "text": "Are almonds, pecans and walnuts ingredients (Contains) or only possible traces?",
+      "why": "They are listed as ingredients but the allergen line only says \"May contain\".",
+      "ruleIds": [
+        "r-us-falcpa"
+      ],
+      "factIds": [
+        "f-allergen-statement",
+        "f-ingredients",
+        "f-contains"
+      ],
+      "unlocks": 2,
+      "answers": [
+        "Ingredients: add a Contains line",
+        "Traces only: fix the ingredient list"
+      ],
+      "status": "open"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "req-identity",
+      "ruleId": "r-us-101-3",
+      "item": "Statement of identity",
+      "panel": "Front",
+      "status": "met",
+      "factIds": [
+        "f-identity"
+      ]
+    },
+    {
+      "id": "req-ingredients",
+      "ruleId": "r-us-101-4",
+      "item": "Ingredient list",
+      "panel": "Back",
+      "status": "conflict",
+      "factIds": [
+        "f-ingredients",
+        "f-honey-pct"
+      ]
+    },
+    {
+      "id": "req-address",
+      "ruleId": "r-us-101-5",
+      "item": "Maker's name and place of business",
+      "panel": "Back",
+      "status": "missing",
+      "factIds": [
+        "f-producer",
+        "f-address"
+      ]
+    },
+    {
+      "id": "req-nutrition",
+      "ruleId": "r-us-101-9",
+      "item": "Nutrition Facts panel",
+      "panel": "Left",
+      "status": "conflict",
+      "factIds": [
+        "f-calories",
+        "f-fat-dv",
+        "f-serving-size"
+      ]
+    },
+    {
+      "id": "req-net-front",
+      "ruleId": "r-us-101-105",
+      "item": "Net quantity in oz and g on front",
+      "panel": "Front",
+      "status": "missing",
+      "factIds": [
+        "f-net-qty",
+        "f-net-qty-oz"
+      ]
+    },
+    {
+      "id": "req-nas",
+      "ruleId": "r-us-101-60c",
+      "item": "Added-sugar claim conditions",
+      "panel": "Top flap · Back",
+      "status": "conflict",
+      "factIds": [
+        "f-claim-nas"
+      ]
+    },
+    {
+      "id": "req-allergen",
+      "ruleId": "r-us-falcpa",
+      "item": "Allergen \"Contains\" statement",
+      "panel": "Back",
+      "status": "missing",
+      "factIds": [
+        "f-contains"
+      ]
+    },
+    {
+      "id": "req-vegan",
+      "ruleId": "r-co-vegan",
+      "item": "Vegan mark eligibility",
+      "panel": "Front",
+      "status": "conflict",
+      "factIds": [
+        "f-mark-vegan"
+      ]
+    },
+    {
+      "id": "req-brand",
+      "ruleId": "r-us-101-3",
+      "item": "Brand name",
+      "panel": "Front",
+      "status": "met",
+      "factIds": [
+        "f-brand"
+      ]
+    },
+    {
+      "id": "req-upc",
+      "ruleId": "r-us-101-105",
+      "item": "Barcode (UPC)",
+      "panel": "Back",
+      "status": "met",
+      "factIds": [
+        "f-upc"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "r-us-101-3",
+      "market": "US",
+      "ref": "21 CFR 101.3",
+      "summary": "The front panel must state what the food is (statement of identity).",
+      "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/section-101.3",
+      "status": "in_force"
+    },
+    {
+      "id": "r-us-101-4",
+      "market": "US",
+      "ref": "21 CFR 101.4",
+      "summary": "List every ingredient by common name, in descending order of weight.",
+      "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/section-101.4",
+      "status": "in_force"
+    },
+    {
+      "id": "r-us-101-5",
+      "market": "US",
+      "ref": "21 CFR 101.5",
+      "summary": "Show the name and place of business (city, state, ZIP) of the maker, packer or distributor.",
+      "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/section-101.5",
+      "status": "in_force"
+    },
+    {
+      "id": "r-us-101-9",
+      "market": "US",
+      "ref": "21 CFR 101.9",
+      "summary": "Nutrition Facts panel: format, serving size, rounding and % Daily Values.",
+      "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/section-101.9",
+      "status": "in_force"
+    },
+    {
+      "id": "r-us-101-105",
+      "market": "US",
+      "ref": "21 CFR 101.105",
+      "summary": "Net quantity on the principal display panel, in both US customary and metric units.",
+      "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/section-101.105",
+      "status": "in_force"
+    },
+    {
+      "id": "r-us-101-60c",
+      "market": "US",
+      "ref": "21 CFR 101.60(c)",
+      "summary": "\"No added sugar\" only if no sugars or sugar-containing ingredients are added.",
+      "url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/section-101.60",
+      "status": "in_force"
+    },
+    {
+      "id": "r-us-falcpa",
+      "market": "US",
+      "ref": "FALCPA 21 USC 343(w)",
+      "summary": "Major food allergens (including tree nuts, by type) must be declared.",
+      "url": "https://www.fda.gov/food/food-allergensgluten-free-guidance-documents-regulatory-information/food-allergen-labeling-and-consumer-protection-act-2004-falcpa",
+      "status": "in_force"
+    },
+    {
+      "id": "r-co-vegan",
+      "market": "company",
+      "ref": "Certified Vegan policy",
+      "summary": "Use the Certified Vegan mark only when no ingredient is of animal origin (honey included).",
+      "url": "https://vegan.org/certification/",
+      "status": "in_force"
+    }
+  ],
+  "pack": {
+    "panels": [
+      {
+        "name": "Back",
+        "x": 14,
+        "y": 141,
+        "w": 142,
+        "h": 159
+      },
+      {
+        "name": "Right",
+        "x": 156,
+        "y": 141,
+        "w": 80,
+        "h": 159
+      },
+      {
+        "name": "Front",
+        "x": 236,
+        "y": 141,
+        "w": 141,
+        "h": 159
+      },
+      {
+        "name": "Left",
+        "x": 377,
+        "y": 141,
+        "w": 79,
+        "h": 159
+      },
+      {
+        "name": "Top flap · Back",
+        "x": 14,
+        "y": 60,
+        "w": 142,
+        "h": 81
+      },
+      {
+        "name": "Bottom flaps",
+        "x": 14,
+        "y": 300,
+        "w": 442,
+        "h": 75
+      }
+    ],
+    "blocks": [
+      {
+        "item": "Ingredient list",
+        "panel": "Back",
+        "x": 20,
+        "y": 200,
+        "w": 130,
+        "h": 40,
+        "state": "existing"
+      },
+      {
+        "item": "Nutrition Facts",
+        "panel": "Left",
+        "x": 384,
+        "y": 150,
+        "w": 66,
+        "h": 140,
+        "state": "existing"
+      }
+    ]
+  },
+  "brief": {
+    "version": 1,
+    "sections": [
+      {
+        "title": "Objective",
+        "sentences": [
+          {
+            "text": "Update the US carton for Dancing Fish Granola Berry Crunch, 480 g.",
+            "factIds": [
+              "f-brand",
+              "f-product-name",
+              "f-net-qty"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "trust": {
+    "coverage": 0.86,
+    "aiOpen": 3,
+    "resolved": 0,
+    "selfTest": {
+      "caught": 0,
+      "total": 0,
+      "rows": []
+    }
+  }
+}
