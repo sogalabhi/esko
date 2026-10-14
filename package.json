@@ -1,0 +1,16 @@
+{
+  "name": "briefforge",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"uv run --directory backend uvicorn app.main:app --reload --port 8000\" \"npm run dev --prefix frontend\"",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "uv run --directory backend pytest",
+    "test:frontend": "npm test --prefix frontend",
+    "test:live": "uv run --directory backend pytest -m live",
+    "test:e2e": "echo not yet (Phase 4)",
+    "test:record": "echo not yet (Phase 2)"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
