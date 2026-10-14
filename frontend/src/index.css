@@ -1,0 +1,57 @@
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import 'tailwindcss';
+
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --border: #e4e4de;
+  --ink: #16181d;
+  --ink-2: #5b6170;
+  --accent: #2f7d32;
+  --ok: #1f7a4d;
+  --warn: #b45309;
+  --bad: #b42318;
+  --ai: #6d28d9;
+  --info: #1d4ed8;
+  --ok-tint: color-mix(in srgb, var(--ok) 10%, transparent);
+  --warn-tint: color-mix(in srgb, var(--warn) 10%, transparent);
+  --bad-tint: color-mix(in srgb, var(--bad) 10%, transparent);
+  --ai-tint: color-mix(in srgb, var(--ai) 10%, transparent);
+  --info-tint: color-mix(in srgb, var(--info) 10%, transparent);
+  --radius-card: 8px;
+  --radius-chip: 6px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-ai: var(--ai);
+  --color-info: var(--info);
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --radius-card: 8px;
+  --radius-chip: 6px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
