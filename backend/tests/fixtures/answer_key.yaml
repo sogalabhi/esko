@@ -1,0 +1,313 @@
+version: 1
+sample: dancing-fish-berry-crunch-us
+# Answer key for the Dancing Fish Granola Berry Crunch (US) sample pair.
+# Cells refer to the content sheet; panels refer to the carton PDF. Verified against both files.
+items:
+  - id: honey-percent
+    kind: value_conflict
+    severity: high
+    owner: rnd
+    summary: Honey is 9% in the sheet but 1% on the carton
+    evidence:
+      - {file: sheet, cell: B26, quote: "Honey (9%)"}
+      - {file: carton, panel: Back, quote: "(1%), Coconut Sugar"}
+    expected: {flag: true, check: value_conflict}
+    market: us
+  - id: ingredient-list-diff
+    kind: list_conflict
+    severity: high
+    owner: rnd
+    summary: Carton lists walnuts, flax seeds, dried strawberries and pumpkin seeds that the sheet lacks
+    evidence:
+      - {file: sheet, cell: B26, quote: "Almonds, Pecans, Sunflower Seeds, Vegetable Oils"}
+      - {file: carton, panel: Back, quote: "Almonds, Pecans, Walnuts, Flax"}
+    expected: {flag: true, check: list_diff, only_in_carton: [walnuts, flax seeds, dried strawberries, pumpkin seeds]}
+    market: us
+  - id: sunflower-seeds-twice
+    kind: list_conflict
+    severity: low
+    owner: rnd
+    summary: Sheet ingredient list names Sunflower Seeds twice
+    evidence:
+      - {file: sheet, cell: B26, quote: "Sunflower Seeds, Vegetable Oils (in varying proportions), Dried Blueberries, Cranberries, Sunflower Seeds"}
+    expected: {flag: true, check: duplicate_item, item: sunflower seeds}
+    market: any
+  - id: total-carbohydrate
+    kind: value_conflict
+    severity: high
+    owner: rnd
+    summary: Total carbohydrate is 15 g in the sheet but 66 g on the carton
+    evidence:
+      - {file: sheet, cell: B53, quote: "15g"}
+      - {file: carton, panel: Left, quote: "Total Carbohydrate 66g"}
+    expected: {flag: true, check: value_conflict}
+    market: us
+  - id: sodium
+    kind: value_conflict
+    severity: medium
+    owner: rnd
+    summary: Sodium is 25 mg in the sheet but 23 mg on the carton
+    evidence:
+      - {file: sheet, cell: B52, quote: "25mg"}
+      - {file: carton, panel: Left, quote: "Sodium 23mg"}
+    expected: {flag: true, check: value_conflict}
+    market: us
+  - id: no-added-sugar-claim
+    kind: rule
+    severity: high
+    owner: legal
+    summary: '"No Added Sugar" claim is wrong because honey, coconut sugar and cane sugar are ingredients'
+    evidence:
+      - {file: sheet, cell: B29, quote: "No Added Sugar"}
+      - {file: carton, panel: Back, quote: "NO ADDED SUGAR"}
+      - {file: sheet, cell: B26, quote: "Honey (9%), Coconut Sugar, Crystallized Ginger (cane sugar)"}
+    expected: {flag: true, check: added_sugars_claim}
+    market: us
+  - id: added-sugars-zero
+    kind: rule
+    severity: high
+    owner: legal
+    summary: '"Incl. 0g Added Sugars" conflicts with honey and coconut sugar in the ingredients'
+    evidence:
+      - {file: sheet, cell: B56, quote: "0g"}
+      - {file: carton, panel: Left, quote: "Incl. 0g Added Sugars"}
+    expected: {flag: true, check: added_sugars_value}
+    market: us
+  - id: vegan-meaning
+    kind: meaning
+    severity: high
+    owner: legal
+    summary: Vegan mark and "Suitable for Vegans" clash with honey and 45 mg cholesterol
+    evidence:
+      - {file: sheet, cell: B29, quote: "Certified Vegan (vegan.org)"}
+      - {file: carton, panel: Back, quote: "DIETARY INFORMATION: Suitable for Vegans."}
+      - {file: carton, panel: Left, quote: "Cholesterol 45mg"}
+    expected: {flag: true, check: meaning_conflict, ai: true}
+    market: any
+  - id: tree-nut-may-contain
+    kind: rule
+    severity: high
+    owner: legal
+    summary: Almonds, pecans and walnuts are ingredients but allergens say only "May Contain"; no "Contains" line
+    evidence:
+      - {file: sheet, cell: B24, quote: "May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts"}
+      - {file: carton, panel: Back, quote: "ALLERGEN INFORMATION: May Contain"}
+    expected: {flag: true, check: allergen_contains}
+    market: us
+  - id: dv-total-fat
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Total fat printed 2.2% DV but 15 g / 78 g is about 19%
+    evidence:
+      - {file: sheet, cell: C48, quote: "2.2%*"}
+      - {file: carton, panel: Left, quote: "Total Fat 15g"}
+    expected: {flag: true, check: percent_dv, computed_pct: 19, printed_pct: 2.2}
+    market: us
+  - id: dv-saturated-fat
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Saturated fat printed 8% DV but 5 g / 20 g is 25%
+    evidence:
+      - {file: sheet, cell: C49, quote: "8%"}
+      - {file: carton, panel: Left, quote: "Saturated Fat 5g"}
+    expected: {flag: true, check: percent_dv, computed_pct: 25, printed_pct: 8}
+    market: us
+  - id: dv-cholesterol
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Cholesterol printed 26% DV but 45 mg / 300 mg is 15%
+    evidence:
+      - {file: sheet, cell: C51, quote: "26%*"}
+      - {file: carton, panel: Left, quote: "Cholesterol 45mg"}
+    expected: {flag: true, check: percent_dv, computed_pct: 15, printed_pct: 26}
+    market: us
+  - id: dv-sodium
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Sodium printed 12% DV but 23 mg / 2300 mg is 1%
+    evidence:
+      - {file: sheet, cell: C52, quote: "12%*"}
+      - {file: carton, panel: Left, quote: "Sodium 23mg"}
+    expected: {flag: true, check: percent_dv, computed_pct: 1, printed_pct: 12}
+    market: us
+  - id: dv-total-carbohydrate
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Total carbohydrate printed 18% DV but 66 g / 275 g is 24% (sheet 15 g would be 5%)
+    evidence:
+      - {file: sheet, cell: C53, quote: "18%"}
+      - {file: carton, panel: Left, quote: "Total Carbohydrate 66g"}
+    expected: {flag: true, check: percent_dv, computed_pct: 24, printed_pct: 18}
+    market: us
+  - id: dv-dietary-fiber
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Dietary fiber printed 5% DV but 3 g / 28 g is about 11%
+    evidence:
+      - {file: sheet, cell: C54, quote: "5%"}
+      - {file: carton, panel: Left, quote: "Dietary Fiber 3g"}
+    expected: {flag: true, check: percent_dv, computed_pct: 11, printed_pct: 5}
+    market: us
+  - id: dv-vitamin-d
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Vitamin D printed 12% DV but 89 mcg / 20 mcg is about 445%
+    evidence:
+      - {file: sheet, cell: C58, quote: "12%"}
+      - {file: carton, panel: Left, quote: "Vitamin D 89mcg"}
+    expected: {flag: true, check: percent_dv, computed_pct: 445, printed_pct: 12}
+    market: us
+  - id: dv-calcium
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Calcium printed 48% DV but 206 mg / 1300 mg is about 16%
+    evidence:
+      - {file: sheet, cell: C59, quote: "48%"}
+      - {file: carton, panel: Left, quote: "Calcium 206mg"}
+    expected: {flag: true, check: percent_dv, computed_pct: 16, printed_pct: 48}
+    market: us
+  - id: dv-iron
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Iron printed 20% DV but 5 mg / 18 mg is about 28%
+    evidence:
+      - {file: sheet, cell: C60, quote: "20%"}
+      - {file: carton, panel: Left, quote: "Iron 5mg"}
+    expected: {flag: true, check: percent_dv, computed_pct: 28, printed_pct: 20}
+    market: us
+  - id: dv-potassium
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Potassium printed 11% DV but 23 mg / 4700 mg is about 0.5%
+    evidence:
+      - {file: sheet, cell: C61, quote: "11%"}
+      - {file: carton, panel: Left, quote: "Potassium 23mg"}
+    expected: {flag: true, check: percent_dv, computed_pct: 0.5, printed_pct: 11}
+    market: us
+  - id: calories-math
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Calories 166 but 15 g fat, 66 g carbohydrate and 34 g protein give about 535
+    evidence:
+      - {file: sheet, cell: B47, quote: "166"}
+      - {file: carton, panel: Left, quote: "Calories 166"}
+    expected: {flag: true, check: calories_atwater, computed_kcal: 535, printed_kcal: 166}
+    market: us
+  - id: serving-size-no-unit
+    kind: math
+    severity: high
+    owner: rnd
+    summary: Serving size printed as "85" with no unit; 480 g / 8 servings is 60 g, not 85
+    evidence:
+      - {file: sheet, cell: B36, quote: "Not clearly legible in extracted artwork text"}
+      - {file: carton, panel: Left, quote: "Serving size 85"}
+      - {file: sheet, cell: B34, quote: "8"}
+    expected: {flag: true, check: serving_math, computed_g: 60}
+    market: us
+  - id: eu-reference-intake-icons
+    kind: rule
+    severity: medium
+    owner: legal
+    summary: EU reference-intake icons (kJ, Salt, Saturates) on the Back panel of a US pack
+    evidence:
+      - {file: carton, panel: Back, quote: "197kJ"}
+      - {file: carton, panel: Back, quote: "Saturates"}
+      - {file: carton, panel: Back, quote: "Salt"}
+    expected: {flag: true, check: non_us_format}
+    market: us
+  - id: eu-gluten-wording
+    kind: rule
+    severity: low
+    owner: legal
+    summary: '"Cereals Containing Gluten" is EU allergen wording, not US wording'
+    evidence:
+      - {file: sheet, cell: B24, quote: "May Contain Walnuts or Cereals Containing Gluten"}
+      - {file: carton, panel: Back, quote: "Cereals Containing Gluten, May Contain Nuts,"}
+    expected: {flag: true, check: non_us_format}
+    market: us
+  - id: net-quantity-format
+    kind: rule
+    severity: medium
+    owner: legal
+    summary: Net quantity is only "480g" on the Back panel, no oz, not on the front
+    evidence:
+      - {file: sheet, cell: B35, quote: "480g"}
+      - {file: carton, panel: Back, quote: "480g"}
+    expected: {flag: true, check: net_quantity}
+    market: us
+  - id: maker-address-missing
+    kind: missing
+    severity: medium
+    owner: legal
+    summary: '"PRODUCED BY DANCING FISH GRANOLA CO." has no city, state and ZIP'
+    evidence:
+      - {file: carton, panel: Back, quote: "DANCING FISH GRANOLA CO."}
+    expected: {flag: true, check: manufacturer_address}
+    market: us
+  - id: upc-check-digit
+    kind: pass
+    severity: low
+    owner: brand
+    summary: UPC 1 20000 00003 6 has a valid check digit
+    evidence:
+      - {file: sheet, cell: E12, quote: "1 20000 00003 6"}
+    expected: {flag: false, check: upc_check_digit}
+    market: any
+  - id: hidden-eu-table
+    kind: hidden_text
+    severity: medium
+    owner: brand
+    summary: EU "Typical Values per 100g" table is hidden under the US panel; report as hidden, no facts or conflicts
+    evidence:
+      - {file: carton, panel: Left, quote: "Typical Values per 100g"}
+    expected: {flag: false, check: hidden_text, produces_facts: false, produces_conflicts: false}
+    market: us
+  - id: ai-label-id
+    kind: ai_suggested
+    severity: low
+    owner: brand
+    summary: Label Identifier is assumed ("confirm with label management"); AI-suggested, not a conflict
+    evidence:
+      - {file: sheet, cell: C2, quote: "Constructed to follow the existing DF-GRAN-BERRY-FR-001 naming pattern"}
+    expected: {flag: false, check: ai_suggested, state: ai_suggested}
+    market: any
+  - id: ai-bpn
+    kind: ai_suggested
+    severity: low
+    owner: brand
+    summary: BPN is assumed from the FR pattern ("confirm actual BPN"); AI-suggested, not a conflict
+    evidence:
+      - {file: sheet, cell: F11, quote: "Assumed from FR BPN pattern (DF-BERRY-480G) with a US suffix"}
+    expected: {flag: false, check: ai_suggested, state: ai_suggested}
+    market: any
+  - id: guide-text-ignored
+    kind: pass
+    severity: low
+    owner: brand
+    summary: Dieline guide text ("Art orientation", "Copy free") must never become facts
+    evidence:
+      - {file: carton, panel: Back, quote: "Art orientation"}
+      - {file: carton, panel: Left, quote: "Copy free"}
+    expected: {flag: false, check: guide_text_ignored, ignored: true}
+    market: any
+  - id: sugars-exceed-carbs
+    kind: math
+    severity: medium
+    owner: rnd
+    summary: Sheet total sugars 18 g exceed sheet total carbohydrate 15 g (not in PLAN)
+    evidence:
+      - {file: sheet, cell: B53, quote: "15g"}
+      - {file: sheet, cell: B55, quote: "18g"}
+    expected: {flag: true, check: sugars_le_carbs}
+    market: us
