@@ -1,0 +1,29 @@
+[project]
+name = "briefforge-backend"
+version = "0.1.0"
+description = "BriefForge backend: files to a proven packaging brief"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.143.1",
+    "google-genai>=2.30.1",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.16.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-m 'not live' -q"
+markers = [
+    "live: calls a real AI provider (uses quota); run with -m live",
+]
