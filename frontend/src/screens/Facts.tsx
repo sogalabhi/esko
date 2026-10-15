@@ -1,10 +1,12 @@
-import { Minus, Plus, Repeat } from 'lucide-react'
+import { ChevronsLeft, ChevronsRight, CircleAlert, Minus, Plus, Repeat } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { ConflictCard } from '../components/ConflictCard'
+import { ExpandDialog } from '../components/ExpandDialog'
 import { SourceChips } from '../components/SourceChip'
 import { StateBadge } from '../components/StateBadge'
 import { diffIngredients, type DiffItem } from '../lib/ingredients'
 import { formatValue, GROUPS, SEVERITY_RANK, sourceShort } from '../lib/labels'
+import { usePersistedFlag } from '../lib/usePersistedFlag'
 import { useProject } from '../state/project'
 import type { Conflict, Fact, Source } from '../types/project'
 
@@ -49,13 +51,19 @@ function DiffList({ title, items }: { title: string; items: DiffItem[] }) {
 
 export function IngredientDiff({ left, right, leftTitle, rightTitle }: { left: string; right: string; leftTitle: string; rightTitle: string }) {
   const d = useMemo(() => diffIngredients(left, right), [left, right])
+  const body = (
+    <div className="mt-2 grid grid-cols-2 gap-4">
+      <DiffList title={leftTitle} items={d.left} />
+      <DiffList title={rightTitle} items={d.right} />
+    </div>
+  )
   return (
     <section aria-label="Ingredient list diff" className="rounded-card border border-border bg-bg p-3">
-      <h3 className="text-[13px] font-semibold">Ingredient list diff · {leftTitle} vs {rightTitle}</h3>
-      <div className="mt-2 grid grid-cols-2 gap-4">
-        <DiffList title={leftTitle} items={d.left} />
-        <DiffList title={rightTitle} items={d.right} />
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-[13px] font-semibold">Ingredient list diff · {leftTitle} vs {rightTitle}</h3>
+        <ExpandDialog title="ingredient list diff">{body}</ExpandDialog>
       </div>
+      {body}
     </section>
   )
 }
@@ -63,6 +71,7 @@ export function IngredientDiff({ left, right, leftTitle, rightTitle }: { left: s
 export function Facts() {
   const { project, resolveConflict } = useProject()
   const [filter, setFilter] = useState<Filter>('all')
+  const [railCollapsed, toggleRail] = usePersistedFlag('bf.conflicts.collapsed')
 
   const openByFact = useMemo(() => {
     const m = new Map<string, Conflict[]>()
@@ -119,8 +128,8 @@ export function Facts() {
   const visible = project.facts.filter((f) => matches(f, filter))
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <section className="min-w-0 lg:col-span-2" aria-labelledby="facts-title">
+    <div className={`grid gap-6 ${railCollapsed ? 'lg:grid-cols-[minmax(0,1fr)_64px]' : 'lg:grid-cols-3'}`}>
+      <section className={`min-w-0 ${railCollapsed ? '' : 'lg:col-span-2'}`} aria-labelledby="facts-title">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 id="facts-title" className="text-[20px] font-semibold">
             Facts
@@ -178,12 +187,19 @@ export function Facts() {
                             <span className="text-ink-2">Not in any file</span>
                           ) : (
                             <span
-                              className={`break-words ${f.unit || /^[\d\s.]+$/.test(f.value ?? '') ? 'font-mono' : ''} ${
+                              className={`block whitespace-normal break-words ${f.group === 'ingredients' ? 'leading-relaxed' : ''} ${f.unit || /^[\d\s.]+$/.test(f.value ?? '') ? 'font-mono' : ''} ${
                                 f.state === 'ai_suggested' ? 'underline decoration-ai decoration-dotted decoration-2 underline-offset-4' : ''
                               }`}
                             >
                               {formatValue(f)}
                             </span>
+                          )}
+                          {f.group === 'ingredients' && f.state !== 'missing' && f.value && (
+                            <div className="mt-1.5">
+                              <ExpandDialog title={f.field}>
+                                <p className="whitespace-normal break-words text-[15px] leading-relaxed">{formatValue(f)}</p>
+                              </ExpandDialog>
+                            </div>
                           )}
                         </td>
                         <td className="px-3 py-2">
@@ -218,18 +234,46 @@ export function Facts() {
         </div>
       </section>
 
-      <aside aria-labelledby="conflicts-title" className="min-w-0 lg:sticky lg:top-[80px] lg:max-h-[calc(100vh-104px)] lg:self-start lg:overflow-auto">
-        <h2 id="conflicts-title" className="text-[20px] font-semibold">
-          Conflicts <span className="font-mono text-[14px] font-normal text-ink-2">· {openCount} open</span>
-        </h2>
-        <p className="mt-0.5 text-[12px] text-ink-2">Sorted by severity. J / K to move between cards.</p>
-        <div className="mt-3 space-y-3">
-          {conflicts.length === 0 && <p className="text-ink-2">No conflicts found.</p>}
-          {conflicts.map((c) => (
-            <ConflictCard key={c.id} conflict={c} onResolve={(choice) => resolveConflict(c.id, choice)} />
-          ))}
-        </div>
-      </aside>
+      {railCollapsed ? (
+        <aside aria-label={`Conflicts, ${openCount} open, collapsed`} className="lg:sticky lg:top-[80px] lg:self-start">
+          <button
+            type="button"
+            onClick={toggleRail}
+            aria-expanded={false}
+            aria-label={`Show conflicts, ${openCount} open`}
+            className="flex w-full flex-col items-center gap-1 rounded-card border border-border bg-surface px-1 py-3 text-[12px] hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info"
+          >
+            <ChevronsLeft size={16} aria-hidden="true" />
+            <CircleAlert size={16} aria-hidden="true" className="text-bad" />
+            <span className="font-mono text-[14px] font-semibold">{openCount}</span>
+            <span className="text-ink-2">open</span>
+          </button>
+        </aside>
+      ) : (
+        <aside aria-labelledby="conflicts-title" className="fade-in min-w-0 lg:sticky lg:top-[80px] lg:max-h-[calc(100vh-104px)] lg:self-start lg:overflow-auto">
+          <div className="flex items-start justify-between gap-2">
+            <h2 id="conflicts-title" className="text-[20px] font-semibold">
+              Conflicts <span className="font-mono text-[14px] font-normal text-ink-2">· {openCount} open</span>
+            </h2>
+            <button
+              type="button"
+              onClick={toggleRail}
+              aria-expanded={true}
+              aria-label="Collapse conflicts"
+              className="rounded-chip border border-border bg-surface p-1.5 hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info"
+            >
+              <ChevronsRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+          <p className="mt-0.5 text-[12px] text-ink-2">Sorted by severity. J / K to move between cards.</p>
+          <div className="mt-3 space-y-3">
+            {conflicts.length === 0 && <p className="text-ink-2">No conflicts found.</p>}
+            {conflicts.map((c) => (
+              <ConflictCard key={c.id} conflict={c} onResolve={(choice) => resolveConflict(c.id, choice)} />
+            ))}
+          </div>
+        </aside>
+      )}
     </div>
   )
 }

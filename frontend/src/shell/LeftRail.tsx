@@ -1,5 +1,6 @@
-import { Box, FileText, FolderOpen, ListChecks, Network, ShieldCheck, Tag, CircleQuestionMark, type LucideIcon } from 'lucide-react'
+import { Box, ChevronsLeft, ChevronsRight, FileText, FolderOpen, ListChecks, Network, ShieldCheck, Tag, CircleQuestionMark, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
+import { usePersistedFlag } from '../lib/usePersistedFlag'
 import { useProject } from '../state/project'
 
 type Dot = 'ok' | 'warn' | 'bad' | 'idle'
@@ -21,7 +22,7 @@ interface Item {
   word?: string
 }
 
-function RailLink({ item }: { item: Item }) {
+function RailLink({ item, collapsed }: { item: Item; collapsed: boolean }) {
   const { to, label, Icon, step, dot, count, word } = item
   const name = step ? `${step} ${label}` : label
   return (
@@ -35,13 +36,13 @@ function RailLink({ item }: { item: Item }) {
       }
     >
       <Icon size={18} aria-hidden="true" className="shrink-0" />
-      <span className="hidden flex-1 truncate lg:inline">
+      <span className={`hidden flex-1 truncate ${collapsed ? '' : 'lg:inline'}`}>
         {step && <span className="mr-1 font-mono text-ink-2">{step}</span>}
         {label}
       </span>
-      <span className="sr-only lg:hidden">{name}</span>
+      <span className={`sr-only ${collapsed ? '' : 'lg:hidden'}`}>{name}</span>
       {dot && (
-        <span className="hidden items-center gap-1.5 lg:flex">
+        <span className={`hidden items-center gap-1.5 ${collapsed ? '' : 'lg:flex'}`}>
           {count != null && <span className="font-mono text-[12px] text-ink-2">{count}</span>}
           <span className={`inline-block h-2 w-2 rounded-full ${DOT[dot].cls}`} aria-hidden="true" title={word ?? DOT[dot].word} />
           <span className="sr-only">
@@ -56,6 +57,7 @@ function RailLink({ item }: { item: Item }) {
 
 export function LeftRail() {
   const { project } = useProject()
+  const [collapsed, toggleCollapsed] = usePersistedFlag('bf.rail.collapsed')
   const openConflicts = project.conflicts.filter((c) => !c.resolution).length
   const openQuestions = project.questions.filter((q) => q.status !== 'answered').length
   const filesDone = project.files.every((f) => f.status === 'done')
@@ -89,11 +91,28 @@ export function LeftRail() {
   ]
 
   return (
-    <nav aria-label="Steps" className="sticky top-14 h-[calc(100vh-56px)] w-14 shrink-0 border-r border-border bg-surface p-2 lg:w-[220px] lg:p-3">
+    <nav
+      aria-label="Steps"
+      data-collapsed={collapsed || undefined}
+      className={`sticky top-14 h-[calc(100vh-56px)] w-14 shrink-0 border-r border-border bg-surface p-2 transition-[width] duration-200 ease-out ${
+        collapsed ? '' : 'lg:w-[220px] lg:p-3'
+      }`}
+    >
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+        title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+        className="mb-2 hidden w-full items-center gap-2.5 rounded-chip px-2.5 py-2 text-[13px] text-ink-2 hover:bg-bg focus-visible:outline-2 focus-visible:outline-info lg:flex"
+      >
+        {collapsed ? <ChevronsRight size={18} aria-hidden="true" /> : <ChevronsLeft size={18} aria-hidden="true" />}
+        {!collapsed && <span>Collapse</span>}
+      </button>
       <ul className="space-y-0.5">
         {steps.map((i) => (
           <li key={i.to}>
-            <RailLink item={i} />
+            <RailLink item={i} collapsed={collapsed} />
           </li>
         ))}
       </ul>
@@ -101,7 +120,7 @@ export function LeftRail() {
       <ul className="space-y-0.5">
         {more.map((i) => (
           <li key={i.to}>
-            <RailLink item={i} />
+            <RailLink item={i} collapsed={collapsed} />
           </li>
         ))}
       </ul>
