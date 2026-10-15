@@ -16,6 +16,8 @@ export interface ProjectFile {
   pages: number
   status: FileStatus
   skipped: SkippedItem[]
+  /** Plain reason when status is 'error'. Not in the backend ProjectFile yet. */
+  error?: string
 }
 
 /** x, y, w, h in mm on the page (same frame as pack panels and conflict locations). */
@@ -57,6 +59,8 @@ export interface Fact {
   unit: string | null
   state: FactState
   sources: Source[]
+  /** Set by a person's answer (backend). */
+  action?: 'keep' | 'change' | 'add' | 'remove'
 }
 
 export type ConflictKind = 'value' | 'list' | 'math' | 'rule' | 'meaning'
@@ -111,6 +115,10 @@ export interface Question {
   unlocks: number
   answers: string[]
   status: QuestionStatus
+  /** Chosen answer (backend, once answered). */
+  answer?: string
+  kind?: 'conflict' | 'missing' | 'design'
+  requirementIds?: string[]
 }
 
 export type RequirementStatus = 'met' | 'missing' | 'conflict'
@@ -194,6 +202,10 @@ export interface Trust {
 }
 
 export interface Project {
+  /** Market pack id the backend analysed with, e.g. 'us'. */
+  market?: string | null
+  /** True while unapproved rules are in use. */
+  demoMode?: boolean
   files: ProjectFile[]
   facts: Fact[]
   conflicts: Conflict[]

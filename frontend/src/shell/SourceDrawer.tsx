@@ -1,8 +1,9 @@
 import { CircleCheck, Sparkles, X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { sourceLong } from '../lib/labels'
 import { useProject } from '../state/project'
 import type { PackPanel, Source } from '../types/project'
+import { PdfCrop } from './PdfCrop'
 
 function colIndex(col: string): number {
   return [...col].reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
@@ -62,7 +63,27 @@ export function SheetPreview({ source }: { source: Source }) {
   )
 }
 
-export function PdfPreview({ source, panels }: { source: Source; panels: PackPanel[] }) {
+/** Real PDF.js crop when the backend serves the original file; otherwise the panel frame placeholder. */
+export function PdfPreview({ source, panels, live = false }: { source: Source; panels: PackPanel[]; live?: boolean }) {
+  const [failed, setFailed] = useState(false)
+  // A new source gets a fresh try.
+  const id = `${source.fileId}|${source.where.panel}|${source.where.page}|${source.where.bbox}`
+  const [seen, setSeen] = useState(id)
+  if (seen !== id) {
+    setSeen(id)
+    setFailed(false)
+  }
+  if (live && !failed) return <PdfCrop source={source} panels={panels} onUnavailable={() => setFailed(true)} />
+  return (
+    <PdfFrame
+      source={source}
+      panels={panels}
+      note={live ? 'The original PDF is not available from the backend yet, so this shows the panel frame only.' : undefined}
+    />
+  )
+}
+
+export function PdfFrame({ source, panels, note }: { source: Source; panels: PackPanel[]; note?: string }) {
   const panel = panels.find((p) => p.name === source.where.panel)
   const bbox = source.where.bbox
   const frame = panel ?? (bbox ? { name: 'Page', x: bbox[0] - 10, y: bbox[1] - 10, w: bbox[2] + 20, h: bbox[3] + 20 } : null)
@@ -94,14 +115,14 @@ export function PdfPreview({ source, panels }: { source: Source; panels: PackPan
         )}
       </svg>
       <figcaption className="mt-1 text-[12px] text-ink-2">
-        Panel frame with the quote position (mm). Page crop arrives with the PDF viewer.
+        {note ?? 'Panel frame with the quote position (mm). Page crop arrives with the PDF viewer.'}
       </figcaption>
     </figure>
   )
 }
 
 export function SourceDrawer() {
-  const { project, drawer, closeDrawer } = useProject()
+  const { project, drawer, closeDrawer, source } = useProject()
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -151,7 +172,7 @@ export function SourceDrawer() {
         )}
       </header>
       <div className="flex-1 overflow-auto p-4">
-        {file?.type === 'sheet' ? <SheetPreview source={drawer} /> : <PdfPreview source={drawer} panels={project.pack.panels} />}
+        {file?.type === 'sheet' ? <SheetPreview source={drawer} /> : <PdfPreview source={drawer} panels={project.pack.panels} live={source === 'api'} />}
       </div>
     </aside>
   )

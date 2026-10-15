@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDashed, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { CircleAlert, CircleCheck, CircleDashed, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QuestionCard } from '../components/QuestionCard'
 import { Toast } from '../components/Toast'
@@ -26,7 +26,7 @@ interface Undo {
 }
 
 export function Questions() {
-  const { project, answers, answerQuestion, skipQuestion, undoAnswer } = useProject()
+  const { project, answers, answerError, answerQuestion, skipQuestion, undoAnswer } = useProject()
   const ordered = useMemo(() => rankQuestions(project.questions), [project.questions])
   const refs = useRef(new Map<string, HTMLElement>())
   const [current, setCurrent] = useState<string | null>(null)
@@ -149,6 +149,12 @@ export function Questions() {
           Keys: <kbd className="font-mono">J</kbd>/<kbd className="font-mono">K</kbd> move between cards, <kbd className="font-mono">1</kbd>–
           <kbd className="font-mono">4</kbd> pick an answer.
         </p>
+        {answerError && (
+          <p role="alert" className="mt-3 flex items-start gap-1.5 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
+            <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
+            {answerError}
+          </p>
+        )}
         {pending.length === 0 && (
           <p className="mt-3 flex items-center gap-1.5 rounded-card border border-ok/30 bg-ok/10 p-3 text-[14px] font-medium text-ok">
             <CircleCheck size={16} aria-hidden="true" />

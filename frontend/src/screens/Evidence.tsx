@@ -1,8 +1,10 @@
-import { ArrowRight, CircleAlert, CircleCheck, FileSpreadsheet, FileText, LoaderCircle, RotateCcw, Upload } from 'lucide-react'
+import { ArrowRight, Circle, CircleAlert, CircleCheck, FileSpreadsheet, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
+import { ACCEPT_ATTR } from '../api/client'
+import { LoadError, LoadingSkeleton, Skeleton } from '../components/LoadGate'
 import { prefersReducedMotion } from '../lib/motion'
-import { useProject } from '../state/project'
+import { useProject, type RunState } from '../state/project'
 import type { Fact, PackPanel, ProjectFile } from '../types/project'
 
 const TICK_MS = 100
@@ -70,10 +72,6 @@ function ThumbPlaceholder({ Icon }: { Icon: typeof FileText }) {
   )
 }
 
-function Skeleton({ className = '' }: { className?: string }) {
-  return <div aria-hidden="true" className={`h-3 animate-pulse rounded-[4px] bg-border ${className}`} />
-}
-
 type Shown = 'queued' | 'reading' | 'done' | 'error'
 
 const STATUS: Record<Shown, { word: string; Icon: typeof CircleCheck; cls: string }> = {
@@ -121,8 +119,7 @@ function FileCard({
 
         {shown === 'error' && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {/* §9 file has no error reason yet; the API must add one. */}
-            <p className="text-[13px] text-ink-2">The reader stopped on this file. Facts from it are not included.</p>
+            <p className="text-[13px] text-ink-2">{file.error || 'The reader stopped on this file.'} Facts from it are not included.</p>
             <button
               type="button"
               onClick={onRetry}
@@ -163,9 +160,52 @@ function FileCard({
   )
 }
 
+const STEPS = ['Uploading', 'Reading', 'Extracting', 'Checking'] as const
+const STEP_MS = 4000
+
+/** Step-based progress: the run is one blocking call, so reading, extracting and checking advance on a timer until it returns. */
+function RunSteps({ run }: { run: RunState }) {
+  const [tick, setTick] = useState(0)
+  const running = run.phase === 'running'
+  useEffect(() => {
+    if (!running) return
+    setTick(0)
+    const t = setInterval(() => setTick((n) => Math.min(2, n + 1)), STEP_MS)
+    return () => clearInterval(t)
+  }, [running])
+  const current = run.phase === 'uploading' ? 0 : 1 + tick
+  return (
+    <div role="status" aria-label="Progress" className="mt-4 rounded-card border border-border bg-surface p-4">
+      <ol className="flex flex-wrap gap-x-6 gap-y-2 text-[14px]">
+        {STEPS.map((label, i) => {
+          const state = i < current ? 'done' : i === current ? 'current' : 'pending'
+          const Icon = state === 'done' ? CircleCheck : state === 'current' ? LoaderCircle : Circle
+          const cls = state === 'done' ? 'text-ok' : state === 'current' ? 'font-medium text-info' : 'text-ink-2'
+          return (
+            <li key={label} data-step={label.toLowerCase()} data-state={state} className={`flex items-center gap-1.5 ${cls}`}>
+              <Icon size={16} aria-hidden="true" className={state === 'current' ? 'motion-safe:animate-spin' : ''} />
+              {label}
+              {i === 0 && run.total > 0 && (
+                <span className="font-mono text-ink-2">
+                  {run.uploaded + run.fileErrors.length}/{run.total}
+                </span>
+              )}
+              <span className="sr-only">{state === 'done' ? '(done)' : state === 'current' ? '(in progress)' : '(waiting)'}</span>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
+
+const retryBtn =
+  'inline-flex items-center gap-1 rounded-chip border border-border bg-surface px-3 py-1 text-[13px] font-medium hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-info'
+
 export function Evidence({ readMs = 2000 }: { readMs?: number }) {
-  const { project } = useProject()
-  const { progress, restart } = useReadProgress(readMs)
+  const { project, source, load, run, ingest, retryFailed, runAnalysis, reload } = useProject()
+  const live = source === 'api'
+  const { progress, restart } = useReadProgress(live ? 0 : readMs)
   const [notice, setNotice] = useState('')
   const [dragging, setDragging] = useState(false)
   const inputId = useId()
@@ -173,7 +213,8 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
   const readable = project.files.filter((f) => f.status !== 'error')
   const readableIds = new Set(readable.map((f) => f.id))
   const shownFacts = project.facts.slice(0, Math.round(project.facts.length * progress))
-  const reading = progress < 1
+  const busy = run.phase === 'uploading' || run.phase === 'running'
+  const reading = live ? busy : progress < 1
 
   const openConflicts = project.conflicts.filter((c) => !c.resolution).length
   const counter = {
@@ -191,15 +232,19 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
 
   const failed = project.files.filter((f) => f.status === 'error')
 
+  const receive = (files: File[]) => {
+    if (files.length === 0) return
+    if (live) void ingest(files)
+    else fakeUpload(files.map((f) => f.name))
+  }
   const fakeUpload = (names: string[]) => {
-    if (names.length === 0) return
     setNotice(`Upload is not connected yet, so ${plural(names.length, 'file')} were not sent. Showing the sample files being read again.`)
     restart()
   }
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
     setDragging(false)
-    fakeUpload([...e.dataTransfer.files].map((f) => f.name))
+    receive([...e.dataTransfer.files])
   }
 
   return (
@@ -234,9 +279,10 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
           id={inputId}
           type="file"
           multiple
+          accept={ACCEPT_ATTR}
           className="sr-only"
           onChange={(e) => {
-            fakeUpload([...(e.target.files ?? [])].map((f) => f.name))
+            receive([...(e.target.files ?? [])])
             e.target.value = ''
           }}
         />
@@ -247,10 +293,58 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
         </p>
       )}
 
-      {project.files.length === 0 ? (
+      {live && busy && <RunSteps run={run} />}
+      {live && !busy && run.fileErrors.length > 0 && (
+        <div role="alert" className="mt-3 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
+          <p className="flex items-center gap-2 font-medium">
+            <CircleAlert size={18} aria-hidden="true" className="shrink-0 text-bad" />
+            {run.fileErrors.length === 1 ? '1 file was not uploaded' : `${run.fileErrors.length} files were not uploaded`}
+          </p>
+          <ul className="mt-1 space-y-0.5 pl-6">
+            {run.fileErrors.map((f) => (
+              <li key={f.name}>
+                <span className="font-medium">{f.name}</span> — {f.reason}
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={() => void retryFailed()} className={`mt-2 ${retryBtn}`}>
+            <RotateCcw size={14} aria-hidden="true" />
+            Retry failed files
+          </button>
+        </div>
+      )}
+      {live && run.phase === 'error' && run.reason && (
+        <div role="alert" className="mt-3 flex items-start gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
+          <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
+          <div>
+            <p className="font-medium">The analysis did not finish</p>
+            <p>{run.reason}</p>
+            {(project.files.length > 0 || run.uploaded > 0) && (
+              <button type="button" onClick={() => void runAnalysis()} className={`mt-2 ${retryBtn}`}>
+                <RotateCcw size={14} aria-hidden="true" />
+                Retry analysis
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {live && run.phase === 'done' && (
+        <p role="status" className="mt-3 flex items-center gap-1.5 text-[14px] font-medium text-ok">
+          <CircleCheck size={16} aria-hidden="true" />
+          Analysis finished
+        </p>
+      )}
+
+      {live && load.status === 'loading' ? (
+        <div className="mt-6">
+          <LoadingSkeleton label="Loading files" />
+        </div>
+      ) : live && load.status === 'error' ? (
+        <LoadError reason={load.reason} onRetry={() => void reload()} />
+      ) : project.files.length === 0 ? (
         <section className="mt-6 rounded-card border border-border bg-surface p-8 text-center">
           <h2 className="text-[16px] font-semibold">No files yet</h2>
-          <p className="mt-1 text-ink-2">Drop the carton dieline and the content sheet above to start.</p>
+          <p className="mt-1 text-ink-2">No files yet — drop your packaging files above to start.</p>
         </section>
       ) : (
         <>
@@ -260,6 +354,20 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
             <span>{counter.missing} missing</span>·<span>{counter.pass} pass</span>
             {reading && <span className="font-sans text-ink-2">· Reading files…</span>}
           </p>
+
+          {live && !busy && project.facts.length === 0 && failed.length < project.files.length && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-card border border-info/40 bg-info/10 p-3 text-[14px]">
+              <p>The files are uploaded but not analysed yet.</p>
+              <button
+                type="button"
+                onClick={() => void runAnalysis()}
+                className="inline-flex items-center gap-1.5 rounded-chip bg-accent px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info"
+              >
+                <Play size={14} aria-hidden="true" />
+                Run analysis
+              </button>
+            </div>
+          )}
 
           {failed.length > 0 && (
             <div role="alert" className="mt-3 flex items-start gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
@@ -285,7 +393,7 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
                 shown={shownOf(f)}
                 facts={readableIds.has(f.id) ? shownFacts.filter((x) => x.sources.some((s) => s.fileId === f.id)) : []}
                 panels={project.pack.panels}
-                onRetry={restart}
+                onRetry={live ? () => void runAnalysis() : restart}
               />
             ))}
           </div>
