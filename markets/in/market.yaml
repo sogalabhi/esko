@@ -1,0 +1,7 @@
+id: in
+name: India
+regulators: [FSSAI, Legal Metrology (Department of Consumer Affairs)]
+units: [g]
+currency: INR
+number_format: lakh
+languages: [English, Hindi]

@@ -1,0 +1,6 @@
+# Intentionally empty. Regulation 5(3)(b) of the FSS (Labelling and Display) Regulations, 2020 requires % RDA per serve on a 2000 kcal reference diet,
+# but the per-nutrient reference table could not be read from an official text (the FSSAI PDFs cannot be text-extracted with the available tools).
+# Secondary commentary (freyrsolutions.com blog) gives: energy 2000 kcal, total fat 67 g, saturated fat 22 g, trans fat 2 g, added sugar 50 g, sodium 2000 mg.
+# These are NOT copied here. A person should read the table in the gazette / FSSAI compendium (https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf)
+# and add rows (nutrient, amount, unit, source, quote) before approval. Also check ICMR-NIN RDA references used by FSSAI.
+daily_values: []

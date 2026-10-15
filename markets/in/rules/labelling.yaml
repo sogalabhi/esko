@@ -1,0 +1,245 @@
+# FSS (Labelling and Display) Regulations, 2020 (FSSAI, F. No. 1-94/FSSAI/SP(Labelling)/2014(Pt-2), gazetted Nov/Dec 2020; sources disagree on the date: 17 Nov and 14 Dec 2020 both appear).
+# Official consolidated text: FSSAI compendium PDF (url below). That PDF could not be text-extracted with the tools used, so every quote was read through
+# a reproduction at taxguru.in/corporate-law/food-safety-standards-labelling-display-regulations-2020.html. Check each quote against the FSSAI compendium before approving.
+# Compliance: one year after gazette publication, except Chapter 3 (1 July 2022, per FSSAI direction as reported by secondary sources). No "from" date is set on in_force rules because the exact date was not read from the official text.
+# Panel vocabulary: front = principal display panel (PDP), any = PDP or other panel.
+- id: in.labelling.language
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 4(5)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "The particulars of declaration required under these Regulations to be specified on the label shall be in English or Hindi"
+  summary: Mandatory declarations must be in English or Hindi (Devanagari); other languages may be added but must not contradict them.
+  status: in_force
+  requires:
+    item: label_language
+    panel: any
+    languages: [English, Hindi]
+  check_type: present
+  approved: false
+  notes: "Quote is a fragment; the sentence continues (reported: 'in Devnagri script' and that other languages may be added as long as they do not contradict). Secondary reproduction; verify."
+
+- id: in.labelling.name_of_food
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(1)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "Every package of food shall carry name of the food which indicate the true nature of the food"
+  summary: The package carries the name of the food, showing its true nature; coined or brand names are allowed alongside, subject to the Advertising and Claims Regulations.
+  status: in_force
+  requires:
+    item: statement_of_identity
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote comes from a taxguru.in summary article (point 3, cut short in the tool output), not the regulation text. The clause 5(1)(a) fragment read from the gazette reproduction is 'Where a food is specified by certain essential composition under Food Safety and Standards Regulations'. Whether the name must be on the front panel is reported by one secondary source but not confirmed from text; panel 'front' is an assumption. Person to verify wording and panel before approving."
+
+- id: in.labelling.ingredients_list
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(2)(a), 5(2)(b)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "The name of ingredients used in the product shall be listed in descending order of their composition"
+  summary: A list of ingredients with an appropriate title ("Ingredients"), in descending order by weight or volume at the time of manufacture.
+  status: in_force
+  requires:
+    item: ingredient_list
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is 5(2)(b). Title requirement is 5(2)(a): 'The list of ingredients shall contain an appropriate title, such as the term' (cut off). Single-ingredient foods are exempt (reported by secondary source). Added water, compound ingredients and ingoing percentages are in 5(2)(e) to (g), not read."
+
+- id: in.labelling.nutrition_information
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(3)(b)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "Nutritional Information per 100g or 100ml or per single consumption pack of the product"
+  summary: Nutrition information is declared per 100 g (or per 100 ml, or per single-consumption pack), with energy, protein, carbohydrate (total and added sugars), fat (saturated, trans), cholesterol and sodium, and % RDA per serve.
+  status: in_force
+  requires:
+    item: nutrition_information
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is the heading text of 5(3)(b); the nutrient list and 'per serve % RDA on a 2000 kcal diet' come from secondary summaries and were not read from the text. Exemptions are in 5(3)(c). Tolerance of minus 10 percent is reported at 5(3)(d). Verify the nutrient list and whether per-serve values are also needed."
+
+- id: in.labelling.veg_nonveg_mark
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(4)(b)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "Every package of Vegetarian Food containing ingredients including food additives, processing aids of plant origin"
+  summary: A vegetarian package carries a green filled circle inside a square with green outline; a non-vegetarian package carries a brown filled triangle inside a square with brown outline.
+  status: in_force
+  requires:
+    item: veg_nonveg_mark
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote is the opening of 5(4)(b) (the sentence continues with the symbol). Colour and shape wording read from secondary summaries: 'a green colour filled circle inside a square with green outline' (veg), 'brown colour filled triangle inside a square with brown outline' (non-veg, 5(4)(a)). Exempt products (water, liquid milk, honey and so on) are not relevant to granola. Panel front: reported rule is 'prominently displayed ... on principal display panel' in 5(4)(d)."
+
+- id: in.labelling.veg_nonveg_mark_placement
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(4)(d)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "Declaration regarding Veg. or Non-Veg shall also be prominently displayed"
+  summary: The veg or non-veg mark is prominent, on a contrasting background, on the principal display panel, close to the name or brand name of the food.
+  status: in_force
+  requires:
+    item: veg_nonveg_mark
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote is a fragment of 5(4)(d) as read in a gazette reproduction. 'Contrasting background', 'close to the name or brand name' and 'principal display panel' are from a secondary summary of the same clause, not quoted. Verify the full sentence."
+
+- id: in.labelling.veg_nonveg_mark_size
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(4)(c)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "Size of the Vegetarian/Non-vegetarian logo:"
+  summary: Minimum size of the veg or non-veg mark depends on PDP area (tiers in pack_items.yaml).
+  status: proposed
+  requires:
+    item: veg_nonveg_mark
+    panel: front
+  check_type: size
+  approved: false
+  notes: "UNVERIFIED NUMBERS. The table is an image/table that was only read through one secondary summary: PDP up to 100 cm2 = circle 3 mm, triangle 2.5 mm, square 6 mm; above 100 to 500 = 4, 3.5, 8; above 500 to 2500 = 6, 5, 12; above 2500 = 8, 7, 16. The source text says 'diameter' in one place and 'sides' in another. A person must copy the table from the official text. min_size_mm left empty because it depends on PDP area."
+
+- id: in.labelling.fssai_logo
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(7)(a)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "The FSSAI logo and license number under the Act shall be displayed on the label of the food package"
+  summary: The FSSAI logo is shown on the label, in a colour that contrasts with the background.
+  status: in_force
+  requires:
+    item: fssai_logo
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is 5(7)(a) as read in a gazette reproduction. Contrast-colour requirement and the minimum logo size (Schedule) are not quoted. 5(7)(b) adds that the brand owner's logo and licence number are displayed; see the next record. Small-pack relief in the 2026 amendment is a separate record."
+
+- id: in.labelling.fssai_licence_number
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(7)(b)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "The FSSAI logo and license number of the brand owner shall be displayed on the label."
+  summary: The 14-digit FSSAI licence number of the brand owner is on the label next to the logo, and the manufacturer or packer's licence number is also shown if different.
+  status: in_force
+  requires:
+    item: fssai_licence_number
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is 5(7)(b) as read in a gazette reproduction. The '14-digit' format and the manufacturer/packer licence number are from secondary summaries and not quoted here; verify the rest of 5(7)(b) and (c)."
+
+- id: in.labelling.name_address_brand_owner
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(6)(a)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "The name and complete address of the brand owner, whether or not, he himself is the manufacturer"
+  summary: The label shows the name and complete address of the brand owner, with a qualifying phrase such as "Manufactured by", "Packed by" or "Marketed by".
+  status: in_force
+  requires:
+    item: manufacturer_name_address
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is a fragment of 5(6)(a) read in a gazette reproduction. The qualifying phrase wording and importer details (5(6)(b)) come from a secondary summary. For food packages the Legal Metrology manufacturer-address clause does not apply (see in.legal_metrology.manufacturer_name_address), so this FSS clause governs."
+
+- id: in.labelling.batch_number
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(9)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "A batch number or code number or lot number shall be declared on the label."
+  summary: A batch, code or lot number is on the label.
+  status: in_force
+  requires:
+    item: batch_number
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote read in a gazette reproduction. Verify against the FSSAI compendium."
+
+- id: in.labelling.date_marking
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(10)(a)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "“Date of manufacture or packaging” and “Expiry/Use by” shall be declared on the label."
+  summary: The label shows the date of manufacture or packaging and the expiry or use-by date, grouped together; the format depends on shelf life.
+  status: in_force
+  requires:
+    item: date_marking
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is 5(10)(a). The format rule is introduced in 5(10)(b) ('The manner of declaration of date of manufacture or packaging/Expiry/Use by/Best Before shall be as follows:'); a secondary summary says day/month/year for shelf life up to 3 months and month/year for longer, but the table was not read. Storage conditions are in 5(10)(c). Verify."
+
+- id: in.labelling.allergen_declaration
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) Regulations, 2020
+    clause: 5(14)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_04_01_2022.pdf
+    quote: "The following foods and ingredients which are known to cause allergy shall be declared separately as Contains"
+  summary: Allergenic foods (cereals containing gluten, crustaceans, milk, eggs, fish, peanuts and tree nuts, soybeans, sulphite at 10 mg/kg or more) are declared separately under "Contains".
+  status: in_force
+  applies_if:
+    any:
+      - contains_ingredient: cereals_containing_gluten
+      - contains_ingredient: wheat
+      - contains_ingredient: oats
+      - contains_ingredient: barley
+      - contains_ingredient: rye
+      - contains_ingredient: crustaceans
+      - contains_ingredient: milk
+      - contains_ingredient: eggs
+      - contains_ingredient: fish
+      - contains_ingredient: peanuts
+      - contains_ingredient: tree_nuts
+      - contains_ingredient: soybeans
+      - contains_ingredient: sulphite
+  requires:
+    item: allergen_declaration
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is the 5(14) lead-in as read in a gazette reproduction (cut off). Allergen list is in allergens.yaml. Precautionary wording 'May Contains (name of allergy causing ingredients)' is permitted in the proviso. Oats are named as a gluten cereal in item (i) of the list as read; this matters for granola. A 2021 draft amendment proposed exceptions to the gluten item; status unknown. Verify against the current compendium."
+
+- id: in.labelling.first_amendment_2026_small_pack_logos
+  market: in
+  source:
+    regulation: FSS (Labelling and Display) First Amendment Regulations, 2026 (F. No. STD/SP-08/A1.2022/N-01)
+    clause: not read
+    url: https://fssai.gov.in/cms/Amendment-FSS-Labelling-Display.php
+    quote: "shall come into force on 1st July, 2027"
+  summary: Reported relief from showing some logos on very small packs (reported threshold 100 cm2), with the information still required on the multi-unit pack; reported in force from 1 July 2027.
+  status: proposed
+  from: 2027-07-01
+  requires:
+    item: fssai_logo
+    panel: any
+  check_type: present
+  approved: false
+  notes: "OFFICIAL TEXT NOT READ. The FSSAI amendment page (listing an amendment dated 24 March 2026) and the gazette PDF could not be opened as text. Facts come from secondary sources only (ChemLinked, TeamLease RegTech, Khaitan bulletin, Simpliance): notified/released 24 or 30 March 2026, in force 1 July 2027, relaxes logos on packs of 100 cm2 or less, infant-nutrition %RDA exemption, non-retail container rules. The quote is from a third-party reproduction, not the gazette. Which logos are relaxed and the exact clause are unknown, so this record is kept proposed instead of coming. A person must read the gazette, then set the status to coming, the real clause, and the correct requires. This record relaxes an existing duty; the engine should not treat it as an extra requirement."

@@ -1,0 +1,53 @@
+# Claim words screened on Indian packs. Conditions are plain statements for a person or the engine to confirm; rule ids link to rules/claims.yaml.
+claims:
+  - word: no added sugar
+    conditions:
+      - no sugars of any type have been added to the food
+      - naturally present sugars are declared with the words CONTAINS NATURALLY OCCURRING SUGARS
+      - the other conditions of Reg 6(1)(a) of the Advertising and Claims Regulations are met (not all read)
+    rule: in.claims.no_added_sugar
+    notes: "Source via LegitQuest copy of the regulation; verify against the FSSAI compendium."
+  - pattern: "(?i)^(without|no|not) added sugars?$|^no sugars? added$|^sugar ?free$"
+    conditions:
+      - same conditions as 'no added sugar'
+      - for 'sugar free', not more than 0.5 g of sugars per 100 g (Schedule I, Sl. No. 10, as read)
+    rule: in.claims.no_added_sugar
+    notes: "Variants of the claim above. 'Sugar free' thresholds are a separate nutrient claim; no separate rule record yet."
+  - word: natural
+    conditions:
+      - derived from a recognised source (plant, animal, microorganism or mineral) and nothing has been added
+      - processed only in ways Schedule V allows (not read)
+      - not misleading about the product as a whole
+    rule: in.claims.natural_fresh_pure
+    notes: "Likely to fail where sugar, flavour or preservative is added. Brand names containing this word may need the 3 mm disclaimer (in.claims.brand_name_natural_disclaimer)."
+  - word: pure
+    conditions:
+      - used only for a single-ingredient food to which nothing has been added (Schedule V item 3(a), as read)
+    rule: in.claims.natural_fresh_pure
+    notes: "Rarely true for granola, which has several ingredients."
+  - word: fresh
+    conditions:
+      - used only for products not processed in any manner except permitted steps (Schedule V item 2(a), partly read)
+    rule: in.claims.natural_fresh_pure
+    notes: "Rarely true for a baked, packaged cereal."
+  - word: 100%
+    conditions:
+      - FSSAI advisory of 28 May 2025 asks businesses to stop using '100%' on labels, packaging and promotion
+      - if used, it must be truthful and must not undermine other products (Reg 4(1), Reg 10(7))
+    rule: in.claims.hundred_percent_advisory
+    notes: "Advisory text not read; record is proposed. Includes '100% natural', '100% vegetarian' and similar."
+  - pattern: "(?i)^100\\s?(%|percent)\\s.+"
+    conditions:
+      - same as '100%'
+    rule: in.claims.hundred_percent_advisory
+    notes: "Any claim that starts with 100% (for example 100% wholegrain). Pattern is a screen only; a person confirms."
+  - word: gluten free
+    conditions:
+      - a person must confirm the FSSAI condition (for example a gluten limit) from the Advertising and Claims Regulations or the Food Standards for gluten free foods
+      - granola made with oats, wheat, barley or rye cannot carry the claim unless a gluten-free process is evidenced
+    notes: "No rule record: the clause and limit were not read from an official text. Do not guess a ppm figure. Cross-contamination wording ('processed in a plant where gluten containing products are manufactured') appeared in a secondary summary only."
+  - word: organic
+    conditions:
+      - valid certification under Indian organic rules (NPOP or PGS-India) is on file
+      - the organic logo/mark use follows FSSAI's organic regulations
+    notes: "No rule record: the Food Safety and Standards (Organic Foods) Regulations, 2017 were not read. Certificates are not in the label files, so BriefForge must ask for them."

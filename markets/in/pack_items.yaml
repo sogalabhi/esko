@@ -1,0 +1,23 @@
+# Required pack items. panel: front = principal display panel (PDP), any = PDP or any other panel.
+# Source details and exact quotes are in the rule records; "source" names the rule id. All sizes are from secondary summaries and need checking against the official text.
+pack_items:
+  - {item: statement_of_identity, panel: front, source: in.labelling.name_of_food, notes: "Name of the food showing its true nature (FSS Labelling 5(1)). Panel front is an assumption."}
+  - {item: ingredient_list, panel: any, source: in.labelling.ingredients_list, notes: "Titled list in descending order by weight or volume."}
+  - {item: nutrition_information, panel: any, source: in.labelling.nutrition_information, notes: "Per 100 g (or per serve) with % RDA per serve. Differs from the US Nutrition Facts panel."}
+  - {item: allergen_declaration, panel: any, source: in.labelling.allergen_declaration, notes: "Declared separately under Contains. Cereals containing gluten (oats, wheat and others), milk, nuts, soy and so on."}
+  - {item: veg_nonveg_mark, panel: front, source: in.labelling.veg_nonveg_mark, notes: "Green circle in green-outlined square (veg) or brown triangle in brown-outlined square (non-veg). Prominent, contrasting background, near the name or brand name."}
+  - {item: veg_nonveg_mark_pdp_up_to_100_sq_cm, panel: front, min_size_mm: 3, source: in.labelling.veg_nonveg_mark_size, notes: "PDP area up to 100 cm2: circle diameter 3 mm; triangle 2.5 mm; square 6 mm. UNVERIFIED, from a secondary summary. min_size_mm is the circle diameter."}
+  - {item: veg_nonveg_mark_pdp_over_100_to_500_sq_cm, panel: front, min_size_mm: 4, source: in.labelling.veg_nonveg_mark_size, notes: "PDP area above 100 to 500 cm2: circle 4 mm; triangle 3.5 mm; square 8 mm. UNVERIFIED."}
+  - {item: veg_nonveg_mark_pdp_over_500_to_2500_sq_cm, panel: front, min_size_mm: 6, source: in.labelling.veg_nonveg_mark_size, notes: "PDP area above 500 to 2500 cm2: circle 6 mm; triangle 5 mm; square 12 mm. UNVERIFIED. A typical 500 g cereal carton front falls in this tier."}
+  - {item: veg_nonveg_mark_pdp_over_2500_sq_cm, panel: front, min_size_mm: 8, source: in.labelling.veg_nonveg_mark_size, notes: "PDP area above 2500 cm2: circle 8 mm; triangle 7 mm; square 16 mm. UNVERIFIED."}
+  - {item: fssai_logo, panel: any, source: in.labelling.fssai_logo, notes: "Contrasting colour. Minimum size not read. 2026 amendment (proposed record) relaxes logos on packs of 100 cm2 or less from 1 July 2027."}
+  - {item: fssai_licence_number, panel: any, source: in.labelling.fssai_licence_number, notes: "Brand owner licence number (14 digits per secondary sources); manufacturer or packer number if different."}
+  - {item: manufacturer_name_address, panel: any, source: in.labelling.name_address_brand_owner, notes: "Brand owner name and complete address with a qualifying phrase such as Manufactured by or Marketed by. Legal Metrology 6(1)(a) defers to FSS for food."}
+  - {item: batch_number, panel: any, source: in.labelling.batch_number, notes: "Batch, code or lot number."}
+  - {item: date_marking, panel: any, source: in.labelling.date_marking, notes: "Date of manufacture or packaging and expiry or use by; format by shelf life (not read)."}
+  - {item: date_of_manufacture, panel: any, source: in.legal_metrology.month_year_of_manufacture, notes: "Month and year of manufacture. For food, the Legal Metrology rule defers to FSS date marking; record is proposed."}
+  - {item: net_quantity, panel: front, source: in.legal_metrology.net_quantity, notes: "In grams or kilograms. Letter-height tiers not read; none listed."}
+  - {item: mrp, panel: any, source: in.legal_metrology.mrp_inclusive_of_taxes, notes: "Maximum retail price in rupees, marked inclusive of all taxes."}
+  - {item: unit_sale_price, panel: any, source: in.legal_metrology.unit_sale_price, notes: "Rupees per gram if under 1 kg, per kilogram if over 1 kg; not needed if equal to the retail sale price."}
+  - {item: consumer_care, panel: any, source: in.legal_metrology.consumer_care, notes: "Name, address, telephone number and e-mail address for consumer complaints."}
+  - {item: label_language, panel: any, source: in.labelling.language, notes: "English or Hindi (Devanagari)."}

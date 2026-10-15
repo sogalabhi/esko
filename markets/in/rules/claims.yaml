@@ -1,0 +1,117 @@
+# FSS (Advertising and Claims) Regulations, 2018 (FSSAI). Official compendium: url below. The PDF was not opened as text; quotes were read through the LegitQuest copy of the regulations
+# (https://www.legitquest.com/act/food-safety-and-standards-advertising-and-claims-regulations-2018/c704), a secondary host. Check each quote against the FSSAI compendium before approving.
+- id: in.claims.truthful_not_misleading
+  market: in
+  source:
+    regulation: FSS (Advertising and Claims) Regulations, 2018
+    clause: 4(1)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Advertising_Claims_Regulations_16_11_2021.pdf
+    quote: "Claims must be truthful, unambiguous, meaningful, not misleading and help consumers to comprehend the information provided."
+  summary: Every claim on the pack must be truthful, unambiguous, meaningful and not misleading.
+  status: in_force
+  requires:
+    item: claim_substantiation
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Quote read via LegitQuest summary of the regulation; confirm exact wording in the FSSAI compendium. Applies to all claims; claim-specific conditions are in the records below and in claims.yaml."
+
+- id: in.claims.natural_fresh_pure
+  market: in
+  source:
+    regulation: FSS (Advertising and Claims) Regulations, 2018
+    clause: 9(2) and Schedule V item 1(a)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Advertising_Claims_Regulations_16_11_2021.pdf
+    quote: "derived from a recognised source viz., plant, animal, microorganism or mineral"
+  summary: The word "natural" may be used only for food derived from a recognised source (plant, animal, microorganism or mineral) to which nothing has been added and which is processed only in permitted ways.
+  status: in_force
+  applies_if:
+    claim_used: natural
+  requires:
+    item: claim_substantiation
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Quotes read via LegitQuest: Reg 9(2) 'shall be in accordance with conditions laid down in Schedule V'; Schedule V 'Natural' 1(a) also says 'and to which nothing has been added'. The text of the remaining Schedule V conditions (processing limits) was not read. A granola with added sugar, flavours or preservatives is unlikely to meet 'natural'; a person must confirm. 'Fresh' and 'pure' have their own Schedule V items (2(a), 3(a)). Verify clause numbering."
+
+- id: in.claims.brand_name_natural_disclaimer
+  market: in
+  source:
+    regulation: FSS (Advertising and Claims) Regulations, 2018
+    clause: 4(7)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Advertising_Claims_Regulations_16_11_2021.pdf
+    quote: "This is only a brand name or trade mark and does not represent its true nature"
+  summary: A brand, trade mark or fancy name containing words such as natural, fresh, pure, original, traditional, authentic, genuine or real that could mislead about the food's nature needs a disclaimer of at least 3 mm.
+  status: in_force
+  applies_if:
+    any:
+      - claim_used: natural
+      - claim_used: fresh
+      - claim_used: pure
+      - claim_used: original
+      - claim_used: traditional
+      - claim_used: authentic
+      - claim_used: genuine
+      - claim_used: real
+  requires:
+    item: brand_name_disclaimer
+    panel: any
+    min_size_mm: 3
+  check_type: size
+  approved: false
+  notes: "Quotes read via LegitQuest: the disclaimer wording above and 'in such cases a disclaimer in not less than 3mm size shall be given'. The adjective list is from the FSSAI compendium summary in a search result, not read in full. The disclaimer applies only where the name is 'likely to mislead consumer as to the nature of the food'. Verify the full 4(7) text."
+
+- id: in.claims.no_added_sugar
+  market: in
+  source:
+    regulation: FSS (Advertising and Claims) Regulations, 2018
+    clause: 6(1)(a)(i)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Advertising_Claims_Regulations_16_11_2021.pdf
+    quote: "no sugars of any type have been added to the food"
+  summary: A "no added sugar" claim is allowed only if no sugars of any type are added (and the other conditions of 6(1)(a) are met); where sugars are naturally present the label says so.
+  status: in_force
+  applies_if:
+    claim_used: no added sugar
+  requires:
+    item: claim_substantiation
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Quotes via LegitQuest: 6(1)(a) opens 'Claims regarding the non-addition of sugars to a food may be made if the following conditions are met'; 6(1)(b) requires 'CONTAINS NATURALLY OCCURRING SUGARS' where naturally occurring sugars are present. Only condition (i) was read; the other conditions (for example no sugar-containing ingredients such as honey or jam) were not read. Sugar-free means not more than 0.5 g sugars per 100 g (Schedule I Sl. No. 10); 'low' is not more than 5 g per 100 g. Verify all conditions."
+
+- id: in.claims.no_undermining_other_products
+  market: in
+  source:
+    regulation: FSS (Advertising and Claims) Regulations, 2018
+    clause: 10(7)
+    url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Advertising_Claims_Regulations_16_11_2021.pdf
+    quote: "No advertisements or claims for articles of foods shall be made by any food business operator that undermines"
+  summary: Claims must not undermine other manufacturers' products; "100%" style absolute claims are treated by FSSAI as at risk under this and 4(1).
+  status: in_force
+  applies_if:
+    claim_used: 100%
+  requires:
+    item: claim_substantiation
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Quote is a fragment of 10(7) via LegitQuest; the sentence continues past 'undermines'. Kept narrow: applied only to the '100%' claim together with the advisory record below."
+
+- id: in.claims.hundred_percent_advisory
+  market: in
+  source:
+    regulation: FSSAI advisory on use of "100%" in food labels and advertisements, 28 May 2025 (press release 30 May 2025); cites Advertising and Claims Regulations 4(1) and 10(7)
+    clause: advisory (clause numbers of the advisory not read)
+    url: https://fssai.gov.in/upload/uploadfiles/files/100PercentClaim_PressRelease_English.pdf
+    quote: "Claims must be truthful, unambiguous, meaningful, not misleading and help consumers to comprehend the information provided."
+  summary: FSSAI asks food businesses to stop using "100%" on labels, packaging, advertisements and promotional material, because it can suggest absolute purity or superiority.
+  status: proposed
+  from: 2025-05-28
+  applies_if:
+    claim_used: 100%
+  requires:
+    item: claim_substantiation
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "ADVISORY TEXT NOT READ. The FSSAI press release PDF could not be opened as text. Date 28 May 2025 (press release 30 May) and the reasons come from secondary sources (S.S. Rana, Aparajitha, FoodNavigator-Asia, Vision IAS). The quote above is Reg 4(1), which the advisory reportedly cites, not a quote from the advisory. An advisory is not itself a regulation; one source reports it was backed by a notice to a confectionery company on '100% Vegetarian'. A person must read the advisory, replace the quote, and decide whether it is a binding rule. Kept proposed. Whether brand names containing '100%' are covered is unconfirmed."

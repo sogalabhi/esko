@@ -1,0 +1,99 @@
+# Legal Metrology (Packaged Commodities) Rules, 2011 (a state-hosted copy cites GSR 202(E) of 7 March 2011, in force 1 April 2011; not confirmed from the central site).
+# Official listing of the Rules and amendments: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology . The consolidated PDF could not be opened from an official domain.
+# Quotes were read through the LegitQuest copy of the Rules (https://www.legitquest.com/act/legal-metrology-packaged-commodities-rules-2011/97B4), a secondary host. Verify each against the official text.
+# For food packages, the Rules hand some declarations to the FSS Act and its regulations (Explanation III to 6(1)(a); proviso to 6(1)(d)). See notes.
+- id: in.legal_metrology.net_quantity
+  market: in
+  source:
+    regulation: Legal Metrology (Packaged Commodities) Rules, 2011
+    clause: 6(1)(c)
+    url: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology
+    quote: "The net quantity, in terms of the standard unit of weight or measure, of the commodity contained in the package"
+  summary: Net quantity is declared in standard units of weight (for example g or kg).
+  status: in_force
+  requires:
+    item: net_quantity
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote via LegitQuest. Panel 'front' is an assumption: the FSS Labelling Regulations 5(8) send net quantity to the Legal Metrology Act and Rules, and the principal-display-panel requirement and letter heights (Rule 7 and Table I) were not read. Rule 7(2) says letter and numeral heights follow Table I; reported 2.5 mm for a PDP of 100 to 500 sq cm, not verified. Net quantity letter-height tiers are therefore not in pack_items.yaml."
+
+- id: in.legal_metrology.mrp_inclusive_of_taxes
+  market: in
+  source:
+    regulation: Legal Metrology (Packaged Commodities) Rules, 2011
+    clause: 6(1)(e)
+    url: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology
+    quote: "the retail sale price of the package shall clearly indicate that it is the maximum retail price inclusive of all taxes"
+  summary: The pack states the maximum retail price in rupees, clearly marked as inclusive of all taxes ("MRP Rs. ... incl. of all taxes").
+  status: in_force
+  requires:
+    item: mrp
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote via LegitQuest; it is a fragment (the sentence continues). Rule 2(m) defines retail sale price as 'the maximum price at which the commodity in packaged form may be sold'. Reported by secondary sources: price shown to two decimal places with the Rs. or rupee symbol; not quoted. Food articles are not exempted from 6(1)(e) in the text read (no food proviso under 6(1)(e))."
+
+- id: in.legal_metrology.unit_sale_price
+  market: in
+  source:
+    regulation: Legal Metrology (Packaged Commodities) Rules, 2011
+    clause: 6(11)
+    url: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology
+    quote: "The unit sale price in rupees, rounded off to the nearest two decimal place, shall be declared on every pre-packaged commodities"
+  summary: The unit sale price in rupees to two decimals is declared, per gram where the net quantity is under 1 kg and per kilogram where it is over 1 kg, unless retail sale price equals unit sale price.
+  status: in_force
+  requires:
+    item: unit_sale_price
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote via LegitQuest; continues 'in the following manner'. Exception read: 'declaration of unit sale price is not required for the pre-packaged commodities in which retail sale price is equal to the unit sale price'. Boundary at exactly 1 kg is not stated in the text read (less than / more than). Sub-rule 6(11) was inserted by amendment; the amending notification and date were not read."
+
+- id: in.legal_metrology.month_year_of_manufacture
+  market: in
+  source:
+    regulation: Legal Metrology (Packaged Commodities) Rules, 2011
+    clause: 6(1)(d) and first proviso
+    url: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology
+    quote: "Provided that for packages containing food articles, the provisions of the Food Safety and Standards Act,"
+  summary: Month and year of manufacture is declared, but for food articles the FSS Act and its regulations apply instead (so dates follow in.labelling.date_marking).
+  status: proposed
+  requires:
+    item: date_of_manufacture
+    panel: any
+  check_type: present
+  approved: false
+  notes: "CONFLICT TO RESOLVE BY A PERSON. 6(1)(d) reads 'The month and year in which the commodity is manufactured', but its first proviso hands food packages to the FSS Act. The quote is the start of that proviso (continues '2006 (34 of 2006) and the rules made thereunder shall apply'). So for granola the FSS date marking (5(10)) governs and this requirement may not apply. The task brief asks for month and year; kept as proposed and the item is in pack_items.yaml. Quote via LegitQuest."
+
+- id: in.legal_metrology.manufacturer_name_address
+  market: in
+  source:
+    regulation: Legal Metrology (Packaged Commodities) Rules, 2011
+    clause: 6(1)(a) Explanation III
+    url: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology
+    quote: "In respect of packages containing food articles, the provisions of this clause shall not apply,"
+  summary: The name and address of manufacturer or packer under 6(1)(a) is not required under these Rules for food packages; the FSS Labelling Regulations (5(6)) apply instead.
+  status: proposed
+  requires:
+    item: manufacturer_name_address
+    panel: any
+  check_type: present
+  approved: false
+  notes: "The brief asked for a Legal Metrology manufacturer/packer rule, but Explanation III exempts food articles from 6(1)(a): 'but the provisions of, and the requirements specified in the Food Safety and Standards Act, 2006 (34 of 2006) and the rules made thereunder shall apply'. The requirement is therefore covered by in.labelling.name_address_brand_owner; this record documents the hand-off. Quote via LegitQuest. A person may choose to withdraw it. Explanation I and II (presumption that the named company is the manufacturer; brand owner liable) were read but not copied."
+
+- id: in.legal_metrology.consumer_care
+  market: in
+  source:
+    regulation: Legal Metrology (Packaged Commodities) Rules, 2011
+    clause: 6(2)
+    url: https://consumeraffairs.nic.in/acts-and-rules/legal-metrology
+    quote: "Every package shall bear the name, address, telephone number, e-mail address of the person who can be"
+  summary: The pack shows the name, address, telephone number and e-mail address of the person or office to contact for consumer complaints.
+  status: in_force
+  requires:
+    item: consumer_care
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote via LegitQuest; sentence continues 'or the office which can be contacted, in case of consumer complaints'. The proviso on electronic products does not apply. The FSS Labelling Regulations 5(8) also refer consumer care details to the Legal Metrology Act and Rules. Not stated in the text read: a food-article exemption."

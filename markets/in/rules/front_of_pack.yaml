@@ -1,0 +1,17 @@
+# Front-of-pack warning labels. NO NOTIFIED REGULATION. Awaiting Supreme Court (W.P.(C) 437/2024, 3S and Our Health Society v. Union of India) and FSSAI amendment of the Labelling and Display Regulations, 2020.
+# Sources are news reports (Deccan Herald, South First, ETV Bharat, Vision IAS, August 2026) because no official FSSAI notification or draft was found.
+- id: in.fop.warning_labels
+  market: in
+  source:
+    regulation: Proposed amendment to FSS (Labelling and Display) Regulations, 2020; Supreme Court proceedings, W.P.(C) 437/2024
+    clause: not notified
+    url: https://thesouthfirst.com/health/fssai-proposes-front-of-pack-warning-labels-for-food-products-high-in-added-fat-sugar-after-sc-rebuke/
+    quote: "HIGH FAT"
+  summary: FSSAI has told the Supreme Court it proposes front-of-pack warnings ("HIGH FAT", "HIGH SUGAR", "HIGH SALT") for foods high in two or more of these, later widening to any one; thresholds and format are not set.
+  status: proposed
+  requires:
+    item: front_of_pack_warning
+    panel: front
+  check_type: present
+  approved: false
+  notes: "NOT LAW. Reported in late August 2026 as a compliance affidavit following the 13 August 2026 hearing, where the Court gave the Centre two weeks; the Court's April 2025 direction asked an FSSAI expert committee to recommend amendments within three months. No threshold values, label design, or date was found. Sources are news reports, not the affidavit or any gazette; the 'quote' is the proposed warning wording as reported. The engine must not enforce this; show it as a watch item. A person should find the affidavit or any draft notification, and check the case record for the latest order."
