@@ -1,7 +1,7 @@
 from google import genai
 from google.genai import errors, types
 
-from ..errors import AIConfigError, AIError, AIResponseInvalid, RetryableAIError
+from ..errors import AIConfigError, AIError, AIModelNotFound, AIResponseInvalid, RetryableAIError
 from .base import AIRequest
 
 RETRYABLE_CODES = {429, 500, 503}
@@ -29,6 +29,8 @@ class GeminiAdapter:
         except errors.APIError as exc:
             if exc.code in RETRYABLE_CODES:
                 raise RetryableAIError(str(exc)) from exc
+            if exc.code == 404:
+                raise AIModelNotFound(f"{self.model}: {exc}") from exc
             raise AIError(str(exc)) from exc
         text = response.text
         if not text:

@@ -8,7 +8,7 @@
     "test:frontend": "npm test --prefix frontend",
     "test:live": "uv run --directory backend pytest -m live",
     "test:e2e": "echo not yet (Phase 4)",
-    "test:record": "echo not yet (Phase 2)"
+    "test:record": "uv run --directory backend python -m app.ai.record"
   },
   "devDependencies": {
     "concurrently": "^10.0.6"

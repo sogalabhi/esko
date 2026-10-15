@@ -1,0 +1,58 @@
+{
+  "conflicts": [
+    {
+      "claim_fact_ids": [
+        "f-12",
+        "f-14",
+        "f-59",
+        "f-60",
+        "f-99"
+      ],
+      "against_fact_ids": [
+        "f-6",
+        "f-10",
+        "f-52",
+        "f-101",
+        "f-103"
+      ],
+      "claim": "Certified vegan and suitable for vegans",
+      "against": "Product contains honey",
+      "explanation": "The product is labeled and certified as vegan, but honey is listed as an ingredient. Honey is an animal-derived product and cannot be included in vegan-certified foods.",
+      "severity": "high",
+      "owner": "legal"
+    },
+    {
+      "claim_fact_ids": [
+        "f-15",
+        "f-37",
+        "f-83",
+        "f-95"
+      ],
+      "against_fact_ids": [
+        "f-6",
+        "f-10",
+        "f-52"
+      ],
+      "claim": "No added sugar and 0g added sugars",
+      "against": "Recipe includes honey, coconut sugar, and cane sugar",
+      "explanation": "The product claims 'No Added Sugar' and declares 0g added sugars in the nutrition panel, yet the ingredients include honey, coconut sugar, and cane sugar.",
+      "severity": "high",
+      "owner": "legal"
+    },
+    {
+      "claim_fact_ids": [
+        "f-8",
+        "f-58"
+      ],
+      "against_fact_ids": [
+        "f-10",
+        "f-52"
+      ],
+      "claim": "May contain advisory for tree nuts",
+      "against": "Almonds and pecans are intentional recipe ingredients",
+      "explanation": "The allergen warning states the product 'May Contain Almonds' and 'May Contain Pecan Nuts', but both are intentional recipe ingredients that must be declared as present, not merely as potential cross-contaminants.",
+      "severity": "high",
+      "owner": "legal"
+    }
+  ]
+}

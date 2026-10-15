@@ -12,3 +12,7 @@ class RetryableAIError(AIError):
 
 class AIResponseInvalid(AIError):
     """The model answer was not valid JSON for the schema."""
+
+
+class AIModelNotFound(AIError):
+    """The provider does not know this model name; the client tries the next model in the list."""

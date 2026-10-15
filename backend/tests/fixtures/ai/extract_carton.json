@@ -1,0 +1,524 @@
+{
+  "facts": [
+    {
+      "group": "identity",
+      "field": "Statement of identity",
+      "value": "GRANOLA",
+      "unit": null,
+      "quote": "GRANOLA",
+      "piece_ids": ["P1"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Marketing copy",
+      "value": "PACKED WITH GOODNESS",
+      "unit": null,
+      "quote": "PACKED WITH GOODNESS",
+      "piece_ids": ["P2"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "Product name",
+      "value": "BERRY CRUNCH",
+      "unit": null,
+      "quote": "BERRY CRUNCH",
+      "piece_ids": ["P3"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Marketing copy",
+      "value": "Start tapping, swishing & shaking your tail fins!",
+      "unit": null,
+      "quote": "Start tapping, swishing & shaking your tail fins!",
+      "piece_ids": ["P4"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "ingredients",
+      "field": "Ingredient list",
+      "value": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+      "unit": null,
+      "quote": "INGREDIENTS: Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+      "piece_ids": ["P5"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Reference-intake icon · Calories",
+      "value": "197kJ 46kcal 4%",
+      "unit": null,
+      "quote": "197kJ 46kcal 4%",
+      "piece_ids": ["P6", "P7", "P8"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Reference-intake icon · Fat",
+      "value": "3.8g 4%",
+      "unit": null,
+      "quote": "3.8g 4%",
+      "piece_ids": ["P9", "P10"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Reference-intake icon · Saturates",
+      "value": "1.1g 6%",
+      "unit": null,
+      "quote": "1.1g 6%",
+      "piece_ids": ["P11", "P12"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Reference-intake icon · Sugars",
+      "value": "2.4g 3%",
+      "unit": null,
+      "quote": "2.4g 3%",
+      "piece_ids": ["P13", "P14", "P16"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Reference-intake icon · Salt",
+      "value": "0.4g 10%",
+      "unit": null,
+      "quote": "0.4g 10%",
+      "piece_ids": ["P17", "P18"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "allergens",
+      "field": "Allergen statement",
+      "value": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+      "unit": null,
+      "quote": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+      "piece_ids": ["P15"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Dietary statement",
+      "value": "Suitable for Vegans.",
+      "unit": null,
+      "quote": "DIETARY INFORMATION: Suitable for Vegans.",
+      "piece_ids": ["P19"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Marketing copy",
+      "value": "All our products are certified organic, GMO free, suitable for vegetarians (vegan), with no artificial additives.",
+      "unit": null,
+      "quote": "All our products are certified organic, GMO free, suitable for vegetarians (vegan), with no artificial additives.",
+      "piece_ids": ["P20"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "quantity",
+      "field": "Net quantity",
+      "value": "480",
+      "unit": "g",
+      "quote": "480g",
+      "piece_ids": ["P21"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "packaging",
+      "field": "Storage instructions",
+      "value": "Store in a cool, dry place. Once opened, keep packaging closed and eat within a month or by date shown, for best before, see base of pack.",
+      "unit": null,
+      "quote": "Store in a cool, dry place. Once opened, keep packaging closed and eat within a month or by date shown, for best before, see base of pack.",
+      "piece_ids": ["P22"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "company",
+      "field": "Manufacturer",
+      "value": "DANCING FISH GRANOLA CO.",
+      "unit": null,
+      "quote": "PRODUCED BY DANCING FISH GRANOLA CO.",
+      "piece_ids": ["P24"],
+      "panel": "Back",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Certification mark",
+      "value": "USDA Organic",
+      "unit": null,
+      "quote": "USDA ORGANIC",
+      "piece_ids": [],
+      "panel": "Back",
+      "from_image": true
+    },
+    {
+      "group": "packaging",
+      "field": "Recycling mark",
+      "value": "Paperboard Packaging Recyclable",
+      "unit": null,
+      "quote": "PAPERBOARD PACKAGING RECYCLABLE",
+      "piece_ids": [],
+      "panel": "Left",
+      "from_image": true
+    },
+    {
+      "group": "nutrition",
+      "field": "Servings per container",
+      "value": "8",
+      "unit": null,
+      "quote": "8 servings per container",
+      "piece_ids": ["P29"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Serving size",
+      "value": "85",
+      "unit": null,
+      "quote": "Serving size 85",
+      "piece_ids": ["P30"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Calories",
+      "value": "166",
+      "unit": null,
+      "quote": "Calories 166",
+      "piece_ids": ["P32"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Fat",
+      "value": "15",
+      "unit": "g",
+      "quote": "Total Fat 15g",
+      "piece_ids": ["P34"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Fat · % Daily Value",
+      "value": "2.2",
+      "unit": "%",
+      "quote": "2.2%",
+      "piece_ids": ["P34"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Saturated Fat",
+      "value": "5",
+      "unit": "g",
+      "quote": "Saturated Fat 5g",
+      "piece_ids": ["P35"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Saturated Fat · % Daily Value",
+      "value": "8",
+      "unit": "%",
+      "quote": "8%",
+      "piece_ids": ["P35"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Trans Fat",
+      "value": "8",
+      "unit": "g",
+      "quote": "Trans Fat 8g",
+      "piece_ids": ["P36"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Cholesterol",
+      "value": "45",
+      "unit": "mg",
+      "quote": "Cholesterol 45mg",
+      "piece_ids": ["P37"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Cholesterol · % Daily Value",
+      "value": "26",
+      "unit": "%",
+      "quote": "26%",
+      "piece_ids": ["P37"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Sodium",
+      "value": "23",
+      "unit": "mg",
+      "quote": "Sodium 23mg",
+      "piece_ids": ["P38"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Sodium · % Daily Value",
+      "value": "12",
+      "unit": "%",
+      "quote": "12%",
+      "piece_ids": ["P38"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Carbohydrate",
+      "value": "66",
+      "unit": "g",
+      "quote": "Total Carbohydrate 66g",
+      "piece_ids": ["P39"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Carbohydrate · % Daily Value",
+      "value": "18",
+      "unit": "%",
+      "quote": "18%",
+      "piece_ids": ["P39"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Dietary Fiber",
+      "value": "3",
+      "unit": "g",
+      "quote": "Dietary Fiber 3g",
+      "piece_ids": ["P40"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Dietary Fiber · % Daily Value",
+      "value": "5",
+      "unit": "%",
+      "quote": "5%",
+      "piece_ids": ["P40"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Sugars",
+      "value": "18",
+      "unit": "g",
+      "quote": "Total Sugars 18g",
+      "piece_ids": ["P41"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Incl. Added Sugars",
+      "value": "0",
+      "unit": "g",
+      "quote": "Incl. 0g Added Sugars",
+      "piece_ids": ["P42"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Incl. Added Sugars · % Daily Value",
+      "value": "0",
+      "unit": "%",
+      "quote": "0%",
+      "piece_ids": ["P42"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Protein",
+      "value": "34",
+      "unit": "g",
+      "quote": "Protein 34g",
+      "piece_ids": ["P43"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Vitamin D",
+      "value": "89",
+      "unit": "mcg",
+      "quote": "Vitamin D 89mcg",
+      "piece_ids": ["P44"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Vitamin D · % Daily Value",
+      "value": "12",
+      "unit": "%",
+      "quote": "12%",
+      "piece_ids": ["P44"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Calcium",
+      "value": "206",
+      "unit": "mg",
+      "quote": "Calcium 206mg",
+      "piece_ids": ["P45"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Calcium · % Daily Value",
+      "value": "48",
+      "unit": "%",
+      "quote": "48%",
+      "piece_ids": ["P45"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Iron",
+      "value": "5",
+      "unit": "mg",
+      "quote": "Iron 5mg",
+      "piece_ids": ["P46"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Iron · % Daily Value",
+      "value": "20",
+      "unit": "%",
+      "quote": "20%",
+      "piece_ids": ["P46"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Potassium",
+      "value": "23",
+      "unit": "mg",
+      "quote": "Potassium 23mg",
+      "piece_ids": ["P47"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Potassium · % Daily Value",
+      "value": "11",
+      "unit": "%",
+      "quote": "11%",
+      "piece_ids": ["P47"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "packaging",
+      "field": "Marketing copy",
+      "value": "PACKAGING POWERED BY",
+      "unit": null,
+      "quote": "PACKAGING POWERED BY",
+      "piece_ids": ["P49"],
+      "panel": "Left",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "NO ADDED SUGAR",
+      "unit": null,
+      "quote": "NO ADDED SUGAR",
+      "piece_ids": ["P50"],
+      "panel": "Top flap (Back)",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "OVEN BAKED",
+      "unit": null,
+      "quote": "OVEN BAKED",
+      "piece_ids": ["P51"],
+      "panel": "Top flap (Back)",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "GMO FREE",
+      "unit": null,
+      "quote": "GMO FREE",
+      "piece_ids": ["P52"],
+      "panel": "Top flap (Back)",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "HIGH-GRAIN",
+      "unit": null,
+      "quote": "HIGH-GRAIN",
+      "piece_ids": ["P53"],
+      "panel": "Top flap (Front)",
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Certification mark",
+      "value": "Certified Vegan",
+      "unit": null,
+      "quote": "CERTIFIED VEGAN",
+      "piece_ids": [],
+      "panel": "Top flap (Front)",
+      "from_image": true
+    }
+  ]
+}

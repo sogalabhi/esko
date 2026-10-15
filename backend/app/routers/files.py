@@ -31,7 +31,7 @@ async def upload(file: UploadFile) -> SourceFileOut:
         source_file, pieces = read_file(dest, file_id)
     except ValueError as e:
         raise HTTPException(status_code=415, detail=str(e)) from e
-    store.put(source_file, pieces)
+    store.put(source_file, pieces, dest)
     return _out(source_file)
 
 

@@ -1,0 +1,474 @@
+{
+  "facts": [
+    {
+      "group": "identity",
+      "field": "Label ID",
+      "value": "DF-GRAN-BERRY-US-001",
+      "unit": null,
+      "quote": "DF-GRAN-BERRY-US-001",
+      "piece_ids": ["B2"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "Product name",
+      "value": "Granola Berry Crunch",
+      "unit": null,
+      "quote": "Granola Berry Crunch",
+      "piece_ids": ["E8"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "BPN",
+      "value": "DF-BERRY-480G-US",
+      "unit": null,
+      "quote": "DF-BERRY-480G-US",
+      "piece_ids": ["E11"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "Barcode",
+      "value": "1 20000 00003 6",
+      "unit": null,
+      "quote": "1 20000 00003 6",
+      "piece_ids": ["E12"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "Brand",
+      "value": "Dancing Fish",
+      "unit": null,
+      "quote": "Dancing Fish",
+      "piece_ids": ["B13"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "ingredients",
+      "field": "Nutritive sweetener",
+      "value": "Honey, Coconut Sugar",
+      "unit": null,
+      "quote": "Honey, Coconut Sugar",
+      "piece_ids": ["E15"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "Statement of identity",
+      "value": "GRANOLA — BERRY CRUNCH",
+      "unit": null,
+      "quote": "GRANOLA — BERRY CRUNCH",
+      "piece_ids": ["B23"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "allergens",
+      "field": "Allergen statement",
+      "value": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+      "unit": null,
+      "quote": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
+      "piece_ids": ["B24"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "packaging",
+      "field": "Storage instructions",
+      "value": "Store in a cool, dry place. Once opened, keep packaging closed and eat within a month or by date shown, for best before, see base of pack.",
+      "unit": null,
+      "quote": "Store in a cool, dry place. Once opened, keep packaging closed and eat within a month or by date shown, for best before, see base of pack.",
+      "piece_ids": ["B25"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "ingredients",
+      "field": "Ingredient list",
+      "value": "INGREDIENTS: Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Sunflower Seeds, Vegetable Oils (in varying proportions), Dried Blueberries, Cranberries, Sunflower Seeds, Honey (9%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+      "unit": null,
+      "quote": "INGREDIENTS: Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Sunflower Seeds, Vegetable Oils (in varying proportions), Dried Blueberries, Cranberries, Sunflower Seeds, Honey (9%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
+      "piece_ids": ["B26"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Marketing copy",
+      "value": "Start tapping, swishing & shaking your tail fins!",
+      "unit": null,
+      "quote": "Start tapping, swishing & shaking your tail fins!",
+      "piece_ids": ["B27"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Dietary statement",
+      "value": "Suitable for vegetarians. All products certified organic, GMO free, and suitable for vegetarians (vegan), with no artificial additives.",
+      "unit": null,
+      "quote": "Suitable for vegetarians. All products certified organic, GMO free, and suitable for vegetarians (vegan), with no artificial additives.",
+      "piece_ids": ["B28"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Certification mark",
+      "value": "USDA Organic",
+      "unit": null,
+      "quote": "USDA Organic",
+      "piece_ids": ["B29"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Certification mark",
+      "value": "Certified Vegan (vegan.org)",
+      "unit": null,
+      "quote": "Certified Vegan (vegan.org)",
+      "piece_ids": ["B29"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "No Added Sugar",
+      "unit": null,
+      "quote": "No Added Sugar",
+      "piece_ids": ["B29"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "Oven Baked",
+      "unit": null,
+      "quote": "Oven Baked",
+      "piece_ids": ["B29"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "claims",
+      "field": "Claim",
+      "value": "GMO Free",
+      "unit": null,
+      "quote": "GMO Free",
+      "piece_ids": ["B29"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "packaging",
+      "field": "Recycling mark",
+      "value": "How2Recycle / recyclable paperboard mark",
+      "unit": null,
+      "quote": "How2Recycle / recyclable paperboard mark",
+      "piece_ids": ["B29"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Servings per container",
+      "value": "8",
+      "unit": null,
+      "quote": "8",
+      "piece_ids": ["B34"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "quantity",
+      "field": "Net quantity",
+      "value": "480",
+      "unit": "g",
+      "quote": "480g",
+      "piece_ids": ["B35"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "packaging",
+      "field": "Package Type",
+      "value": "Carton",
+      "unit": null,
+      "quote": "Carton",
+      "piece_ids": ["B37"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Calories",
+      "value": "166",
+      "unit": null,
+      "quote": "166",
+      "piece_ids": ["B47"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Fat",
+      "value": "15",
+      "unit": "g",
+      "quote": "15g",
+      "piece_ids": ["B48"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Fat · % Daily Value",
+      "value": "2.2",
+      "unit": "%",
+      "quote": "2.2%*",
+      "piece_ids": ["C48"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Saturated Fat",
+      "value": "5",
+      "unit": "g",
+      "quote": "5g",
+      "piece_ids": ["B49"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Saturated Fat · % Daily Value",
+      "value": "8",
+      "unit": "%",
+      "quote": "8%",
+      "piece_ids": ["C49"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Trans Fat",
+      "value": "8",
+      "unit": "g",
+      "quote": "8g",
+      "piece_ids": ["B50"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Cholesterol",
+      "value": "45",
+      "unit": "mg",
+      "quote": "45mg",
+      "piece_ids": ["B51"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Cholesterol · % Daily Value",
+      "value": "26",
+      "unit": "%",
+      "quote": "26%*",
+      "piece_ids": ["C51"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Sodium",
+      "value": "25",
+      "unit": "mg",
+      "quote": "25mg",
+      "piece_ids": ["B52"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Sodium · % Daily Value",
+      "value": "12",
+      "unit": "%",
+      "quote": "12%*",
+      "piece_ids": ["C52"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Carbohydrate",
+      "value": "15",
+      "unit": "g",
+      "quote": "15g",
+      "piece_ids": ["B53"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Carbohydrate · % Daily Value",
+      "value": "18",
+      "unit": "%",
+      "quote": "18%",
+      "piece_ids": ["C53"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Dietary Fiber",
+      "value": "3",
+      "unit": "g",
+      "quote": "3g",
+      "piece_ids": ["B54"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Dietary Fiber · % Daily Value",
+      "value": "5",
+      "unit": "%",
+      "quote": "5%",
+      "piece_ids": ["C54"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Total Sugars",
+      "value": "18",
+      "unit": "g",
+      "quote": "18g",
+      "piece_ids": ["B55"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Incl. Added Sugars",
+      "value": "0",
+      "unit": "g",
+      "quote": "0g",
+      "piece_ids": ["B56"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Incl. Added Sugars · % Daily Value",
+      "value": "0",
+      "unit": "%",
+      "quote": "0%",
+      "piece_ids": ["C56"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Protein",
+      "value": "34",
+      "unit": "g",
+      "quote": "34g",
+      "piece_ids": ["B57"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Vitamin D",
+      "value": "89",
+      "unit": "mcg",
+      "quote": "89mcg",
+      "piece_ids": ["B58"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Vitamin D · % Daily Value",
+      "value": "12",
+      "unit": "%",
+      "quote": "12%",
+      "piece_ids": ["C58"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Calcium",
+      "value": "206",
+      "unit": "mg",
+      "quote": "206mg",
+      "piece_ids": ["B59"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Calcium · % Daily Value",
+      "value": "48",
+      "unit": "%",
+      "quote": "48%",
+      "piece_ids": ["C59"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Iron",
+      "value": "5",
+      "unit": "mg",
+      "quote": "5mg",
+      "piece_ids": ["B60"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Iron · % Daily Value",
+      "value": "20",
+      "unit": "%",
+      "quote": "20%",
+      "piece_ids": ["C60"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Potassium",
+      "value": "23",
+      "unit": "mg",
+      "quote": "23mg",
+      "piece_ids": ["B61"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "nutrition",
+      "field": "Potassium · % Daily Value",
+      "value": "11",
+      "unit": "%",
+      "quote": "11%",
+      "piece_ids": ["C61"],
+      "panel": null,
+      "from_image": false
+    }
+  ]
+}

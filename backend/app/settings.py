@@ -14,8 +14,13 @@ class Settings(BaseSettings):
 
     llm_api_key: SecretStr | None = None
     llm_provider: str = "gemini"
-    llm_model: str = "gemini-3.8-flash"
+    # Comma list = fallback order; the next model is tried when one stays overloaded.
+    llm_model: str = "gemini-3.8-flash,gemini-3.7-flash,gemini-3.5-flash"
     ai_cache_dir: Path = BACKEND_DIR / ".cache" / "ai"
+
+    @property
+    def llm_models(self) -> list[str]:
+        return [m.strip() for m in self.llm_model.split(",") if m.strip()]
 
 
 @lru_cache
