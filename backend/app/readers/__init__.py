@@ -39,3 +39,7 @@ def read_file(path: Path, file_id: str) -> tuple[SourceFile, list[SourcePiece]]:
     except Exception as e:  # unreadable/corrupt file: report it, don't crash the upload
         return SourceFile(id=file_id, name=path.name, type=_TYPES[ext], status="error",
                           error=f"{type(e).__name__}: {e}"), []
+
+from .pdf_reader import read_pdf  # noqa: E402
+
+register_reader(".pdf", read_pdf)

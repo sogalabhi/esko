@@ -7,6 +7,7 @@ from app import store
 from app.main import app
 from app.routers import files
 
+CARTON = Path(__file__).resolve().parents[3] / "samples" / "DancingFish_Granola_Berry_US_Carton.pdf"
 SAMPLE = Path(__file__).resolve().parents[3] / "samples" / "DancingFish_Granola_BerryCrunch_US_Content_Sheet.xlsx"
 
 
@@ -28,10 +29,23 @@ def test_upload_xlsx_and_list_pieces(client):
     assert pieces[0]["fileId"] == body["id"] and pieces[0]["location"]["kind"] == "sheet"
 
 
-def test_upload_pdf_is_unsupported_for_now(client):
+def test_upload_carton_pdf_and_list_pieces(client):
+    r = client.post("/api/files", files={"file": (CARTON.name, CARTON.read_bytes())})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "read" and body["type"] == "pdf" and body["pieceCount"] > 0
+    assert any("Hidden text" in s for s in body["skipped"])
+    pieces = client.get(f"/api/files/{body['id']}/pieces").json()
+    assert len(pieces) == body["pieceCount"]
+    p = pieces[0]
+    assert p["location"]["kind"] == "pdf" and len(p["location"]["bboxMm"]) == 4 and p["fontSize"] > 0
+    assert {"visible", "ignored", "hidden"} <= {q["status"] for q in pieces}
+
+
+def test_upload_broken_pdf_reports_error(client):
     r = client.post("/api/files", files={"file": ("a.pdf", b"%PDF-1.4 fake")})
     assert r.status_code == 200
-    assert r.json()["status"] == "unsupported" and r.json()["pieceCount"] == 0
+    assert r.json()["status"] == "error" and r.json()["pieceCount"] == 0
 
 
 def test_unknown_id_404(client):
