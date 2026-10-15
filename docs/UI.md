@@ -246,6 +246,8 @@ Shape details fixed in UI chunk 1 (the backend must match; see frontend/src/type
 - question.status = open | answered | skipped (+ answer once the backend stores it).
 - file.skipped = [{item, reason}]. bbox = [x, y, w, h] in mm, same frame as pack.panels.
 - Brief health = met requirements ÷ all requirements.
+- file.error = plain reason when status is error (e.g. "page 2: scanned image, low resolution").
+- question.requirementIds = the requirements an answer settles (unlocks = its length).
 Live progress comes over a WebSocket as small events: fact_found, conflict_found,
 file_done. Ship a mock file with the Dancing Fish data from section 6.2 so the UI
 can be built before the backend exists.

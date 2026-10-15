@@ -17,10 +17,12 @@ interface Item {
   step?: number
   dot?: Dot
   count?: number
+  /** Overrides the dot's default word for screen readers and the tooltip. */
+  word?: string
 }
 
 function RailLink({ item }: { item: Item }) {
-  const { to, label, Icon, step, dot, count } = item
+  const { to, label, Icon, step, dot, count, word } = item
   const name = step ? `${step} ${label}` : label
   return (
     <NavLink
@@ -41,10 +43,10 @@ function RailLink({ item }: { item: Item }) {
       {dot && (
         <span className="hidden items-center gap-1.5 lg:flex">
           {count != null && <span className="font-mono text-[12px] text-ink-2">{count}</span>}
-          <span className={`inline-block h-2 w-2 rounded-full ${DOT[dot].cls}`} aria-hidden="true" />
+          <span className={`inline-block h-2 w-2 rounded-full ${DOT[dot].cls}`} aria-hidden="true" title={word ?? DOT[dot].word} />
           <span className="sr-only">
             {count != null ? `${count}, ` : ''}
-            {DOT[dot].word}
+            {word ?? DOT[dot].word}
           </span>
         </span>
       )}
@@ -57,11 +59,26 @@ export function LeftRail() {
   const openConflicts = project.conflicts.filter((c) => !c.resolution).length
   const openQuestions = project.questions.filter((q) => q.status !== 'answered').length
   const filesDone = project.files.every((f) => f.status === 'done')
+  const filesFailed = project.files.filter((f) => f.status === 'error').length
+  const evidence: Pick<Item, 'dot' | 'word'> =
+    project.files.length === 0
+      ? { dot: 'idle', word: 'no files yet' }
+      : filesFailed
+        ? { dot: 'bad', word: `${filesFailed} could not be read` }
+        : filesDone
+          ? { dot: 'ok', word: 'all files read' }
+          : { dot: 'warn', word: 'reading' }
+  const questions: Pick<Item, 'dot' | 'word'> =
+    project.questions.length === 0
+      ? { dot: 'idle', word: 'no questions' }
+      : openQuestions
+        ? { dot: 'warn', word: 'to answer' }
+        : { dot: 'ok', word: 'all answered' }
 
   const steps: Item[] = [
-    { to: '/evidence', label: 'Evidence', Icon: FolderOpen, step: 1, count: project.files.length, dot: project.files.length === 0 ? 'idle' : filesDone ? 'ok' : 'warn' },
+    { to: '/evidence', label: 'Evidence', Icon: FolderOpen, step: 1, count: project.files.length, ...evidence },
     { to: '/facts', label: 'Facts', Icon: ListChecks, step: 2, count: project.facts.length, dot: openConflicts ? 'bad' : 'ok' },
-    { to: '/questions', label: 'Questions', Icon: CircleQuestionMark, step: 3, count: openQuestions, dot: openQuestions ? 'warn' : 'ok' },
+    { to: '/questions', label: 'Questions', Icon: CircleQuestionMark, step: 3, count: openQuestions, ...questions },
     { to: '/pack', label: 'Pack', Icon: Box, step: 4, dot: 'idle' },
     { to: '/brief', label: 'Brief', Icon: FileText, step: 5, dot: project.brief.approvedBy ? 'ok' : 'idle' },
   ]

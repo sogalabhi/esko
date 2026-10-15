@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useReducer, type ReactNode } from 'react'
 import mock from '../mocks/project.json'
-import type { Project, ResolutionChoice, Source } from '../types/project'
+import type { Project, QuestionStatus, ResolutionChoice, Source } from '../types/project'
 
 export const mockProject = mock as unknown as Project
 
@@ -22,6 +22,7 @@ type Action =
   | { type: 'resolve'; id: string; choice: ResolutionChoice }
   | { type: 'answer'; id: string; answer: string }
   | { type: 'skip'; id: string }
+  | { type: 'undoAnswer'; id: string; prev: QuestionStatus }
   | { type: 'open'; source: Source }
   | { type: 'close' }
   | { type: 'market'; market: UiMarket }
@@ -58,6 +59,15 @@ function reducer(initial: Project) {
           ...s,
           project: { ...s.project, questions: s.project.questions.map((q) => (q.id === a.id ? { ...q, status: 'skipped' } : q)) },
         }
+      case 'undoAnswer': {
+        const answers = { ...s.answers }
+        delete answers[a.id]
+        return {
+          ...s,
+          answers,
+          project: { ...s.project, questions: s.project.questions.map((q) => (q.id === a.id ? { ...q, status: a.prev } : q)) },
+        }
+      }
       case 'open':
         return { ...s, drawer: a.source }
       case 'close':
@@ -77,14 +87,15 @@ function useStore(initial: Project) {
   const resolveConflict = useCallback((id: string, choice: ResolutionChoice) => dispatch({ type: 'resolve', id, choice }), [])
   const answerQuestion = useCallback((id: string, answer: string) => dispatch({ type: 'answer', id, answer }), [])
   const skipQuestion = useCallback((id: string) => dispatch({ type: 'skip', id }), [])
+  const undoAnswer = useCallback((id: string, prev: QuestionStatus) => dispatch({ type: 'undoAnswer', id, prev }), [])
   const openSource = useCallback((source: Source) => dispatch({ type: 'open', source }), [])
   const closeDrawer = useCallback(() => dispatch({ type: 'close' }), [])
   const setMarket = useCallback((market: UiMarket) => dispatch({ type: 'market', market }), [])
   const setLaunchDate = useCallback((date: string) => dispatch({ type: 'launch', date }), [])
   const reset = useCallback(() => dispatch({ type: 'reset' }), [])
   return useMemo(
-    () => ({ ...state, resolveConflict, answerQuestion, skipQuestion, openSource, closeDrawer, setMarket, setLaunchDate, reset }),
-    [state, resolveConflict, answerQuestion, skipQuestion, openSource, closeDrawer, setMarket, setLaunchDate, reset],
+    () => ({ ...state, resolveConflict, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset }),
+    [state, resolveConflict, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset],
   )
 }
 

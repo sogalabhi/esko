@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router'
+import { Evidence } from './screens/Evidence'
 import { Facts } from './screens/Facts'
+import { Questions } from './screens/Questions'
 import { AppShell, NotBuilt } from './shell/AppShell'
 import { ProjectProvider } from './state/project'
 
@@ -9,9 +11,9 @@ export default function App() {
       <AppShell>
         <Routes>
           <Route path="/" element={<Navigate to="/facts" replace />} />
-          <Route path="/evidence" element={<NotBuilt title="Evidence" phase="4" />} />
+          <Route path="/evidence" element={<Evidence />} />
           <Route path="/facts" element={<Facts />} />
-          <Route path="/questions" element={<NotBuilt title="Questions" phase="4" />} />
+          <Route path="/questions" element={<Questions />} />
           <Route path="/pack" element={<NotBuilt title="Pack" phase="6" />} />
           <Route path="/brief" element={<NotBuilt title="Brief" phase="5" />} />
           <Route path="/rules" element={<NotBuilt title="Rules map" phase="7" />} />
