@@ -188,6 +188,7 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
   - capped at 10, with duplicates merged;
   - AI wording for the text and the "why".
 - `POST /api/answers` applies an answer and recomputes everything.
+- Design keep/change questions for brand assets found in the old design (logo, photo, colours, tagline, marks); answers feed keep / change / add / remove.
 
 **Unit tests**
 - `test_pack_loader`: the US pack loads; a broken record gives an error that names the file and field; proposed rules are never evaluated.
@@ -226,6 +227,7 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
   - Evidence, Facts (table, filters, conflicts column, list diff) and Questions (stack, answer, undo).
 - Then wire it to the API. TypeScript types are generated from the backend's OpenAPI, so the two sides can't drift.
 - WebSocket progress events: `fact_found`, `conflict_found`, `file_done`.
+- More inputs: Word reader (python-docx, paragraph locations), plain-PDF document reader (page + line, no panels), notes (pasted text or .txt, line numbers), JPG/PNG via vision (AI-suggested). Tests: one fixture per type parses with locations; a fact from each type shows a correct source chip.
 - Source drawer: a PDF.js crop of the panel with a highlight box, and a sheet grid with the cell outlined.
 
 **Unit tests (Vitest)**
@@ -253,6 +255,7 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
 - Editor: violet underline on unproven text.
 - Approve stamps the name and time.
 - Export: PDF (print stylesheet) and checklist JSON built from the requirements. Change log.
+- "Ask about this" side panel (closed by default): answers from facts with sources; a confirmed answer becomes a fact. Test: an answer citing no fact is refused.
 
 **Unit tests**
 - `test_audit`:

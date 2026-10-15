@@ -493,7 +493,7 @@ Each phase ends with something you can run and check. Phases 0–5 are the must-
 ### Phase 1 — Read files with positions (15 Oct)
 
 - **Goal:** every sample file turns into text pieces that know where they came from.
-- **Build:** parsers for PDF (text with page, box, panel and layer) and Excel (sheet and cell, columns A–C only, since the scaled columns are Excel 365 formulas), all producing one shared "source piece" format. For the dieline: map each piece to its panel using the Artwork panel layer, rebuild letter-spaced and curved text, drop guide text into an "ignored" list, and mark text covered by artwork as hidden by checking it against a render. Word and image inputs come later.
+- **Build:** parsers for PDF (text with page, box, panel and layer) and Excel (sheet and cell, columns A–C only, since the scaled columns are Excel 365 formulas), all producing one shared "source piece" format. For the dieline: map each piece to its panel using the Artwork panel layer, rebuild letter-spaced and curved text, drop guide text into an "ignored" list, and mark text covered by artwork as hidden by checking it against a render. Word, plain-PDF documents, notes and images come in Phase 4.
 - **Done when:** both of Esko's sample files parse; each piece shows its file, panel or cell; "Art orientation" and "Copy free" are in the ignored list; the EU per-100 g table is marked hidden; "1 5 g" reads as "15 g". Tests cover both files.
 
 ### Phase 2 — Facts and the quote check (15–16 Oct)
@@ -505,19 +505,19 @@ Each phase ends with something you can run and check. Phases 0–5 are the must-
 ### Phase 3 — Rules, requirements and questions (16 Oct)
 
 - **Goal:** facts plus a market and launch date decide what the pack must carry, and what we still need to ask.
-- **Build:** the market pack format and loader, the US pack (about 20 FDA rule records for granola, FDA daily values, allergens, claim words, required pack items), the date filter, the "applies if" logic, the nutrition math checks (daily values, calories from fat, carbs and protein, servings × serving size = net weight), the barcode check digit, requirement statuses, ranking questions by impact, and AI wording for each question and its reason.
+- **Build:** the market pack format and loader, the US pack (about 20 FDA rule records for granola, FDA daily values, allergens, claim words, required pack items), the date filter, the "applies if" logic, the nutrition math checks (daily values, calories from fat, carbs and protein, servings × serving size = net weight), the barcode check digit, requirement statuses, ranking questions by impact, and AI wording for each question and its reason. Plus design keep/change questions for brand assets found in the old design (logo, product photo, colours, tagline, marks), whose answers feed the brief's keep / change / add / remove section.
 - **Done when:** on Esko's samples, the API flags the added-sugar claim, the tree-nut "may contain" problem, the wrong daily values, the calorie math and the serving-size math; the barcode passes; at most 10 questions; and a search of the engine code finds no US-specific values (they all live in `markets/us/`).
 
 ### Phase 4 — Core UI flow (16–17 Oct)
 
 - **Goal:** a person can do the whole job in the browser.
-- **Build:** Evidence Desk with live progress, Fact Sheet with source chips that open the file at the right spot, conflict cards, the Questions stack.
+- **Build:** Evidence Desk with live progress, Fact Sheet with source chips that open the file at the right spot, conflict cards, the Questions stack. More inputs, because the challenge names them: a Word reader (paragraph locations), a plain-PDF document reader (page and line, no panels) for product specs, notes as pasted text or .txt (line numbers as the source), and JPG/PNG images of an old design read by the vision model (facts start AI-suggested).
 - **Done when:** upload the samples, watch facts appear, resolve a conflict, answer a question, and see the Fact Sheet update.
 
 ### Phase 5 — Brief, audit and export (17 Oct) · milestone: end to end
 
 - **Goal:** the deliverable.
-- **Build:** brief sections with sentences that carry fact IDs, the AI draft, the audit that rejects unproven numbers and claims, the editor, Approve, PDF and checklist export.
+- **Build:** brief sections with sentences that carry fact IDs, the AI draft, the audit that rejects unproven numbers and claims, the editor, Approve, PDF and checklist export. Plus a small "Ask about this" side panel (closed by default): it answers from the facts with sources, and an answer the user confirms becomes a fact. This covers the challenge's "conversation" without a chat-first screen.
 - **Done when:** a full run goes from upload to an approved brief with zero unproven sentences. If this works, you have a valid entry even if nothing else gets built.
 
 ### Phase 5A — Reviewer lenses: red pen, sticky notes, track changes (dates set when we get here)
