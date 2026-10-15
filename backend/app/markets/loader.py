@@ -92,11 +92,14 @@ def list_packs(root: str | Path | None = None) -> list[str]:
     return sorted(p.name for p in base.iterdir() if (p / "market.yaml").exists())
 
 
-def active_rules(pack: MarketPack, on_date: date) -> list[Rule]:
-    """Approved rules in force on on_date. Proposed rules never count."""
+def active_rules(pack: MarketPack, on_date: date, include_unapproved: bool = False) -> list[Rule]:
+    """Approved rules in force on on_date. Proposed rules never count.
+
+    include_unapproved waives only the approval flag (dev/demo), never the status.
+    """
     out = []
     for r in pack.rules:
-        if not r.approved or r.status == "proposed":
+        if (not r.approved and not include_unapproved) or r.status == "proposed":
             continue
         if r.from_ and on_date < r.from_:
             continue

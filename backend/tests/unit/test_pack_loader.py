@@ -6,7 +6,7 @@ import yaml
 from app.markets import PackError, active_rules, list_packs, load_pack
 
 MARKET = {"id": "t", "name": "Test", "units": ["g"], "currency": "USD",
-          "number_format": "us", "languages": ["English"]}
+          "number_format": "western", "languages": ["English"]}
 
 
 def rule(**over):

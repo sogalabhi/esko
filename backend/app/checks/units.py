@@ -1,5 +1,6 @@
 """Quantity parsing and comparison (pint-backed)."""
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 import pint
@@ -10,7 +11,7 @@ _UNITS = {
     "g": "gram", "gram": "gram", "grams": "gram", "kg": "kilogram", "mg": "milligram",
     "mcg": "microgram", "µg": "microgram", "μg": "microgram", "ug": "microgram",
     "oz": "ounce", "lb": "pound", "lbs": "pound",
-    "kj": "kilojoule", "kcal": "kilocalorie", "cal": "kilocalorie",
+    "kj": "kilojoule", "kcal": "kilocalorie",
     "ml": "milliliter", "l": "liter", "cl": "centiliter", "floz": "fluid_ounce",
 }
 _CANON = {"gram": "g", "kilogram": "kg", "milligram": "mg", "microgram": "mcg",
@@ -55,7 +56,8 @@ class Quantity:
         return float(q.to(target).magnitude)
 
 
-def parse_quantity(text: str) -> Quantity | None:
+def parse_quantity(text: str, aliases: Mapping[str, str] | None = None) -> Quantity | None:
+    """aliases: market-specific printed unit -> known unit (lowercase keys), e.g. {"cal": "kcal"}."""
     if not text:
         return None
     m = _RE.match(text)
@@ -65,7 +67,10 @@ def parse_quantity(text: str) -> Quantity | None:
     value = float(num.replace(",", "."))
     if unit == "%":
         return Quantity(value, "%", bool(star))
-    name = _UNITS.get(re.sub(r"[\s.]", "", unit.lower()))
+    token = re.sub(r"[\s.]", "", unit.lower())
+    if aliases:
+        token = aliases.get(token, token).lower()
+    name = _UNITS.get(token)
     if name is None:
         return None
     return Quantity(value, _CANON[name], bool(star))

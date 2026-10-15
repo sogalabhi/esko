@@ -3,5 +3,6 @@ name: United States
 regulators: [FDA]
 units: [g, oz]
 currency: USD
-number_format: us
+number_format: western
+unit_aliases: {cal: kcal}
 languages: [English]

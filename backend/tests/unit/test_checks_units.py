@@ -26,3 +26,9 @@ def test_same():
     assert not same_quantity(p("25 mg"), p("23 mg"))
     assert same_quantity(p("1868kJ"), p("445kcal"))
     assert not same_quantity(p("100 g"), p("100 kcal"))
+
+
+def test_unit_alias_is_injected_not_built_in():
+    assert parse_quantity("120 cal") is None
+    q = parse_quantity("120 cal", {"cal": "kcal"})
+    assert (q.value, q.unit) == (120, "kcal")

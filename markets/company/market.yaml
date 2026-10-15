@@ -4,5 +4,5 @@ name: Company rules
 regulators: []
 units: [g, oz]
 currency: USD
-number_format: us
+number_format: western
 languages: [English]

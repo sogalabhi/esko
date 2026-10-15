@@ -26,8 +26,10 @@ class MarketSettings(_Strict):
     regulators: list[str] = []
     units: list[str]
     currency: str
-    number_format: Literal["us", "in"]
+    number_format: Literal["western", "lakh"]
     languages: list[str]
+    # Printed unit token (lowercase) -> unit the checks understand, e.g. a market that prints "cal" for kcal.
+    unit_aliases: dict[str, str] = {}
 
 
 class FactEquals(_Strict):
@@ -67,6 +69,11 @@ class Requires(_Strict):
     panel: str | None = None
     min_size_mm: float | None = None
     languages: list[str] | None = None
+    # Optional parameters for the value check types (the rule engine falls back to "present" without them).
+    expected: Any = None  # exact
+    min: float | None = None  # range
+    max: float | None = None  # range
+    words: list[str] | None = None  # word_list: every word must appear in the fact value
 
 
 class Rule(_Strict):
