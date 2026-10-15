@@ -1,6 +1,6 @@
 """Record real AI answers as fixtures: `npm run test:record`.
 
-Runs the live pipeline once over the two sample files and saves each task's raw answer to
+Runs the live pipeline once over the two sample files (facts, conflicts, question wording) and saves each task's raw answer to
 tests/fixtures/ai/<task>.json, which the fake adapter replays. Uses quota; never run in tests.
 Usage: uv run python -m app.ai.record [carton.pdf sheet.xlsx]
 """
@@ -11,6 +11,7 @@ from pathlib import Path
 from app.ai.adapters.base import AIRequest
 from app.ai.cache import AICache
 from app.ai.client import AIClient, build_ai_client
+from app.analysis import analyze
 from app.extraction.pipeline import run_pipeline
 from app.readers import fingerprint, read_file
 from app.settings import BACKEND_DIR, get_settings
@@ -47,8 +48,9 @@ def main(paths: list[Path]) -> int:
         files.append(sf)
         pieces[sf.id], stored[sf.id] = ps, path
     project, report = run_pipeline(client, files, pieces, stored)
-    print(f"calls={report.calls} models={sorted(set(report.models))} facts={len(project.facts)} "
-          f"conflicts={len(project.conflicts)} prompts={report.prompt_versions}")
+    project = analyze(project, client=client)  # also records the question wording
+    print(f"calls={client.calls_made} models={sorted(set(report.models))} facts={len(project.facts)} "
+          f"conflicts={len(project.conflicts)} questions={len(project.questions)} prompts={report.prompt_versions}")
     return 0
 
 

@@ -83,3 +83,16 @@ def same_quantity(a: Quantity, b: Quantity, rel_tol: float = 0.02) -> bool:
     if x is None or y is None:
         return False
     return abs(x - y) <= rel_tol * max(abs(x), abs(y))
+
+
+def convert(q: Quantity, unit: str) -> Quantity | None:
+    """The same amount in another unit of the same kind (for example grams to ounces); None if not comparable."""
+    token = re.sub(r"[\s.]", "", unit.lower())
+    name = _UNITS.get(token)
+    src = q._pint()
+    if name is None or src is None:
+        return None
+    try:
+        return Quantity(float(src.to(name).magnitude), _CANON[name])
+    except pint.DimensionalityError:
+        return None

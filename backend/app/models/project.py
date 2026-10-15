@@ -63,7 +63,13 @@ class Source(CamelModel):
     quote_checked: bool
 
 
-class Fact(CamelModel):
+FactAction = Literal["keep", "change", "add", "remove"]
+
+
+class Fact(OmitNone):
+    """action is set by a person's answer (keep / change / add / remove); the brief reads it."""
+
+    omit_none = ("action",)
     id: str
     group: FactGroup
     field: str
@@ -71,6 +77,7 @@ class Fact(CamelModel):
     unit: str | None = None
     state: FactState
     sources: list[Source] = []
+    action: FactAction | None = None
 
 
 class ConflictSide(CamelModel):
@@ -78,10 +85,14 @@ class ConflictSide(CamelModel):
     sources: list[Source] = []  # empty when computed by code or stated by a rule
 
 
-class Resolution(CamelModel):
-    choice: Literal["intended", "left", "right"]
+class Resolution(OmitNone):
+    """choice custom = a person typed their own answer (kept in `text`), not one of the two sides."""
+
+    omit_none = ("text",)
+    choice: Literal["intended", "left", "right", "custom"]
     by: str
     at: str
+    text: str | None = None
 
 
 class ConflictLocation(CamelModel):
@@ -111,15 +122,35 @@ class Conflict(OmitNone):
 # --- later phases: minimal placeholders that already match the contract -------------------------
 
 
-class Question(CamelModel):
+QuestionKind = Literal["conflict", "missing", "design"]
+# What choosing an answer does. left / right / intended settle a conflict; value fills a missing fact;
+# keep / change / remove record a design decision; defer leaves the question for someone else.
+AnswerEffect = Literal["left", "right", "intended", "value", "keep", "change", "remove", "defer"]
+
+
+class AnswerOption(OmitNone):
+    omit_none = ("effects",)
+    label: str
+    effect: AnswerEffect
+    # Per-conflict override for a question that settles several conflicts at once: {conflict id: effect}.
+    effects: dict[str, AnswerEffect] | None = None
+
+
+class Question(OmitNone):
+    omit_none = ("answer",)
     id: str
     text: str
     why: str
     rule_ids: list[str] = []
     fact_ids: list[str] = []
+    requirement_ids: list[str] = []  # the requirements an answer settles; unlocks = len
     unlocks: int = 0
-    answers: list[str] = []
+    answers: list[str] = []  # the suggested answers (labels of `options`)
     status: Literal["open", "answered", "skipped"] = "open"
+    answer: str | None = None
+    kind: QuestionKind = "conflict"
+    subject: str = ""  # conflict id, requirement item or design asset this question is about
+    options: list[AnswerOption] = []
 
 
 class Requirement(OmitNone):
@@ -135,7 +166,7 @@ class Requirement(OmitNone):
 class Rule(OmitNone):
     omit_none = ("from", "to")
     id: str
-    market: Literal["US", "IN", "company"]
+    market: str  # the market's short name from its market.yaml
     ref: str
     summary: str
     url: str
@@ -205,7 +236,11 @@ class Trust(CamelModel):
     self_test: SelfTest = SelfTest()
 
 
-class Project(CamelModel):
+class Project(OmitNone):
+    omit_none = ("market",)
+    market: str | None = None
+    # True while rules that nobody has approved yet are used (demo mode); see rules/engine include_unapproved.
+    demo_mode: bool = False
     files: list[ProjectFile] = []
     facts: list[Fact] = []
     conflicts: list[Conflict] = []

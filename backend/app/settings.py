@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     llm_provider: str = "gemini"
     # Comma list = fallback order; the next model is tried when one stays overloaded.
     llm_model: str = "gemini-3.8-flash,gemini-3.7-flash,gemini-3.5-flash"
+    default_market: str = "us"  # folder under markets/ used when a project has no market yet
+    company_pack: str | None = "company"  # layered on top of every market (stricter-than-law rules)
     ai_cache_dir: Path = BACKEND_DIR / ".cache" / "ai"
 
     @property

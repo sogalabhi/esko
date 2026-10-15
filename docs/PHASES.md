@@ -214,7 +214,7 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
 - There are at most 10 questions, and the honey/vegan question is in the top 3.
 - Answering "keep honey, remove vegan claims" resolves the vegan conflicts and changes the expected requirements (the ripple).
 
-**Checkpoint:** `uv run python -m app.score` prints the answer key coverage (caught / missed, with reasons). It's our first honest score; write it in the commit message.
+**Checkpoint:** `uv run python scripts/score.py` (in `backend/`) prints the answer key coverage (caught / missed, with reasons). It's our first honest score; write it in the commit message.
 
 ---
 

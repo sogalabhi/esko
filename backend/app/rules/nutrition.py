@@ -36,6 +36,7 @@ class NutritionKeys:
     serving_size: str = "serving_size"
     net_quantity: str = "net_quantity"
     barcode: str = "barcode"
+    sugars: str = "total_sugars"
 
 
 def _get(facts: Sequence[FactView], key: str) -> FactView | None:
@@ -90,6 +91,13 @@ def run_nutrition(pack: MarketPack, facts: Sequence[FactView], keys: NutritionKe
     if servings is not None and size is not None and net is not None:
         out.append(_finding(check_servings(net, servings, _qty(size, aliases) or str(size.value),
                                            serving_tolerance), "servings"))
+
+    sugars_q, carbs_q = _qty(_get(facts, keys.sugars), aliases), _qty(_get(facts, keys.carbs), aliases)
+    if sugars_q is not None and carbs_q is not None and sugars_q.dimension == carbs_q.dimension:
+        s, c = sugars_q.to_base(), carbs_q.to_base()
+        if s is not None and c is not None and s > c:
+            out.append(Finding(kind="math", nutrient="sugars_vs_carbohydrate", printed=sugars_q.value,
+                               computed=carbs_q.value, detail="sugars exceed total carbohydrate"))
 
     code = _get(facts, keys.barcode)
     if code is not None:

@@ -1,0 +1,71 @@
+# The ONE table from extracted facts (Phase 2 field names) to the rule vocabulary of this market.
+# Keys are the item names used by rules/*.yaml, pack_items.yaml and the nutrition checks.
+# Fields are matched case- and punctuation-insensitively ("Total Fat" = "total fat").
+fields:
+  statement of identity: statement_of_identity
+  ingredient list: ingredient_list
+  allergen statement: allergen_statement
+  barcode: barcode
+  package type: pack_type
+  manufacturer: manufacturer_name
+  net quantity: net_quantity
+  servings per container: servings_per_container
+  serving size: serving_size
+  calories: calories
+  total fat: total_fat
+  saturated fat: saturated_fat
+  trans fat: trans_fat
+  cholesterol: cholesterol
+  sodium: sodium
+  total carbohydrate: total_carbohydrate
+  dietary fiber: dietary_fiber
+  total sugars: total_sugars
+  incl added sugars: added_sugars
+  protein: protein
+  vitamin d: vitamin_d
+  calcium: calcium
+  iron: iron
+  potassium: potassium
+# "<field> - % Daily Value" becomes the key of <field> plus "_dv".
+daily_value_phrase: daily value
+dv_suffix: _dv
+ingredient_keys: [ingredient_list]
+claim_groups: [claims]
+pack_type_key: pack_type
+# Which ingredient words belong to which allergen group of allergens.yaml (so "Almonds" counts as tree_nuts).
+allergen_members:
+  tree_nuts: [almond, brazil nut, cashew, hazelnut, macadamia, pecan, pine nut, pistachio, walnut]
+  peanuts: [peanut]
+  milk: [milk, butter, cream, whey, casein, cheese]
+  eggs: [egg]
+  fish: [fish, anchovy, salmon, tuna, cod]
+  crustacean_shellfish: [shrimp, prawn, crab, lobster, crayfish]
+  wheat: [wheat, spelt, kamut]
+  soybeans: [soy, soya, soybean]
+  sesame: [sesame, tahini]
+derive:
+  - {from: [net_quantity], key: net_quantity_metric, unit_in: [g, kg, mg, ml, l, cl]}
+  - {from: [net_quantity], key: net_quantity_ounces, unit_in: [oz, fl oz, lb]}
+  - {from: [manufacturer_name], key: manufacturer_name_place}
+  - {from: [manufacturer_name], key: manufacturer_address_city_state_zip, pattern: '\b\d{5}(-\d{4})?\b'}
+  - {from: [allergen_statement], key: allergen_declaration, pattern: '(?i)(?<!may )\bcontains?\b'}
+  - {from: [calories], key: nutrition_facts}
+  - {from: [total_fat_dv, saturated_fat_dv, cholesterol_dv, sodium_dv, total_carbohydrate_dv, dietary_fiber_dv, added_sugars_dv, vitamin_d_dv, calcium_dv, iron_dv, potassium_dv], key: percent_daily_value}
+format_markers:
+  - pattern: '(?i)reference.intake|\bkJ\b|\bsaturates\b'
+    rule: us.nutrition_facts.percent_daily_value
+    explanation: "EU-style nutrition wording (kJ, Saturates, Salt, reference-intake icons) is on a US pack."
+    expected: "Calories, Saturated Fat and Sodium with US % Daily Values"
+    severity: medium
+  - pattern: '(?i)cereals containing gluten'
+    rule: us.allergens.contains_or_parenthetical
+    explanation: '"Cereals Containing Gluten" is EU allergen wording; a US label names the food source (for example wheat).'
+    expected: "A Contains line naming each major allergen by its food source"
+    severity: low
+design_assets:
+  - {kind: logo, group: identity, fields: [brand], question: 'Keep the {value} logo as is?', label: '{value} logo'}
+  - {kind: product_photo, group: packaging, fields: [product photo, photo], question: 'Keep the product photo as is?', label: 'Product photo'}
+  - {kind: colours, group: packaging, fields: [brand colour, brand colours, colours], question: 'Keep the brand colours ({value})?', label: 'Brand colours'}
+  - {kind: certification_mark, group: claims, fields: [certification mark], question: 'Keep the {value} mark on the pack?', label: '{value} mark'}
+  - {kind: recycling_mark, group: packaging, fields: [recycling mark], question: 'Keep the recycling mark ({value})?', label: 'Recycling mark'}
+  - {kind: tagline, group: claims, fields: [marketing copy], question: 'Keep the line "{value}"?', label: 'Line: {value}'}

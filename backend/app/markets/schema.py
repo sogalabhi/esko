@@ -30,6 +30,7 @@ class MarketSettings(_Strict):
     languages: list[str]
     # Printed unit token (lowercase) -> unit the checks understand, e.g. a market that prints "cal" for kcal.
     unit_aliases: dict[str, str] = {}
+    short_name: str | None = None  # how the UI shows the market (for example a two-letter code); defaults to id
 
 
 class FactEquals(_Strict):
@@ -129,6 +130,59 @@ class PackItem(_Strict):
     min_height_mm: float | None = None
     source: str | None = None
     notes: str | None = None
+    # How a missing item is shown as a fact and asked as a question.
+    label: str | None = None
+    group: str | None = None  # fact group (identity, quantity, company, ...)
+    ask: bool = True  # False: cannot be answered by a person in a question (checked on the artwork later)
+
+
+class Derive(_Strict):
+    """An extra fact view for a rule item, built from one or more fact keys.
+
+    If a source fact exists but the unit/pattern test fails, the view is `missing` (the requirement is
+    then tied to that source fact). With no source fact at all, nothing is made.
+    """
+
+    from_: list[str] = Field(alias="from")
+    key: str
+    unit_in: list[str] | None = None  # source fact unit (or unit parsed from its value) must be one of these
+    pattern: str | None = None  # regex the source value must match
+
+
+class FormatMarker(_Strict):
+    """Text that does not belong on this market's pack (for example another market's nutrition format)."""
+
+    pattern: str
+    rule: str  # rule id the finding is filed under
+    explanation: str
+    expected: str  # what the market's pack should show instead
+    severity: Literal["high", "medium", "low"] = "medium"
+    owner: Literal["legal", "rnd", "brand"] = "legal"
+
+
+class DesignAsset(_Strict):
+    """A piece of the old design that gets a keep / change / remove question."""
+
+    kind: str  # logo, product_photo, colours, tagline, certification_mark, ...
+    group: str
+    fields: list[str]  # fact fields (case and punctuation insensitive) that show the asset
+    question: str  # {value} is the fact value
+    label: str
+
+
+class FactKeys(_Strict):
+    """The ONE table from extracted facts to rule vocabulary (fact keys). Market data."""
+
+    fields: dict[str, str]  # normalised fact field -> fact key
+    daily_value_phrase: str = "daily value"  # field suffix meaning "% of the daily value" -> key + dv_suffix
+    dv_suffix: str = "_dv"
+    ingredient_keys: list[str] = []  # keys whose value is an ingredient list
+    claim_groups: list[str] = []  # fact groups whose text can contain claim words
+    pack_type_key: str | None = None
+    allergen_members: dict[str, list[str]] = {}  # allergen group -> ingredient words that belong to it
+    derive: list[Derive] = []
+    format_markers: list[FormatMarker] = []
+    design_assets: list[DesignAsset] = []
 
 
 class MarketPack(_Strict):
@@ -138,3 +192,5 @@ class MarketPack(_Strict):
     allergens: AllergenList | None = None
     claims: list[ClaimWord] = []
     pack_items: list[PackItem] = []
+    fact_keys: FactKeys | None = None
+    layers: list[MarketSettings] = []  # settings of the packs layered on top (company rules)

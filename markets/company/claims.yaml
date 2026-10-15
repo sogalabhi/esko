@@ -1,0 +1,8 @@
+# Claim words screened by the company layer.
+claims:
+  - word: vegan
+    conditions:
+      - no animal-derived ingredient (the standard names honey and honey bee products)
+      - a Certified Vegan certificate is on file for the product
+    rule: company.vegan.certification
+    notes: "Also matches 'Certified Vegan' and 'Suitable for Vegans'."

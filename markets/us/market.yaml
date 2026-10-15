@@ -6,3 +6,4 @@ currency: USD
 number_format: western
 unit_aliases: {cal: kcal}
 languages: [English]
+short_name: US

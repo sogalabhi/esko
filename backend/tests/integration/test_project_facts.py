@@ -210,7 +210,8 @@ def test_api_run_then_get_project_validates_and_is_camel_case(client):
     assert body == r.json()
     parsed = Project.model_validate(body)  # field names are the UI.md section 9 names
     assert parsed.facts and parsed.conflicts
-    assert set(body) == {"files", "facts", "conflicts", "questions", "requirements", "rules", "pack", "brief", "trust"}
+    assert set(body) == {"files", "facts", "conflicts", "questions", "requirements", "rules", "pack", "brief", "trust",
+                         "market", "demoMode"}
     fact = body["facts"][0]
     assert {"id", "group", "field", "value", "unit", "state", "sources"} <= set(fact)
     assert {"fileId", "where", "quote", "quoteChecked"} == set(fact["sources"][0])

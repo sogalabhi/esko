@@ -9,7 +9,7 @@ import yaml
 from pydantic import ValidationError
 
 from app.markets.schema import (
-    AllergenList, ClaimWord, DailyValue, MarketPack, MarketSettings, PackItem, Rule,
+    AllergenList, ClaimWord, DailyValue, FactKeys, MarketPack, MarketSettings, PackItem, Rule,
 )
 
 
@@ -75,6 +75,11 @@ def load_pack(path: str | Path) -> MarketPack:
     if af.exists() and (d := _yaml(af)) is not None:
         allergens = _validate(AllergenList, d, af)
 
+    fact_keys = None
+    kf = root / "fact_keys.yaml"
+    if kf.exists() and (d := _yaml(kf)) is not None:
+        fact_keys = _validate(FactKeys, d, kf)
+
     return MarketPack(
         settings=settings,
         rules=rules,
@@ -82,6 +87,7 @@ def load_pack(path: str | Path) -> MarketPack:
         allergens=allergens,
         claims=many("claims.yaml", ClaimWord, "claims"),
         pack_items=many("pack_items.yaml", PackItem, "pack_items"),
+        fact_keys=fact_keys,
     )
 
 
@@ -110,4 +116,17 @@ def active_rules(pack: MarketPack, on_date: date, include_unapproved: bool = Fal
         if r.status == "withdrawn" and r.to is None:
             continue
         out.append(r)
+    return out
+
+
+def layer_packs(base: MarketPack, *overlays: MarketPack) -> MarketPack:
+    """A market pack with other packs (for example the company rules) layered on top: rules, claim words and
+    required items are added; the base keeps its settings, daily values, allergens and fact-key table."""
+    out = base.model_copy(deep=True)
+    for o in overlays:
+        out.rules += o.rules
+        out.claims += o.claims
+        have = {i.item for i in out.pack_items}
+        out.pack_items += [i for i in o.pack_items if i.item not in have]
+        out.layers.append(o.settings)
     return out

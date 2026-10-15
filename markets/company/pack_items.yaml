@@ -1,0 +1,2 @@
+pack_items:
+  - {item: vegan_certificate_and_ingredient_check, label: "Vegan certificate and ingredient check", group: claims, panel: any, source: company.vegan.certification, notes: "Evidence a person provides; not on the artwork."}

@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
-from .routers import files, project
+from .routers import answers, files, project
 from .settings import get_settings
 
 app = FastAPI(title="BriefForge")
 app.include_router(files.router)
 app.include_router(project.router)
+app.include_router(answers.router)
 
 
 @app.get("/api/health")

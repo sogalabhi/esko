@@ -1,0 +1,20 @@
+# Company layer: stricter than law. DRAFT, not approved. Quote read from vegan.org/certification via a page fetch (15 Oct 2026);
+# a person must check it against the current standard before approving.
+- id: company.vegan.certification
+  market: company
+  source:
+    regulation: Certified Vegan Standards (vegan.org)
+    clause: Certified Vegan Standards, products may not contain
+    url: https://vegan.org/certification/
+    quote: "meat, fish, fowl, animal by-products, eggs or egg products, milk or milk products, honey or honey bee products"
+  summary: A pack that carries a vegan claim or the Certified Vegan mark needs proof that the recipe has no animal-derived ingredient (honey is named in the standard) and that the certificate is on file.
+  status: in_force
+  applies_if:
+    claim_used: vegan
+  requires:
+    item: vegan_certificate_and_ingredient_check
+    panel: any
+  check_type: present
+  stricter_than_law: true
+  approved: false
+  notes: "Company rule draft. No US law defines 'vegan', so this is a certification-standard rule, not a regulation. Quote is from the standard's list of what a certified product may not contain; the certificate and the ingredient check are evidence a person provides."

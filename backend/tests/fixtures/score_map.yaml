@@ -1,0 +1,10 @@
+# Answer-key checks that are gaps in a requirement rather than conflicts: which rule's requirement must have which status.
+# Kept next to the answer key so scripts/score.py holds no market vocabulary.
+requirement_status:
+  allergen_contains: {rule: us.allergens.contains_or_parenthetical, status: missing}
+  net_quantity: {rule: us.net_quantity.ounces_first, status: missing}
+  manufacturer_address: {rule: us.name_place.city_state_zip, status: missing}
+  added_sugars_value: {rule: us.added_sugars.declaration, status: conflict}
+# The extraction must have found at least this many visible facts on each panel an item's evidence names,
+# so that "no hidden/guide text in facts" cannot pass just because nothing was read.
+min_visible_facts_per_panel: 5

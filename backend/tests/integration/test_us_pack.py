@@ -14,7 +14,8 @@ def test_us_pack_loads():
     for r in pack.rules:
         assert r.source.url and r.source.quote, r.id
         assert not r.approved, r.id
-    assert load_pack(packs_root() / "company").rules == []
+    company = load_pack(packs_root() / "company")
+    assert [r.id for r in company.rules] == ["company.vegan.certification"] and not company.rules[0].approved
 
 
 def test_daily_values():

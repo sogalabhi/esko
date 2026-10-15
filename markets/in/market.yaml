@@ -5,3 +5,4 @@ units: [g]
 currency: INR
 number_format: lakh
 languages: [English, Hindi]
+short_name: IN
