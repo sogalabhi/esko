@@ -14,7 +14,7 @@ class CamelModel(BaseModel):
 
 
 class Location(CamelModel):
-    kind: Literal["pdf", "sheet"]
+    kind: Literal["pdf", "sheet", "doc", "text", "image"]
     # pdf
     page: int | None = None
     bbox_mm: tuple[float, float, float, float] | None = None  # x0,y0,x1,y1; origin top-left of the page
@@ -23,6 +23,12 @@ class Location(CamelModel):
     # sheet
     sheet: str | None = None
     cell: str | None = None
+    # doc (Word), text (notes)
+    paragraph: int | None = None
+    line: int | None = None
+    table: int | None = None
+    row: int | None = None
+    col: int | None = None
 
 
 class SourcePiece(CamelModel):
@@ -41,9 +47,11 @@ class SourcePiece(CamelModel):
 class SourceFile(CamelModel):
     id: str  # first 16 hex chars of sha256 of the bytes
     name: str
-    type: Literal["pdf", "xlsx"]
+    type: Literal["pdf", "xlsx", "docx", "text", "image"]
     pages: int | None = None
     sheets: list[str] = []
     status: Literal["read", "unsupported", "error"] = "read"
     error: str | None = None
+    width_px: int | None = None  # images
+    height_px: int | None = None
     skipped: list[str] = []  # human-readable notes about what was not read

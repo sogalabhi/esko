@@ -13,7 +13,8 @@ Reader = Callable[[Path, str], tuple[SourceFile, list[SourcePiece]]]
 _READERS: dict[str, Reader] = {".xlsx": read_xlsx, ".xlsm": read_xlsx}
 
 # Extension -> SourceFile.type for formats we recognise but may not read yet.
-_TYPES = {".pdf": "pdf", ".xlsx": "xlsx", ".xlsm": "xlsx"}
+_TYPES = {".pdf": "pdf", ".xlsx": "xlsx", ".xlsm": "xlsx", ".docx": "docx", ".txt": "text", ".md": "text",
+          ".png": "image", ".jpg": "image", ".jpeg": "image"}
 
 
 def register_reader(ext: str, reader: Reader) -> None:
@@ -40,6 +41,14 @@ def read_file(path: Path, file_id: str) -> tuple[SourceFile, list[SourcePiece]]:
         return SourceFile(id=file_id, name=path.name, type=_TYPES[ext], status="error",
                           error=f"{type(e).__name__}: {e}"), []
 
-from .pdf_reader import read_pdf  # noqa: E402
+from .docx_reader import read_docx  # noqa: E402
+from .image_reader import read_image  # noqa: E402
+from .pdf_document import read_pdf_any  # noqa: E402
+from .text_reader import read_text, read_text_file  # noqa: E402,F401
 
-register_reader(".pdf", read_pdf)
+register_reader(".pdf", read_pdf_any)  # dieline vs plain document decided per file
+register_reader(".docx", read_docx)
+for _ext in (".txt", ".md"):
+    register_reader(_ext, read_text_file)
+for _ext in (".png", ".jpg", ".jpeg"):
+    register_reader(_ext, read_image)
