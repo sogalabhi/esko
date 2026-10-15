@@ -1,0 +1,19 @@
+# Updated "healthy" definition. Final rule 89 FR 106064 (Dec. 27, 2024), amending 21 CFR 101.65(d).
+- id: us.healthy.updated_definition
+  market: us
+  source:
+    regulation: 21 CFR 101.65(d), as amended by Federal Register document 2024-29957 (89 FR 106064, Dec. 27, 2024)
+    clause: 101.65(d)
+    url: https://www.federalregister.gov/documents/full_text/xml/2024/12/27/2024-29957.xml
+    quote: "The compliance date of this final rule is February 25, 2028."
+  summary: From 25 Feb 2028 "healthy" needs a minimum food-group amount (a grain product needs 3/4 oz equivalent whole grain per reference amount) and limits on added sugars, sodium and saturated fat.
+  status: coming
+  from: 2028-02-25
+  applies_if:
+    claim_used: healthy
+  requires:
+    item: healthy_claim_conditions
+    panel: front
+  check_type: range
+  approved: false
+  notes: "The rule text says 'This rule is effective February 25, 2025.' Effective date was postponed to April 28, 2025 (90 FR 10592) per a secondary summary; not confirmed on the Federal Register page. Compliance date stays 2028-02-25. Until then the older 101.65(d) definition applies, and firms may comply early. Grain-product limits reported by FDA's page: added sugars 5 g (10% DV), sodium 230 mg (10% DV), saturated fat 1 g (5% DV), whole grain 3/4 oz equivalent. These limit values were not read in the Federal Register text itself (the FDA page was used) and must be copied exactly from the codified table in 101.65(d)(3) before use. Sample granola: sugar-and-honey content likely exceeds the limit."

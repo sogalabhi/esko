@@ -1,0 +1,18 @@
+# Proposed front-of-package "Nutrition Info box". Proposed rule only; not law.
+- id: us.fop.nutrition_info_box
+  market: us
+  source:
+    regulation: 'FDA proposed rule, "Food Labeling: Front-of-Package Nutrition Information" (FR doc. 2025-00778; 90 FR 5426, Jan. 16, 2025); docket FDA-2024-N-2910'
+    clause: proposed 21 CFR 101.9 (front-of-package nutrition information)
+    url: https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/front-package-nutrition-labeling
+    quote: "Food Labeling: Front-of-Package Nutrition Information"
+  summary: 'Proposed: most packaged foods would show a simple "Nutrition Info" box on the front with Low/Med/High levels of saturated fat, sodium and added sugars.'
+  status: proposed
+  applies_if:
+    pack_type: carton
+  requires:
+    item: front_of_pack_nutrition_info_box
+    panel: front
+  check_type: present
+  approved: false
+  notes: "The title is quoted as an identifier because the proposal text was not read. Citation 90 FR 5426 and publication date 16 Jan 2025 come from a web-search summary; the FDA page gives only public-inspection number 2025-00778. Comment period was extended to 15 July 2025 (FDA page, as of 8 May 2025). No final rule or withdrawal found. The proposed compliance period was not found. Person must open the Federal Register document, copy an exact quote, the proposed compliance dates, and confirm status as of today. Left status proposed, no from-date; never counted as active."

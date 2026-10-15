@@ -1,0 +1,72 @@
+# Nutrient content and other claims. 21 CFR 101.13, 101.60, 101.91; 7 CFR 205. Quotes read from Cornell LII copies of the official text; check against eCFR before approving.
+- id: us.claims.no_added_sugars
+  market: us
+  source:
+    regulation: 21 CFR 101.60
+    clause: 101.60(c)(2)
+    url: https://www.ecfr.gov/current/title-21/section-101.60
+    quote: "The product does not contain an ingredient containing added sugars such as jam"
+  summary: '"No added sugar", "without added sugar" and "no sugar added" are allowed only if no sugars or sugar-containing ingredient (jam, jelly, concentrated fruit juice) is added, sugar content is not increased by processing, and the food is labeled as not low or reduced calorie when it is not.'
+  status: in_force
+  applies_if:
+    claim_used: no added sugar
+  requires:
+    item: no_added_sugar_claim_conditions
+    panel: front
+  check_type: word_list
+  approved: false
+  notes: "Quote is condition (c)(2)(ii), cut at 'such as jam'. Conditions (i) no added sugars, (iii) sugars not increased above the amount in the ingredients, (iv) similar food normally has added sugars, and the calorie statement are also in (c)(2); (i) to (iv) were read as fragments, and the calorie condition was reported as (c)(2)(v) only by the tool. The sample uses sugar-containing ingredients such as honey and dried fruit (check the ingredient list), so this claim is likely to fail."
+
+- id: us.claims.sugar_free
+  market: us
+  source:
+    regulation: 21 CFR 101.60
+    clause: 101.60(c)(1)
+    url: https://www.ecfr.gov/current/title-21/section-101.60
+    quote: "The food contains less than 0.5 g of sugars"
+  summary: '"Sugar free" (and "free of sugar", "no sugar", "zero sugar") needs under 0.5 g sugars per serving and per reference amount, and no added sugar ingredient; low-calorie conditions also apply.'
+  status: in_force
+  applies_if:
+    claim_used: sugar free
+  requires:
+    item: sugar_free_claim_conditions
+    panel: front
+  check_type: range
+  approved: false
+  notes: "Quote is condition (c)(1)(i) as reported by the tool; the 'per reference amount customarily consumed and per labeled serving' wording that follows was not captured. The other conditions (c)(1)(ii) and (iii) (no sugar or sugar-containing ingredient; calorie statement) were not read verbatim."
+
+- id: us.claims.gluten_free
+  market: us
+  source:
+    regulation: 21 CFR 101.91
+    clause: 101.91(a)(3)
+    url: https://www.ecfr.gov/current/title-21/section-101.91
+    quote: "Any unavoidable presence of gluten in the food bearing the claim in its labeling is below 20 ppm gluten"
+  summary: '"Gluten free" is allowed only if the food has no gluten-containing grain (or processed ingredient) and any unavoidable gluten is under 20 ppm.'
+  status: in_force
+  applies_if:
+    claim_used: gluten free
+  requires:
+    item: gluten_free_claim_conditions
+    panel: front
+  check_type: range
+  approved: false
+  notes: "Quote is the (a)(3)(ii) condition as reported by the tool (cut after 'ppm gluten', the full sentence continues). Oats in granola need a person to check supplier testing or a gluten-free oat certificate; this cannot be decided from label files."
+
+- id: us.claims.organic
+  market: us
+  source:
+    regulation: 7 CFR 205 (USDA National Organic Program)
+    clause: 205.301(b)
+    url: https://www.ecfr.gov/current/title-7/section-205.301
+    quote: "not less than 95 percent organically produced raw or processed agricultural products"
+  summary: '"Organic" on a product needs at least 95% organic ingredients, certified production, and the name of the certifying agent on the label.'
+  status: in_force
+  applies_if:
+    claim_used: organic
+  requires:
+    item: organic_certificate_and_certifier_name
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is a fragment of 205.301(b) (the phrase is preceded by 'Products sold, labeled, or represented as \"organic\" must contain'). The certifying agent identification was read as 'identify the name of the certifying agent that certified the handler of the finished product' at 205.303(b)(2) (tool-reported paragraph number; check). The USDA organic seal rules are in 205.311 and were not read. A certificate cannot be seen in the label files, so it must be asked for."

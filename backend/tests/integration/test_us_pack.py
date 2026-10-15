@@ -10,7 +10,10 @@ def test_us_pack_loads():
     assert {"us", "company"} <= set(list_packs())
     pack = load_pack(packs_root() / "us")
     assert pack.settings.regulators == ["FDA"] and pack.settings.currency == "USD"
-    assert len(pack.rules) == 1 and not pack.rules[0].approved
+    assert len(pack.rules) >= 25
+    for r in pack.rules:
+        assert r.source.url and r.source.quote, r.id
+        assert not r.approved, r.id
     assert load_pack(packs_root() / "company").rules == []
 
 

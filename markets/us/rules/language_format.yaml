@@ -1,0 +1,17 @@
+# Language and format of required label information. 21 CFR 101.15.
+- id: us.language.english_required_text
+  market: us
+  source:
+    regulation: 21 CFR 101.15
+    clause: 101.15(c)(1)
+    url: https://www.ecfr.gov/current/title-21/section-101.15
+    quote: "All words, statements, and other information required by or under authority of the act to appear on the label"
+  summary: All required label information is in English (a foreign language may be added only if every required item is repeated in it, with some exceptions).
+  status: in_force
+  requires:
+    item: required_text_in_english
+    panel: any
+    languages: [English]
+  check_type: word_list
+  approved: false
+  notes: "Quote is the start of the sentence in 101.15(c)(1) as reported by the tool; the 'shall appear thereon in the English language' ending was not captured. Flags non-English or French-reference wording (the sample content sheet was rebuilt from a French reference). Rules for Puerto Rico and bilingual labels are not modelled."

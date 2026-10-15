@@ -1,0 +1,32 @@
+# Name and place of business. 21 CFR 101.5. Quotes read from the Cornell LII copy of the eCFR text; check against eCFR before approving.
+- id: us.name_place.manufacturer_packer_distributor
+  market: us
+  source:
+    regulation: 21 CFR 101.5
+    clause: 101.5(a)
+    url: https://www.ecfr.gov/current/title-21/section-101.5
+    quote: "shall specify conspicuously the name and place of business of the manufacturer, packer, or distributor."
+  summary: The label names the manufacturer, packer or distributor and gives its place of business.
+  status: in_force
+  requires:
+    item: manufacturer_name_place
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote starts mid-sentence in 101.5(a). If the name is not the manufacturer's, 101.5(a) and (c) require a qualifying phrase such as 'Manufactured for' or 'Distributed by'. Panel is 'any' because 101.5 allows the principal display panel or the information panel; check 101.2 for the exact rule."
+
+- id: us.name_place.city_state_zip
+  market: us
+  source:
+    regulation: 21 CFR 101.5
+    clause: 101.5(d)
+    url: https://www.ecfr.gov/current/title-21/section-101.5
+    quote: "the street address may be omitted if it is shown in a current city directory or telephone directory."
+  summary: The place of business shows city, State and ZIP code; the street address may be left out only if the firm is listed in a current city or telephone directory.
+  status: in_force
+  requires:
+    item: manufacturer_address_city_state_zip
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is the second half of the sentence in 101.5(d); its first half (street address, city, State and ZIP code) was read through a summarising tool, not copied verbatim. A person must check the first half and the ZIP code sentence ('The requirement for inclusion of the ZIP code shall apply only to consumer commodity labels developed or revised ...') against eCFR. Street address is conditional, so the sample's missing address (city/state/ZIP absent) is a gap either way."

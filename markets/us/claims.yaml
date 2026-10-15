@@ -1,0 +1,59 @@
+# Claim words screened on US packs. Each claim names the conditions a person or the engine must confirm and the rule record (if any).
+# Conditions are plain statements, not engine logic. Sources are in the linked rule records, except where a note says otherwise.
+claims:
+  - word: no added sugar
+    conditions:
+      - no sugar or sugar-containing ingredient (for example honey, jam, concentrated fruit juice) is added
+      - sugars content is not increased above what the ingredients contain
+      - if the food is not low or reduced calorie, the label says so
+    rule: us.claims.no_added_sugars
+    notes: "Also covers 'without added sugar' and 'no sugar added' (21 CFR 101.60(c)(2))."
+  - pattern: "(?i)^(without|no|not) added sugars?$|^no sugars? added$"
+    conditions:
+      - same conditions as 'no added sugar'
+    rule: us.claims.no_added_sugars
+    notes: "Variants of the claim above."
+  - word: sugar free
+    conditions:
+      - under 0.5 g sugars per serving and per reference amount
+      - no sugar or sugar-containing ingredient added
+    rule: us.claims.sugar_free
+    notes: "Also 'free of sugar', 'zero sugar', 'no sugar' (21 CFR 101.60(c)(1))."
+  - word: gluten free
+    conditions:
+      - no gluten-containing grain (wheat, rye, barley and crossbreeds) unless processed to remove gluten
+      - under 20 ppm gluten
+    rule: us.claims.gluten_free
+  - word: healthy
+    conditions:
+      - from 2028-02-25 the new 101.65(d) definition applies (food-group minimum; limits on added sugars, sodium, saturated fat)
+      - before then the old definition still applies
+    rule: us.healthy.updated_definition
+    notes: "Rule record is 'coming' (compliance 2028-02-25). Needs a person to read the exact limits for grain products."
+  - word: natural
+    conditions:
+      - nothing artificial or synthetic (including all color additives regardless of source) has been added that would not normally be expected in the food
+      - not misleading about the product as a whole
+    notes: "No FDA regulation defines 'natural'. Policy source, not a rule record: FDA page 'Use of the Term Natural on Food Labeling' (https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/use-term-natural-food-labeling), page current as of 2018-10-22; quote read: 'has not engaged in rulemaking to establish a formal definition for the term natural'. Informal policy only; flag for legal review. No rule id because there is no regulation to cite."
+  - word: gmo free
+    conditions:
+      - proof is needed that the ingredients are not bioengineered (supplier statement, testing or third-party verification)
+      - the claim must be truthful and not misleading
+    notes: "Needs proof. FDA has a non-binding guidance on voluntary labeling of foods derived or not derived from genetically engineered plants (https://www.fda.gov/media/120958/download). The PDF could not be read, so no exact quote and no rule record. Related: 'non-GMO'. A person should confirm the guidance and its status."
+  - word: non-gmo
+    conditions:
+      - same proof as 'gmo free'
+    notes: "See 'gmo free'. Third-party seals (for example Non-GMO Project) are not regulated by FDA; the seal needs its own licence evidence."
+  - word: organic
+    conditions:
+      - a valid USDA organic certificate from an accredited certifier is on file
+      - at least 95 percent organically produced agricultural ingredients (water and salt excluded) for the word 'organic'
+      - the certifying agent is named on the label
+    rule: us.claims.organic
+    notes: "USDA National Organic Program, 7 CFR Part 205. Needs a certificate, which is not in the label files, so BriefForge must ask for it. 'Made with organic ingredients' (70 percent) and '100 percent organic' have different conditions that were not read."
+  - word: 100% organic
+    conditions:
+      - a valid USDA organic certificate is on file
+      - every ingredient is organic
+    rule: us.claims.organic
+    notes: "Stricter than 'organic'; the 100 percent threshold was not read from 7 CFR 205.301(a)."

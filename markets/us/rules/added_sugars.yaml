@@ -1,0 +1,16 @@
+# Added sugars on the Nutrition Facts panel. 21 CFR 101.9(c)(6)(iii).
+- id: us.added_sugars.declaration
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(c)(6)(iii)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "Added sugars content shall be indented under Total Sugars"
+  summary: Added sugars is declared in grams per serving, indented under Total Sugars and shown as "Includes X g Added Sugars", with a % Daily Value (DRV 50 g).
+  status: in_force
+  requires:
+    item: added_sugars
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote read from the Cornell LII copy of the eCFR; the tool also returned the format string \"Includes `X' g Added Sugars\". The % Daily Value for added sugars (50 g) is in daily_values.yaml via 101.9(c)(9). Compliance dates (2020 for large firms, 2021 for small) belong to 81 FR 33742 (May 27, 2016) and were not read, so no from-date is set. Person to confirm the exact quote."

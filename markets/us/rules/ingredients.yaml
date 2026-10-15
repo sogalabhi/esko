@@ -1,0 +1,32 @@
+# Ingredient list. 21 CFR 101.4. Quotes read from the Cornell LII copy of the eCFR text; check against eCFR before approving.
+- id: us.ingredients.descending_order
+  market: us
+  source:
+    regulation: 21 CFR 101.4
+    clause: 101.4(a)(1)
+    url: https://www.ecfr.gov/current/title-21/section-101.4
+    quote: "shall be listed by common or usual name in descending order of predominance by weight"
+  summary: Every ingredient is listed by its common or usual name, heaviest first.
+  status: in_force
+  requires:
+    item: ingredient_list
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote starts mid-sentence in 101.4(a)(1). Order can only be checked against weights if the content sheet gives them. Ingredients may be on the principal display panel or the information panel (21 CFR 101.2); panel is 'any'. The engine cannot check 'descending order' by itself; it needs ingredient weights or a person."
+
+- id: us.ingredients.specific_names
+  market: us
+  source:
+    regulation: 21 CFR 101.4
+    clause: 101.4(b)
+    url: https://www.ecfr.gov/current/title-21/section-101.4
+    quote: "The name of an ingredient shall be a specific name and not a collective (generic) name"
+  summary: Ingredients are named specifically (for example "walnuts", "almonds") and not by a collective name.
+  status: in_force
+  requires:
+    item: ingredient_list
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Quote is the start of the sentence in 101.4(b); it continues with the exceptions (for example spices, natural flavors). The tool found no tree-nut provision in this section."

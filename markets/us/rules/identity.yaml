@@ -1,0 +1,32 @@
+# Statement of identity. 21 CFR 101.3. Quotes read from the Cornell LII copy of the eCFR text; check against eCFR before approving.
+- id: us.identity.statement_of_identity
+  market: us
+  source:
+    regulation: 21 CFR 101.3
+    clause: 101.3(a)
+    url: https://www.ecfr.gov/current/title-21/section-101.3
+    quote: "shall bear as one of its principal features a statement of the identity of the commodity."
+  summary: The principal display panel must carry a statement of identity (the common or usual name of the food, for example "Granola").
+  status: in_force
+  requires:
+    item: statement_of_identity
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote is the middle of the sentence in 101.3(a); the sentence starts 'The principal display panel of a package of food in package form ...'. Paragraph (b) says what the statement can be (name in a regulation, common or usual name, or an appropriately descriptive term)."
+
+- id: us.identity.bold_and_prominent
+  market: us
+  source:
+    regulation: 21 CFR 101.3
+    clause: 101.3(d)
+    url: https://www.ecfr.gov/current/title-21/section-101.3
+    quote: "This statement of identity shall be presented in bold type on the principal display panel"
+  summary: The statement of identity is in bold type on the front panel, in a size reasonably related to the most prominent printed matter there, and parallel to the base.
+  status: in_force
+  requires:
+    item: statement_of_identity
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote is the first part of the sentence in 101.3(d); it continues 'in a size reasonably related to the most prominent printed matter on such panel'. Bold and 'reasonably related' size are judged by a person; the engine can only check presence and position."

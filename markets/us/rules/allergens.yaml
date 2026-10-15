@@ -1,0 +1,64 @@
+# Allergen labeling. FD&C Act 403(w) = 21 U.S.C. 343(w); definition at 21 U.S.C. 321(qq). Statute read on Cornell LII; official text at uscode.house.gov.
+- id: us.allergens.contains_or_parenthetical
+  market: us
+  source:
+    regulation: FD&C Act 403(w)(1), 21 U.S.C. 343(w)(1)
+    clause: 21 U.S.C. 343(w)(1)(A)
+    url: https://www.law.cornell.edu/uscode/text/21/343
+    quote: "the word \"Contains\", followed by the name of the food source from which the major food allergen is derived"
+  summary: Each major food allergen is shown either in a "Contains ..." statement or in parentheses in the ingredient list, using the name of its food source.
+  status: in_force
+  applies_if:
+    any:
+      - contains_ingredient: milk
+      - contains_ingredient: eggs
+      - contains_ingredient: fish
+      - contains_ingredient: crustacean_shellfish
+      - contains_ingredient: tree_nuts
+      - contains_ingredient: peanuts
+      - contains_ingredient: wheat
+      - contains_ingredient: soybeans
+      - contains_ingredient: sesame
+  requires:
+    item: allergen_declaration
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is (w)(1)(A) as returned by a reading tool; the parenthetical alternative is (w)(1)(B). The 'Contains' statement must be placed immediately after or next to the ingredient list (FDA Q&A guidance); that placement text is not quoted here. EU-style wording such as 'Cereals Containing Gluten' is not a US allergen name: the US name is 'wheat'."
+
+- id: us.allergens.tree_nuts_by_type
+  market: us
+  source:
+    regulation: FD&C Act 201(qq)(1), 21 U.S.C. 321(qq)(1) and FDA Food Allergen Q&A Guidance, Edition 5 (January 2025)
+    clause: 21 U.S.C. 321(qq)(1)
+    url: https://www.fda.gov/regulatory-information/search-fda-guidance-documents/guidance-industry-questions-and-answers-regarding-food-allergen-labeling-edition-5
+    quote: "only the tree nuts listed in Table 1 of the 5th edition are tree nuts"
+  summary: Tree nuts are declared by the type of nut (for example almond, walnut, pecan); only the 12 nuts in FDA's Table 1 count as the major allergen, and coconut no longer does.
+  status: proposed
+  applies_if:
+    contains_ingredient: tree_nuts
+  requires:
+    item: allergen_declaration_tree_nut_type
+    panel: any
+  check_type: present
+  approved: false
+  notes: "SECONDARY-SOURCE RISK. The quote comes from the FDA FAQ page about Edition 5 as read by a tool; the guidance PDF itself could not be read. The statutory phrase read from 321(qq)(1) is 'tree nuts (e.g., almonds, pecans, or walnuts)'. The requirement to name the specific nut in the Contains statement is stated in FDA's Q&A but was not captured verbatim; a person must find the question number and exact text (probably in the tree-nut section of Edition 5) before approving. Guidance is non-binding; the statute is binding. FDA's Edition 5 was published January 6, 2025 per the FDA page."
+
+- id: us.allergens.sesame
+  market: us
+  source:
+    regulation: FASTER Act (Pub. L. 117-11), amending 21 U.S.C. 321(qq)(1)
+    clause: 21 U.S.C. 321(qq)(1)
+    url: https://www.law.cornell.edu/uscode/text/21/321
+    quote: "soybeans, and sesame"
+  summary: Sesame is a ninth major food allergen and must be declared like the others.
+  status: in_force
+  from: 2023-01-01
+  applies_if:
+    contains_ingredient: sesame
+  requires:
+    item: allergen_declaration
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is from Cornell's amendment note on 321(qq)(1) ('Pub. L. 117-11 substituted \"soybeans, and sesame\" for \"and soybeans\"'), not the statute body. The date 1 Jan 2023 is from allergens.yaml (FDA guidance) and is not re-verified from the Act text; a person should confirm the effective date from Pub. L. 117-11 sec. 203."

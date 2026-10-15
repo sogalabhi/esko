@@ -1,0 +1,98 @@
+# Nutrition Facts. 21 CFR 101.9. Quotes read from the Cornell LII copy of the eCFR text; check against eCFR before approving.
+# Only the first 100,000 of 131,918 characters of the section were read; paragraph letters below were reported by a reading tool and must be checked.
+- id: us.nutrition_facts.required_panel
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(a)(1)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "When food is in package form, the required nutrition labeling information shall appear on the label"
+  summary: A packaged food carries the Nutrition Facts panel.
+  status: in_force
+  requires:
+    item: nutrition_facts
+    panel: any
+  check_type: present
+  approved: false
+  notes: "Quote is the start of 101.9(a)(1). Exemptions (small business, small packages) are not modelled. Placement on the information panel is governed by 101.2; panel is 'any'."
+
+- id: us.nutrition_facts.heading_and_box
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(d)(2)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "shall be presented under the identifying heading of \"Nutrition Facts.\""
+  summary: The panel carries the heading "Nutrition Facts" and is set off in a box with hairlines.
+  status: in_force
+  requires:
+    item: nutrition_facts
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Reported by the tool as (d)(2). The box requirement was reported at 'The nutrition information shall be set off in a box by use of hairlines' (tool placed it at (d)(1)(i); unconfirmed). Quote fragment starts mid-sentence."
+
+- id: us.nutrition_facts.calories_not_kj_only
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(c)(1)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "Energy content per serving may also be expressed in kilojoule units,"
+  summary: Energy is declared as Calories per serving; kilojoules may be added in parentheses but cannot replace Calories.
+  status: in_force
+  requires:
+    item: calories
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "Quote shows kJ is only an addition ('may also be expressed'). The sentence in (c)(1) that Calories must be declared uses 'Calories, total, Total calories, or Calories'; not quoted here to keep it exact. This record flags EU-style kJ/kcal values (e.g. 197 kJ / 46 kcal) on the pack."
+
+- id: us.nutrition_facts.sodium_not_salt
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(c)(4)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "A statement of the number of milligrams of sodium in a specified serving of food"
+  summary: Sodium is declared in milligrams under the name "Sodium"; the term "salt" (EU style) does not replace it on the Nutrition Facts panel.
+  status: proposed
+  requires:
+    item: sodium
+    panel: any
+  check_type: word_list
+  approved: false
+  notes: "The rule text does not mention 'salt'; this is an inference that the panel must say 'Sodium' in mg. Person to confirm the interpretation. Quote is the start of the sentence in (c)(4)."
+
+- id: us.nutrition_facts.percent_daily_value
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(d)(7)(ii)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "A listing of the percent of the DRV as established in paragraphs (c)(7)(iii) and (c)(9) of this section"
+  summary: Percent Daily Value is shown for each nutrient with a Daily Reference Value, using the values in 101.9(c)(9); EU "reference intake" percentages do not satisfy this.
+  status: in_force
+  requires:
+    item: percent_daily_value
+    panel: any
+  check_type: range
+  approved: false
+  notes: "Quote is the start of (d)(7)(ii) as reported by the tool. The heading '% Daily Value' alignment rule was reported at (d)(6). daily_values.yaml holds the reference numbers; the engine does the percent math."
+
+- id: us.nutrition_facts.calories_type_size
+  market: us
+  source:
+    regulation: 21 CFR 101.9
+    clause: 101.9(d)(1)(iii)
+    url: https://www.ecfr.gov/current/title-21/section-101.9
+    quote: "shall be in a type size no smaller than 16 point."
+  summary: The Calories line is in bold or extra bold, at least 16 point (numbers at least 22 point).
+  status: proposed
+  requires:
+    item: calories
+    panel: any
+    min_size_mm: 5.64
+  check_type: size
+  approved: false
+  notes: "16 pt = 5.64 mm (1 pt = 0.3528 mm). The 22 point figure for the number came from the reading tool and was not quoted. Exceptions for tabular and small packages exist and are not modelled. Quote is the tail of the sentence; the beginning (which item it applies to) was not captured. Verify before approving."

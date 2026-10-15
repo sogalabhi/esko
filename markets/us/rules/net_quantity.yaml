@@ -1,18 +1,99 @@
-id: us.net_quantity.dual_units_bottom30
-market: us
-source:
-  regulation: 21 CFR 101.105
-  clause: 101.105(f)
-  url: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/subpart-G/section-101.105
-  quote: "The declaration shall appear as a distinct item on the principal display panel, in the bottom 30 percent of the area of the label panel"
-summary: Net quantity goes in the bottom 30% of the principal display panel, in both US (oz) and metric (g) units.
-status: in_force
-applies_if:
-  fact_present: net_quantity
-requires:
-  item: net_quantity
-  panel: front
-check_type: present
-stricter_than_law: false
-approved: false
-notes: "Example rule. Quote and clause drafted from memory, not fetched; a person must verify against the eCFR text before approving. Dual US + metric units per 101.105(j)."
+# Net quantity of contents. Section is 21 CFR 101.7 (formerly 101.105; redesignated at 81 FR 59131, Aug. 29, 2016).
+# Panel vocabulary: front = principal display panel (PDP).
+# Quotes read from the Cornell LII copy of the eCFR text because ecfr.gov was unreachable; check against eCFR before approving.
+- id: us.net_quantity.dual_units_bottom30
+  market: us
+  source:
+    regulation: 21 CFR 101.7
+    clause: 101.7(f)
+    url: https://www.ecfr.gov/current/title-21/section-101.7
+    quote: "It shall be placed on the principal display panel within the bottom 30 percent"
+  summary: Net quantity is a distinct item on the principal display panel, in the bottom 30% of the panel area, in lines generally parallel to the base.
+  status: in_force
+  requires:
+    item: net_quantity
+    panel: front
+  check_type: present
+  stricter_than_law: false
+  approved: false
+  notes: "Fixed from the first draft: the clause is 101.7(f), not 101.105(f) (the section was redesignated in 2016). Quote is a fragment of the sentence that continues past 'bottom 30 percent'. 101.7(f) has a narrow exception for panels of 5 square inches or less. The id keeps its original name (dual_units) although dual units are now covered by two separate records below."
+
+- id: us.net_quantity.distinct_item
+  market: us
+  source:
+    regulation: 21 CFR 101.7
+    clause: 101.7(f)
+    url: https://www.ecfr.gov/current/title-21/section-101.7
+    quote: "The declaration shall appear as a distinct item on the principal display panel,"
+  summary: The net quantity statement must stand apart from other label information (not run in with other text).
+  status: in_force
+  requires:
+    item: net_quantity
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote is the start of the sentence in 101.7(f), cut at the comma. 101.7(f) goes on to say how far it must be separated from other information; those distances are not copied here."
+
+- id: us.net_quantity.ounces_first
+  market: us
+  source:
+    regulation: 21 CFR 101.7
+    clause: 101.7(j)(1)
+    url: https://www.ecfr.gov/current/title-21/section-101.7
+    quote: "The declaration shall be expressed both in ounces, with identification by weight or by liquid measure and,"
+  summary: For a package under 4 lb or 1 gal, net quantity is stated in ounces (identified as weight), with the pound equivalent in parentheses when 1 lb or more.
+  status: in_force
+  requires:
+    item: net_quantity_ounces
+    panel: front
+  check_type: present
+  approved: false
+  notes: "Quote is the start of the sentence in 101.7(j)(1); the sentence continues with the pound/pint rule. Paragraph (j) applies to packages under 4 pounds or 1 gallon. A 480 g carton is about 16.9 oz, so 'NET WT 16.9 OZ (1 LB 0.9 OZ) (480g)' style applies; exact wording of the parenthetical needs a person to check against the full paragraph."
+
+- id: us.net_quantity.metric_units
+  market: us
+  source:
+    regulation: Fair Packaging and Labeling Act, 15 U.S.C. 1453(a)(2)
+    clause: 15 U.S.C. 1453(a)(2)
+    url: https://www.law.cornell.edu/uscode/text/15/1453
+    quote: "using the most appropriate units of both the customary inch/pound system of measure"
+  summary: Net quantity must also be stated in SI metric units (grams) alongside ounces, except for random packages and foods packed at retail.
+  status: in_force
+  requires:
+    item: net_quantity_metric
+    panel: front
+  check_type: present
+  approved: false
+  notes: "The metric requirement comes from the FPLA statute that FDA enforces, not from 21 CFR 101.7 (101.7(p) only permits a metric statement). Quote is the first half of the phrase; the SI metric clause follows, with exceptions at (a)(3)(A)(ii) and (a)(6). Statute read on Cornell LII (secondary host of the U.S. Code); official text is at uscode.house.gov. Person to confirm how FDA applies it before approving."
+
+- id: us.net_quantity.net_weight_term
+  market: us
+  source:
+    regulation: 21 CFR 101.7
+    clause: 101.7(j)(3)
+    url: https://www.ecfr.gov/current/title-21/section-101.7
+    quote: "The term \"net weight\" shall be used when stating the net quantity of contents in terms of weight."
+  summary: A weight statement must use the words "net weight" (for example "Net Wt. 16.9 oz").
+  status: in_force
+  requires:
+    item: net_quantity
+    panel: front
+  check_type: word_list
+  approved: false
+  notes: "Paragraph number (j)(3) was given by the reading tool; a person should confirm the sub-paragraph. Whether the abbreviation 'Net Wt' is acceptable is not checked here."
+
+- id: us.net_quantity.type_size_by_pdp_area
+  market: us
+  source:
+    regulation: 21 CFR 101.7
+    clause: 101.7(i)
+    url: https://www.ecfr.gov/current/title-21/section-101.7
+    quote: "The declaration shall be in letters and numerals in a type size established in relationship to the"
+  summary: Minimum letter height of the net quantity depends on the area of the principal display panel (tiers listed in pack_items.yaml).
+  status: proposed
+  requires:
+    item: net_quantity
+    panel: front
+  check_type: size
+  approved: false
+  notes: "Quote is the start of the sentence in 101.7(i). Tier values (1/16, 1/8, 3/16, 1/4, 1/2 inch by PDP area) are in pack_items.yaml. The tiers were read as a paraphrase of the table, not a verbatim copy, and the sentence at 101.7(i)(3) was seen verbatim only for 'more than 25 but not more than 100 square inches' = 'not less than three-sixteenths inch'. A person must verify every tier in the eCFR text. min_size_mm is left empty here because it depends on the PDP area."
