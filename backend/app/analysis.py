@@ -30,6 +30,9 @@ from app.settings import get_settings
 
 DERIVED_CONFLICT_PREFIXES = ("math-", "fmt-")
 USER_PREFIX = "user-"
+# how a question names the file a value came from, by project file type
+SOURCE_NAMES = {"pdf": "the pack artwork", "document": "the spec document", "sheet": "the content sheet",
+                "docx": "the Word document", "text": "the notes", "image": "the image"}
 
 
 @lru_cache
@@ -119,7 +122,7 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
     reqs, missing, _ = build_requirements(pack, live, contested, on_date)
     facts = facts + missing
 
-    conf_cands, absorbed = build_conflict_candidates(pack, facts, conflicts, reqs, {f.id: ("the content sheet" if f.type == "sheet" else "the pack artwork") for f in out.files})
+    conf_cands, absorbed = build_conflict_candidates(pack, facts, conflicts, reqs, {f.id: SOURCE_NAMES.get(f.type, "the file") for f in out.files})
     decisions = rank(conf_cands + build_missing_candidates(pack, facts, reqs, absorbed))
     design = build_design_candidates(pack, facts, conflicts)
     closed = [q for q in out.questions if q.status != "open"]

@@ -2,13 +2,12 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import get_args
 
 from app.ai.cache import fingerprint
 from app.ai.client import AIClient
 from app.ai.prompts import load_prompt
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import Conflict, Fact, FileType, Project, ProjectFile, SkippedItem
+from app.models.project import Conflict, Fact, Project, project_file_type, to_project_file
 
 from .facts import Draft, build_draft, build_image_draft, corroborate, fact_state, source_for
 from .ingredients import parse_ingredients
@@ -33,30 +32,6 @@ class RunReport:
     unchecked: list[str] = field(default_factory=list)  # "file: field - reason" for facts left AI-suggested
     rejected_meaning: int = 0
     prompt_versions: dict[str, str] = field(default_factory=dict)
-
-
-def _file_type(f: SourceFile) -> str:
-    """The type the project shows; the reconciler treats "sheet" as the reference side of a conflict."""
-    if f.type == "xlsx":
-        return "sheet"
-    return f.type if f.type in get_args(FileType) else "pdf"
-
-
-def is_dieline_pieces(pieces: list[SourcePiece]) -> bool:
-    """A dieline PDF's pieces sit on panels; a plain-PDF document's do not."""
-    return any(p.location.panel for p in pieces)
-
-
-def to_project_file(f: SourceFile) -> ProjectFile:
-    skipped = []
-    for note in f.skipped:
-        item, _, reason = note.partition(": ")
-        skipped.append(SkippedItem(item=item, reason=reason or "Not read as a fact"))
-    ok = f.status == "read"
-    return ProjectFile(
-        id=f.id, name=f.name, type=_file_type(f), pages=f.pages or max(1, len(f.sheets)),
-        status="done" if ok else "error", skipped=skipped,
-    )
 
 
 def _run(client: AIClient, name: str, inp: ExtractionInput, file_id: str, schema, report: RunReport):
@@ -121,7 +96,7 @@ def extract_file(client: AIClient, file: SourceFile, pieces: list[SourcePiece], 
         result = _run(client, inp.task, inp, file.id, ImageExtraction, report)
         piece = inp.id_map["IMG"]
         return _dedupe([build_image_draft(ef, file, piece) for ef in result.facts], report, file)
-    if file.type == "pdf" and is_dieline_pieces(pieces):
+    if file.type == "pdf" and project_file_type(file, pieces) == "pdf":  # dieline; otherwise a plain-PDF document
         images = render_panels(path) if path and Path(path).exists() else {}
         inp = carton_input(pieces, images)
     elif file.type == "xlsx":
@@ -152,7 +127,7 @@ def run_pipeline(client: AIClient, files: list[SourceFile], pieces: dict[str, li
         d.fact.id = f"f-{i}"
     facts = [d.fact for d in drafts]
 
-    file_types = {f.id: _file_type(f) for f in files}
+    file_types = {f.id: project_file_type(f, pieces.get(f.id, [])) for f in files}
     file_names = {f.id: f.name for f in files}
     factory = ConflictFactory()
     conflicts: list[Conflict] = value_conflicts(facts, file_types, factory)
@@ -169,5 +144,5 @@ def run_pipeline(client: AIClient, files: list[SourceFile], pieces: dict[str, li
         report.rejected_meaning = len(rejected)
         conflicts += meaning_conflicts(valid, facts, factory)
 
-    project = Project(files=[to_project_file(f) for f in files], facts=facts, conflicts=conflicts)
+    project = Project(files=[to_project_file(f, pieces.get(f.id)) for f in files], facts=facts, conflicts=conflicts)
     return project, report

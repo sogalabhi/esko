@@ -88,12 +88,17 @@ def to_project_file(f: SourceFile, pieces: list[SourcePiece] | None = None) -> P
 
 
 class SourceWhere(OmitNone):
-    omit_none = ("panel", "page", "bbox", "sheet", "cell")
+    omit_none = ("panel", "page", "bbox", "sheet", "cell", "paragraph", "line", "table", "row", "col")
     panel: str | None = None
     page: int | None = None
     bbox: BBox | None = None
     sheet: str | None = None
     cell: str | None = None
+    paragraph: int | None = None  # Word
+    line: int | None = None  # notes
+    table: int | None = None  # Word tables
+    row: int | None = None
+    col: int | None = None
 
 
 class Source(CamelModel):

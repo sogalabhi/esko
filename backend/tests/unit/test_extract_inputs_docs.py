@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import get_args
 
 import pymupdf
 
@@ -10,7 +11,8 @@ from app.ai.client import AIClient
 from app.ai.synthetic import make_docx, make_notes, make_png
 from app.extraction.inputs import document_input, image_input
 from app.extraction.pipeline import RunReport, extract_file, run_pipeline
-from app.models.project import SourceWhere
+from app.analysis import analyze
+from app.models.project import FileType
 from app.readers import read_file
 from tests.unit.helpers_extraction import sheet_file, sheet_piece
 
@@ -45,8 +47,7 @@ def test_notes_facts_carry_their_line(tmp_path):
     assert by["Storage instructions"].pieces[0].location.line == 5
     for d in drafts:
         assert d.fact.sources[0].quote_checked and d.fact.sources[0].file_id == sf.id
-        if "line" in SourceWhere.model_fields:
-            assert d.fact.sources[0].where.line == d.pieces[0].location.line
+        assert d.fact.sources[0].where.line == d.pieces[0].location.line
 
 
 def test_docx_facts_carry_paragraph_and_table_cell(tmp_path):
@@ -58,8 +59,11 @@ def test_docx_facts_carry_paragraph_and_table_cell(tmp_path):
     sodium = by["Sodium"]  # label and value are in two table cells: the quote check joins them
     assert sodium.fact.state == "confirmed" and sodium.fact.sources[0].quote_checked
     assert [(p.location.table, p.location.row, p.location.col) for p in sodium.pieces] == [(1, 2, 1), (1, 2, 2)]
-    if "paragraph" in SourceWhere.model_fields:
-        assert by["Product name"].fact.sources[0].where.paragraph == 2
+    assert by["Product name"].fact.sources[0].where.paragraph == 2
+    w = sodium.fact.sources[0].where
+    assert (w.table, w.row, w.col) == (1, 2, 1)
+    dumped = by["Product name"].fact.sources[0].where.model_dump(by_alias=True)
+    assert dumped == {"paragraph": 2}  # empty fields are omitted from the JSON
 
 
 def test_plain_pdf_document_facts_carry_page_and_box(tmp_path):
@@ -180,3 +184,21 @@ def test_image_value_that_only_contains_the_sheet_value_stays_ai_suggested(tmp_p
                                  "Oat Crunch Granola Deluxe", None, "identity")
     name = [f for f in project.facts if f.field == "Product name" and f.sources[0].file_id == sf.id][0]
     assert name.state == "ai_suggested" and len(name.sources) == 1
+
+
+def test_questions_name_each_source_by_its_real_type(tmp_path, monkeypatch):
+    import app.analysis as analysis
+
+    seen = {}
+    real = analysis.build_conflict_candidates
+
+    def spy(pack, facts, conflicts, reqs, names=None):
+        seen.update(names or {})
+        return real(pack, facts, conflicts, reqs, names)
+
+    monkeypatch.setattr(analysis, "build_conflict_candidates", spy)
+    project, _, sheet_f, sf = run_with(tmp_path, "docx", "150mg", "Sodium", "150", "mg", "nutrition")
+    analyze(project)
+    assert seen == {sheet_f.id: "the content sheet", sf.id: "the Word document"}
+    assert set(analysis.SOURCE_NAMES) == set(get_args(FileType))
+    assert len(set(analysis.SOURCE_NAMES.values())) == 6 and "the pack artwork" not in seen.values()
