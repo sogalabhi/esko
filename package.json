@@ -7,10 +7,11 @@
     "test:backend": "uv run --directory backend pytest",
     "test:frontend": "npm test --prefix frontend",
     "test:live": "uv run --directory backend pytest -m live",
-    "test:e2e": "echo not yet (Phase 4)",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "test:record": "uv run --directory backend python -m app.ai.record"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "concurrently": "^10.0.6"
   }
 }
