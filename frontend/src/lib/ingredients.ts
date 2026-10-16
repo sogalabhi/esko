@@ -41,8 +41,11 @@ export function ingredientKey(item: string): string {
  * repeats within a list are "duplicate".
  */
 export function diffIngredients(left: string, right: string): { left: DiffItem[]; right: DiffItem[] } {
-  const l = splitIngredients(left)
-  const r = splitIngredients(right)
+  return diffLists(splitIngredients(left), splitIngredients(right))
+}
+
+/** The same diff on lists that are already split (e.g. one claim per item). */
+export function diffLists(l: string[], r: string[]): { left: DiffItem[]; right: DiffItem[] } {
   const lKeys = new Set(l.map(ingredientKey))
   const rKeys = new Set(r.map(ingredientKey))
   const mark = (items: string[], other: Set<string>, absent: DiffStatus): DiffItem[] => {

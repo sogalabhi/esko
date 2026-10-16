@@ -14,7 +14,7 @@
         },
         {
           "item": "Layers: Cut, Crease, Dimensions",
-          "reason": "Dieline guide layers"
+          "reason": "Dieline guide layers (guide layer 'Dimensions and text')"
         },
         {
           "item": "Hidden EU 'Typical Values per 100g' table",
@@ -179,10 +179,10 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              20,
-              200,
-              130,
-              40
+              46,
+              208,
+              41,
+              31
             ]
           },
           "quote": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
@@ -213,10 +213,10 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              20,
-              200,
-              130,
-              40
+              77,
+              227.5,
+              8,
+              4.4
             ]
           },
           "quote": "Honey (1%)",
@@ -266,10 +266,10 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              20,
-              244,
-              130,
-              18
+              46,
+              240.5,
+              44,
+              15
             ]
           },
           "quote": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
@@ -309,10 +309,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              152,
-              66,
-              7
+              391.5,
+              177.5,
+              47.5,
+              4
             ]
           },
           "quote": "8 servings per container",
@@ -343,10 +343,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              160,
-              66,
-              7
+              433.5,
+              182.2,
+              5.2,
+              5.4
             ]
           },
           "quote": "85",
@@ -377,10 +377,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              176,
-              66,
-              7
+              422.5,
+              188.5,
+              16.5,
+              11.5
             ]
           },
           "quote": "Calories 166",
@@ -411,10 +411,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              184,
-              66,
-              7
+              391.5,
+              202.2,
+              47.5,
+              4.4
             ]
           },
           "quote": "Total Fat 15g",
@@ -445,10 +445,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              184,
-              66,
-              7
+              430.5,
+              202.2,
+              8,
+              4.4
             ]
           },
           "quote": "Total Fat 15g 2.2%",
@@ -479,10 +479,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              192,
-              66,
-              7
+              391.5,
+              206.1,
+              47.5,
+              4.4
             ]
           },
           "quote": "Saturated Fat 5g",
@@ -513,10 +513,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              192,
-              66,
-              7
+              430.5,
+              206.1,
+              8,
+              4.4
             ]
           },
           "quote": "Saturated Fat 5g 8%",
@@ -547,10 +547,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              200,
-              66,
-              7
+              391.5,
+              210,
+              47.5,
+              4.4
             ]
           },
           "quote": "Trans Fat 8g",
@@ -581,10 +581,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              208,
-              66,
-              7
+              391.5,
+              214,
+              47.5,
+              4.4
             ]
           },
           "quote": "Cholesterol 45mg",
@@ -615,10 +615,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              208,
-              66,
-              7
+              430.5,
+              214,
+              8,
+              4.4
             ]
           },
           "quote": "Cholesterol 45mg 26%",
@@ -649,10 +649,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              216,
-              66,
-              7
+              391.5,
+              217.9,
+              47.5,
+              4.4
             ]
           },
           "quote": "Sodium 23mg",
@@ -683,10 +683,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              216,
-              66,
-              7
+              430.5,
+              217.9,
+              8,
+              4.4
             ]
           },
           "quote": "Sodium 23mg 12%",
@@ -717,10 +717,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              224,
-              66,
-              7
+              391.5,
+              221.8,
+              47.5,
+              4.4
             ]
           },
           "quote": "Total Carbohydrate 66g",
@@ -751,10 +751,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              224,
-              66,
-              7
+              430.5,
+              221.8,
+              8,
+              4.4
             ]
           },
           "quote": "Total Carbohydrate 66g 18%",
@@ -785,10 +785,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              232,
-              66,
-              7
+              391.5,
+              225.9,
+              47.5,
+              4.4
             ]
           },
           "quote": "Dietary Fiber 3g",
@@ -819,10 +819,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              232,
-              66,
-              7
+              430.5,
+              225.9,
+              8,
+              4.4
             ]
           },
           "quote": "Dietary Fiber 3g 5%",
@@ -853,10 +853,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              240,
-              66,
-              7
+              391.5,
+              230,
+              47.5,
+              4.4
             ]
           },
           "quote": "Total Sugars 18g",
@@ -887,10 +887,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              248,
-              66,
-              7
+              391.5,
+              234.1,
+              47.5,
+              4.4
             ]
           },
           "quote": "Incl. 0g Added Sugars",
@@ -921,10 +921,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              248,
-              66,
-              7
+              430.5,
+              234.1,
+              8,
+              4.4
             ]
           },
           "quote": "Incl. 0g Added Sugars 0%",
@@ -955,10 +955,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              256,
-              66,
-              7
+              391.5,
+              238,
+              47.5,
+              4.4
             ]
           },
           "quote": "Protein 34g",
@@ -989,10 +989,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              264,
-              66,
-              7
+              391.5,
+              244.3,
+              47.5,
+              4.4
             ]
           },
           "quote": "Vitamin D 89mcg",
@@ -1023,10 +1023,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              264,
-              66,
-              7
+              430.5,
+              244.3,
+              8,
+              4.4
             ]
           },
           "quote": "Vitamin D 89mcg 12%",
@@ -1057,10 +1057,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              272,
-              66,
-              7
+              391.5,
+              248.2,
+              47.5,
+              4.4
             ]
           },
           "quote": "Calcium 206mg",
@@ -1091,10 +1091,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              272,
-              66,
-              7
+              430.5,
+              248.2,
+              8,
+              4.4
             ]
           },
           "quote": "Calcium 206mg 48%",
@@ -1125,10 +1125,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              280,
-              66,
-              7
+              391.5,
+              252.1,
+              47.5,
+              4.4
             ]
           },
           "quote": "Iron 5mg",
@@ -1159,10 +1159,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              280,
-              66,
-              7
+              430.5,
+              252.1,
+              8,
+              4.4
             ]
           },
           "quote": "Iron 5mg 20%",
@@ -1193,10 +1193,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              288,
-              66,
-              7
+              391.5,
+              256,
+              47.5,
+              4.4
             ]
           },
           "quote": "Potassium 23mg",
@@ -1227,10 +1227,10 @@
             "panel": "Left",
             "page": 1,
             "bbox": [
-              384,
-              288,
-              66,
-              7
+              430.5,
+              256,
+              8,
+              4.4
             ]
           },
           "quote": "Potassium 23mg 11%",
@@ -1261,10 +1261,10 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              56,
-              150,
-              94,
-              22
+              21,
+              208,
+              22,
+              52
             ]
           },
           "quote": "197kJ 46kcal",
@@ -1286,9 +1286,9 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              118,
-              288,
-              32,
+              63,
+              274.5,
+              11.5,
               8
             ]
           },
@@ -1331,6 +1331,21 @@
           },
           "quote": "1 20000 00003 6",
           "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              26,
+              277,
+              34,
+              15
+            ]
+          },
+          "quote": "1 20000 00003 6",
+          "quoteChecked": true
         }
       ]
     },
@@ -1348,10 +1363,10 @@
             "panel": "Top flap · Back",
             "page": 1,
             "bbox": [
-              30,
-              88,
-              110,
-              34
+              61,
+              74,
+              22,
+              19
             ]
           },
           "quote": "NO ADDED SUGAR",
@@ -1382,10 +1397,10 @@
             "panel": "Top flap · Back",
             "page": 1,
             "bbox": [
-              30,
-              88,
-              110,
-              34
+              92,
+              79,
+              20,
+              17
             ]
           },
           "quote": "OVEN BAKED",
@@ -1416,10 +1431,10 @@
             "panel": "Top flap · Back",
             "page": 1,
             "bbox": [
-              30,
-              88,
-              110,
-              34
+              75,
+              103,
+              17,
+              17
             ]
           },
           "quote": "GMO FREE",
@@ -1459,10 +1474,10 @@
             "panel": "Front",
             "page": 1,
             "bbox": [
-              338,
-              262,
-              30,
-              28
+              344,
+              110,
+              25,
+              26
             ]
           },
           "quote": "Certified Vegan",
@@ -1484,10 +1499,10 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              20,
-              266,
-              120,
-              7
+              46,
+              256.5,
+              46,
+              4.4
             ]
           },
           "quote": "DIETARY INFORMATION: Suitable for Vegans.",
@@ -1518,10 +1533,10 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              22,
-              150,
-              26,
-              26
+              96,
+              261,
+              21,
+              19
             ]
           },
           "quote": "USDA Organic",
@@ -1562,9 +1577,9 @@
             "panel": "Back",
             "page": 1,
             "bbox": [
-              20,
-              280,
-              90,
+              114.5,
+              287,
+              33,
               7
             ]
           },
@@ -1654,10 +1669,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                200,
-                130,
-                40
+                77,
+                227.5,
+                8,
+                4.4
               ]
             },
             "quote": "Honey (1%)",
@@ -1671,10 +1686,10 @@
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 200,
-          "w": 130,
-          "h": 40
+          "x": 77,
+          "y": 227.5,
+          "w": 8,
+          "h": 4.4
         }
       ]
     },
@@ -1695,10 +1710,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                200,
-                130,
-                40
+                46,
+                208,
+                41,
+                31
               ]
             },
             "quote": "Organic Wholegrain Oat Flakes (79%), Almonds, Pecans, Walnuts, Flax Seeds, Vegetable Oil (Rapeseed and Sunflower in varying proportions), Dried Strawberries, Blueberries, Cranberries, Pumpkin Seeds, Sunflower Seeds, Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar), Himalayan Pink Salt. Natural Flavoring.",
@@ -1726,10 +1741,10 @@
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 200,
-          "w": 130,
-          "h": 40
+          "x": 46,
+          "y": 208,
+          "w": 41,
+          "h": 31
         }
       ]
     },
@@ -1764,10 +1779,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                224,
-                66,
-                7
+                391.5,
+                221.8,
+                47.5,
+                4.4
               ]
             },
             "quote": "Total Carbohydrate 66g",
@@ -1781,10 +1796,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 224,
-          "w": 66,
-          "h": 7
+          "x": 391.5,
+          "y": 221.8,
+          "w": 47.5,
+          "h": 4.4
         }
       ]
     },
@@ -1808,10 +1823,10 @@
               "panel": "Top flap · Back",
               "page": 1,
               "bbox": [
-                30,
-                88,
-                110,
-                34
+                61,
+                74,
+                22,
+                19
               ]
             },
             "quote": "NO ADDED SUGAR",
@@ -1823,10 +1838,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                248,
-                66,
-                7
+                391.5,
+                234.1,
+                47.5,
+                4.4
               ]
             },
             "quote": "Incl. 0g Added Sugars",
@@ -1843,10 +1858,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                200,
-                130,
-                40
+                46,
+                208,
+                41,
+                31
               ]
             },
             "quote": "Honey (1%), Coconut Sugar, Crystallized Ginger (cane sugar)",
@@ -1860,26 +1875,26 @@
         {
           "fileId": "f-carton",
           "panel": "Top flap · Back",
-          "x": 30,
-          "y": 88,
-          "w": 110,
-          "h": 34
+          "x": 61,
+          "y": 74,
+          "w": 22,
+          "h": 19
         },
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 248,
-          "w": 66,
-          "h": 7
+          "x": 391.5,
+          "y": 234.1,
+          "w": 47.5,
+          "h": 4.4
         },
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 200,
-          "w": 130,
-          "h": 40
+          "x": 46,
+          "y": 208,
+          "w": 41,
+          "h": 31
         }
       ]
     },
@@ -1903,10 +1918,10 @@
               "panel": "Front",
               "page": 1,
               "bbox": [
-                338,
-                262,
-                30,
-                28
+                344,
+                110,
+                25,
+                26
               ]
             },
             "quote": "Certified Vegan",
@@ -1918,10 +1933,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                266,
-                120,
-                7
+                46,
+                256.5,
+                46,
+                4.4
               ]
             },
             "quote": "DIETARY INFORMATION: Suitable for Vegans.",
@@ -1938,10 +1953,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                200,
-                130,
-                40
+                77,
+                227.5,
+                8,
+                4.4
               ]
             },
             "quote": "Honey (1%)",
@@ -1953,10 +1968,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                208,
-                66,
-                7
+                391.5,
+                214,
+                47.5,
+                4.4
               ]
             },
             "quote": "Cholesterol 45mg",
@@ -1970,26 +1985,26 @@
         {
           "fileId": "f-carton",
           "panel": "Front",
-          "x": 338,
-          "y": 262,
-          "w": 30,
-          "h": 28
+          "x": 344,
+          "y": 110,
+          "w": 25,
+          "h": 26
         },
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 266,
-          "w": 120,
-          "h": 7
+          "x": 46,
+          "y": 256.5,
+          "w": 46,
+          "h": 4.4
         },
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 200,
-          "w": 130,
-          "h": 40
+          "x": 77,
+          "y": 227.5,
+          "w": 8,
+          "h": 4.4
         }
       ]
     },
@@ -2012,10 +2027,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                200,
-                130,
-                40
+                46,
+                208,
+                41,
+                31
               ]
             },
             "quote": "Almonds, Pecans, Walnuts",
@@ -2032,10 +2047,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                244,
-                130,
-                18
+                46,
+                240.5,
+                44,
+                15
               ]
             },
             "quote": "ALLERGEN INFORMATION: May Contain Almonds, May Contain Brazil Nuts, May Contain Pecan Nuts, May Contain Walnuts or Cereals Containing Gluten, May Contain Nuts, Oats.",
@@ -2049,18 +2064,18 @@
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 244,
-          "w": 130,
-          "h": 18
+          "x": 46,
+          "y": 240.5,
+          "w": 44,
+          "h": 15
         },
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 200,
-          "w": 130,
-          "h": 40
+          "x": 46,
+          "y": 208,
+          "w": 41,
+          "h": 31
         }
       ]
     },
@@ -2082,10 +2097,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                184,
-                66,
-                7
+                430.5,
+                202.2,
+                8,
+                4.4
               ]
             },
             "quote": "Total Fat 15g 2.2%",
@@ -2103,10 +2118,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 184,
-          "w": 66,
-          "h": 7
+          "x": 430.5,
+          "y": 202.2,
+          "w": 8,
+          "h": 4.4
         }
       ]
     },
@@ -2128,10 +2143,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                264,
-                66,
-                7
+                430.5,
+                244.3,
+                8,
+                4.4
               ]
             },
             "quote": "Vitamin D 89mcg 12%",
@@ -2149,10 +2164,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 264,
-          "w": 66,
-          "h": 7
+          "x": 430.5,
+          "y": 244.3,
+          "w": 8,
+          "h": 4.4
         }
       ]
     },
@@ -2174,10 +2189,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                272,
-                66,
-                7
+                430.5,
+                248.2,
+                8,
+                4.4
               ]
             },
             "quote": "Calcium 206mg 48%",
@@ -2195,10 +2210,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 272,
-          "w": 66,
-          "h": 7
+          "x": 430.5,
+          "y": 248.2,
+          "w": 8,
+          "h": 4.4
         }
       ]
     },
@@ -2222,10 +2237,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                176,
-                66,
-                7
+                422.5,
+                188.5,
+                16.5,
+                11.5
               ]
             },
             "quote": "Calories 166",
@@ -2243,10 +2258,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 176,
-          "w": 66,
-          "h": 7
+          "x": 422.5,
+          "y": 188.5,
+          "w": 16.5,
+          "h": 11.5
         }
       ]
     },
@@ -2269,10 +2284,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                160,
-                66,
-                7
+                433.5,
+                182.2,
+                5.2,
+                5.4
               ]
             },
             "quote": "85",
@@ -2290,10 +2305,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 160,
-          "w": 66,
-          "h": 7
+          "x": 433.5,
+          "y": 182.2,
+          "w": 5.2,
+          "h": 5.4
         }
       ]
     },
@@ -2328,10 +2343,10 @@
               "panel": "Left",
               "page": 1,
               "bbox": [
-                384,
-                216,
-                66,
-                7
+                391.5,
+                217.9,
+                47.5,
+                4.4
               ]
             },
             "quote": "Sodium 23mg",
@@ -2345,10 +2360,10 @@
         {
           "fileId": "f-carton",
           "panel": "Left",
-          "x": 384,
-          "y": 216,
-          "w": 66,
-          "h": 7
+          "x": 391.5,
+          "y": 217.9,
+          "w": 47.5,
+          "h": 4.4
         }
       ]
     },
@@ -2370,10 +2385,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                56,
-                150,
-                94,
-                22
+                21,
+                208,
+                22,
+                52
               ]
             },
             "quote": "197kJ 46kcal",
@@ -2385,10 +2400,10 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                244,
-                130,
-                18
+                46,
+                240.5,
+                44,
+                15
               ]
             },
             "quote": "Cereals Containing Gluten",
@@ -2406,18 +2421,18 @@
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 56,
-          "y": 150,
-          "w": 94,
-          "h": 22
+          "x": 21,
+          "y": 208,
+          "w": 22,
+          "h": 52
         },
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 244,
-          "w": 130,
-          "h": 18
+          "x": 46,
+          "y": 240.5,
+          "w": 44,
+          "h": 15
         }
       ]
     },
@@ -2439,9 +2454,9 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                118,
-                288,
-                32,
+                63,
+                274.5,
+                11.5,
                 8
               ]
             },
@@ -2460,9 +2475,9 @@
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 118,
-          "y": 288,
-          "w": 32,
+          "x": 63,
+          "y": 274.5,
+          "w": 11.5,
           "h": 8
         },
         {
@@ -2493,9 +2508,9 @@
               "panel": "Back",
               "page": 1,
               "bbox": [
-                20,
-                280,
-                90,
+                114.5,
+                287,
+                33,
                 7
               ]
             },
@@ -2514,9 +2529,9 @@
         {
           "fileId": "f-carton",
           "panel": "Back",
-          "x": 20,
-          "y": 280,
-          "w": 90,
+          "x": 114.5,
+          "y": 287,
+          "w": 33,
           "h": 7
         }
       ]

@@ -1,0 +1,60 @@
+@import '@fontsource/caveat/500.css';
+@import '@fontsource/caveat/700.css';
+
+/* Sticky-note paper by owner. Pale paper, never a state colour; the owner word is always printed on the note. */
+:root {
+  --owner-legal: #dbe7fb;
+  --owner-rnd: #fbefb8;
+  --owner-brand: #f8dde6;
+  --pen: var(--bad);
+}
+
+.hand {
+  font-family: 'Caveat', 'Segoe Print', cursive;
+}
+
+/* Self-drawing pen: every stroke has pathLength=1, so one dash of length 1 is the whole stroke. */
+.pen-stroke {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 0;
+  animation: pen-draw var(--dur, 500ms) ease-out var(--d, 0ms) backwards;
+}
+@keyframes pen-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.pen-ink {
+  animation: pen-fade 250ms ease-out var(--d, 0ms) backwards;
+}
+@keyframes pen-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.still .pen-stroke,
+.still .pen-ink {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pen-stroke,
+  .pen-ink {
+    animation: none;
+  }
+}
+
+/* Marks are SVG buttons: a dashed box shows hover, a solid one focus and the selected finding. */
+.mark-btn {
+  cursor: pointer;
+  outline: none;
+}
+.mark-focus {
+  visibility: hidden;
+}
+.mark-btn:hover .mark-focus {
+  visibility: visible;
+  stroke-dasharray: 1.5 1;
+}
+.mark-btn:focus-visible .mark-focus,
+.mark-btn[data-selected] .mark-focus {
+  visibility: visible;
+  stroke-dasharray: none;
+}

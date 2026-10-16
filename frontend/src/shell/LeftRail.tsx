@@ -1,4 +1,4 @@
-import { Box, ChevronsLeft, ChevronsRight, FileText, FolderOpen, ListChecks, Network, ShieldCheck, Tag, CircleQuestionMark, type LucideIcon } from 'lucide-react'
+import { Box, ChevronsLeft, ChevronsRight, FileText, FolderOpen, ListChecks, Network, PenLine, ShieldCheck, Tag, CircleQuestionMark, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
 import { usePersistedFlag } from '../lib/usePersistedFlag'
 import { useProject } from '../state/project'
@@ -85,6 +85,7 @@ export function LeftRail() {
     { to: '/brief', label: 'Brief', Icon: FileText, step: 5, dot: project.brief.approvedBy ? 'ok' : 'idle' },
   ]
   const more: Item[] = [
+    { to: '/markup', label: 'Markup', Icon: PenLine },
     { to: '/rules', label: 'Rules map', Icon: Network },
     { to: '/claims', label: 'Claims', Icon: Tag },
     { to: '/trust', label: 'Trust', Icon: ShieldCheck },
