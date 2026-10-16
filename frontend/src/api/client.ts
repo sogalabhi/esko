@@ -1,4 +1,4 @@
-import type { Project, ResolutionChoice } from '../types/project'
+import type { AskResult, Brief, BriefSentence, Project, ResolutionChoice } from '../types/project'
 
 /** Where the app gets its project: the real backend, or the bundled mock (VITE_USE_MOCK=1, and in tests). */
 export type DataSource = 'api' | 'mock'
@@ -107,7 +107,70 @@ async function postDecision(path: string, body?: unknown): Promise<Project | nul
   }
 }
 
+/** What a brief route sends back: the whole project (like the other decision routes) or just the brief. */
+export type BriefReply = { project: Project } | { brief: Brief }
+
+function normalizeBrief(raw: Brief): Brief {
+  return {
+    ...raw,
+    sections: (raw.sections ?? []).map((s) => ({
+      ...s,
+      sentences: (s.sentences ?? []).map(
+        (x): BriefSentence => ({ ...x, factIds: x.factIds ?? [], status: x.status ?? 'unproven', problems: x.problems ?? [], source: x.source ?? 'code' }),
+      ),
+    })),
+  }
+}
+
+/** Call a brief route. Null when the route is not there (older backend). */
+async function sendBrief(path: string, method: 'POST' | 'PATCH', body?: unknown): Promise<BriefReply | null> {
+  try {
+    const init: RequestInit = body === undefined ? { method } : { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    const raw = await request<Partial<Project> & Partial<Brief>>(path, init)
+    if (!('files' in raw) && 'sections' in raw) return { brief: normalizeBrief(raw as Brief) }
+    return { project: normalizeProject({ ...raw, ...(raw.brief ? { brief: normalizeBrief(raw.brief) } : {}) }) }
+  } catch (e) {
+    if (isRouteMissing(e)) return null
+    throw e
+  }
+}
+
 export const api = {
+  /** POST /api/brief/draft: write the brief from the facts and answers. Null when the route does not exist. */
+  draftBrief: () => sendBrief('/api/brief/draft', 'POST'),
+
+  /** PATCH /api/brief/sentences: save an edited sentence; the audit runs on the backend. */
+  patchSentence: (section: string, index: number, text: string, factIds: string[]) =>
+    sendBrief('/api/brief/sentences', 'PATCH', { section, index, text, factIds }),
+
+  /** POST /api/brief/approve: 409 while any sentence is unproven. */
+  approveBrief: (name: string) => sendBrief('/api/brief/approve', 'POST', { name }),
+
+  /** GET /api/brief/checklist.json as text, ready to save. */
+  async checklistJson(): Promise<string> {
+    let res: Response
+    try {
+      res = await fetch('/api/brief/checklist.json')
+    } catch {
+      throw new ApiError(0, UNREACHABLE)
+    }
+    if (!res.ok) throw new ApiError(res.status, (await detailOf(res)) || `The backend answered ${res.status}.`)
+    return res.text()
+  },
+
+  /** POST /api/ask. Null when the route does not exist. */
+  async ask(question: string): Promise<AskResult | null> {
+    try {
+      return await request<AskResult>('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) })
+    } catch (e) {
+      if (isRouteMissing(e)) return null
+      throw e
+    }
+  },
+
+  /** POST /api/ask/confirm: the answer becomes a user-sourced fact; the project comes back. */
+  confirmAsk: (question: string, answer: string, factIds: string[]) => postDecision('/api/ask/confirm', { question, answer, factIds }),
+
   /** GET /api/project. Null when no files are uploaded yet (404). */
   async getProject(): Promise<Project | null> {
     try {

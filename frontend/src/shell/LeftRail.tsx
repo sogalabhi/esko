@@ -95,7 +95,7 @@ export function LeftRail() {
     <nav
       aria-label="Steps"
       data-collapsed={collapsed || undefined}
-      className={`sticky top-14 h-[calc(100vh-56px)] w-14 shrink-0 border-r border-border bg-surface p-2 transition-[width] duration-200 ease-out ${
+      className={`no-print sticky top-14 h-[calc(100vh-56px)] w-14 shrink-0 border-r border-border bg-surface p-2 transition-[width] duration-200 ease-out ${
         collapsed ? '' : 'lg:w-[220px] lg:p-3'
       }`}
     >

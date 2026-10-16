@@ -1,17 +1,21 @@
 import { Construction } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
+import { AskPanel } from './AskPanel'
 import { LeftRail } from './LeftRail'
 import { SourceDrawer } from './SourceDrawer'
 import { TopBar } from './TopBar'
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const [askOpen, setAskOpen] = useState(false)
+  const closeAsk = useCallback(() => setAskOpen(false), [])
   return (
     <div className="min-h-screen bg-bg">
-      <TopBar />
+      <TopBar askOpen={askOpen} onAsk={() => setAskOpen((o) => !o)} />
       <div className="flex">
         <LeftRail />
         <main className="min-w-0 flex-1 p-6">{children}</main>
       </div>
+      <AskPanel open={askOpen} onClose={closeAsk} />
       <SourceDrawer />
     </div>
   )

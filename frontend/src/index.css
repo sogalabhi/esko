@@ -73,3 +73,15 @@ body {
   to { opacity: 1; }
 }
 .fade-in { animation: fade-in 200ms ease-out; }
+
+/* Print (Brief > Export PDF): the document only; controls and chrome are hidden, source dots become [n] refs plus an appendix. */
+.print-only { display: none; }
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: revert; }
+  body { background: #fff; }
+  main { padding: 0 !important; }
+  .brief-doc { border: 0 !important; padding: 0 !important; }
+  .brief-section { break-inside: avoid; }
+  @page { margin: 18mm; }
+}

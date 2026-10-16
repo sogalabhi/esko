@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
-import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, type DataSource } from '../api/client'
+import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, type BriefReply, type DataSource } from '../api/client'
+import { auditSentence } from '../lib/briefAudit'
 import mock from '../mocks/project.json'
-import type { Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
+import type { Brief, Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
 
 export const mockProject = mock as unknown as Project
 
@@ -26,6 +27,14 @@ export interface RunState {
   reason?: string
 }
 
+export type BriefBusy = 'idle' | 'drafting' | 'saving' | 'approving'
+
+export interface BriefError {
+  message: string
+  /** Set when a retry makes sense (the draft). */
+  retry?: 'draft'
+}
+
 const IDLE_RUN: RunState = { phase: 'idle', total: 0, uploaded: 0, fileErrors: [] }
 
 interface State {
@@ -37,6 +46,8 @@ interface State {
   /** Conflict resolutions made in this browser, kept across project refreshes until the backend has them. */
   resolutions: Record<string, Resolution>
   answerError: string | null
+  briefBusy: BriefBusy
+  briefError: BriefError | null
   drawer: Source | null
   market: UiMarket
   launchDate: string
@@ -59,6 +70,9 @@ type Action =
   | { type: 'setProject'; project: Project; settled?: string }
   | { type: 'run'; run: RunState }
   | { type: 'answerError'; message: string | null }
+  | { type: 'setBrief'; brief: Brief }
+  | { type: 'briefBusy'; busy: BriefBusy }
+  | { type: 'briefError'; error: BriefError | null }
 
 const DEFAULT_LAUNCH = '2027-03-01'
 
@@ -72,6 +86,8 @@ function init([project, source]: Seed): State {
     answers: {},
     resolutions: {},
     answerError: null,
+    briefBusy: 'idle',
+    briefError: null,
     drawer: null,
     market: 'US',
     launchDate: DEFAULT_LAUNCH,
@@ -145,6 +161,12 @@ function reducer(seed: Seed) {
         return { ...s, run: a.run }
       case 'answerError':
         return { ...s, answerError: a.message }
+      case 'setBrief':
+        return { ...s, project: { ...s.project, brief: a.brief }, briefBusy: 'idle', briefError: null }
+      case 'briefBusy':
+        return { ...s, briefBusy: a.busy, briefError: null }
+      case 'briefError':
+        return { ...s, briefError: a.error, briefBusy: 'idle' }
     }
   }
 }
@@ -311,6 +333,109 @@ function useStore(initial: Project, source: DataSource) {
     [analyse],
   )
 
+  const applyBriefReply = useCallback((r: BriefReply) => {
+    if ('project' in r) {
+      dispatch({ type: 'setProject', project: r.project })
+      dispatch({ type: 'briefBusy', busy: 'idle' })
+    } else dispatch({ type: 'setBrief', brief: r.brief })
+  }, [])
+
+  /** POST /api/brief/draft. On the mock it shows the bundled sample brief. */
+  const draftBrief = useCallback(async () => {
+    dispatch({ type: 'briefBusy', busy: 'drafting' })
+    if (source !== 'api') {
+      dispatch({ type: 'setBrief', brief: structuredClone(mockProject.brief) })
+      return
+    }
+    try {
+      const r = await api.draftBrief()
+      if (r) applyBriefReply(r)
+      else dispatch({ type: 'briefError', error: { message: 'This backend cannot draft a brief yet.', retry: 'draft' } })
+    } catch (e) {
+      dispatch({ type: 'briefError', error: { message: `The brief could not be drafted: ${message(e)}`, retry: 'draft' } })
+    }
+  }, [source, applyBriefReply])
+
+  /** PATCH one sentence (section title + index). Resolves true when saved; the audit result comes back on the sentence. */
+  const editSentence = useCallback(
+    async (section: string, index: number, text: string): Promise<boolean> => {
+      const brief = latest.current.project.brief
+      const sentence = brief.sections.find((s) => s.title === section)?.sentences[index]
+      if (!sentence) return false
+      dispatch({ type: 'briefBusy', busy: 'saving' })
+      if (source !== 'api') {
+        const problems = auditSentence(text, latest.current.project.facts)
+        const now = new Date().toISOString()
+        dispatch({
+          type: 'setBrief',
+          brief: {
+            ...brief,
+            version: brief.version + 1,
+            approvedBy: undefined,
+            approvedAt: undefined,
+            sections: brief.sections.map((sec) =>
+              sec.title !== section
+                ? sec
+                : {
+                    ...sec,
+                    sentences: sec.sentences.map((x, i) =>
+                      i === index ? { ...x, text, problems, status: problems.length ? 'unproven' : 'ok', source: 'user' } : x,
+                    ),
+                  },
+            ),
+            log: [...(brief.log ?? []), { who: CURRENT_USER, what: `Edited sentence ${index + 1} of ${section}`, at: now }],
+          },
+        })
+        return true
+      }
+      try {
+        const r = await api.patchSentence(section, index, text, sentence.factIds)
+        if (!r) {
+          dispatch({ type: 'briefError', error: { message: 'This backend cannot save brief edits yet.' } })
+          return false
+        }
+        applyBriefReply(r)
+        return true
+      } catch (e) {
+        dispatch({ type: 'briefError', error: { message: `The edit was not saved: ${message(e)}` } })
+        return false
+      }
+    },
+    [source, applyBriefReply],
+  )
+
+  /** POST /api/brief/approve {name}; the backend refuses (409) while any sentence is unproven. */
+  const approveBrief = useCallback(
+    async (name: string) => {
+      const brief = latest.current.project.brief
+      dispatch({ type: 'briefBusy', busy: 'approving' })
+      if (source !== 'api') {
+        if (brief.sections.some((s) => s.sentences.some((x) => x.status !== 'ok'))) {
+          dispatch({ type: 'briefError', error: { message: 'Not approved: some sentences are not in the facts.' } })
+          return
+        }
+        const now = new Date().toISOString()
+        dispatch({
+          type: 'setBrief',
+          brief: { ...brief, approvedBy: name, approvedAt: now, log: [...(brief.log ?? []), { who: name, what: 'Approved the brief', at: now }] },
+        })
+        return
+      }
+      try {
+        const r = await api.approveBrief(name)
+        if (r) applyBriefReply(r)
+        else dispatch({ type: 'briefError', error: { message: 'This backend cannot approve a brief yet.' } })
+      } catch (e) {
+        dispatch({ type: 'briefError', error: { message: `Not approved: ${message(e)}` } })
+        if (e instanceof ApiError && e.status === 409) void resync()
+      }
+    },
+    [source, applyBriefReply, resync],
+  )
+
+  const dismissBriefError = useCallback(() => dispatch({ type: 'briefError', error: null }), [])
+  const applyProject = useCallback((project: Project) => dispatch({ type: 'setProject', project }), [])
+
   const retryFailed = useCallback(() => ingest(failedFiles.current), [ingest])
   const runAnalysis = useCallback(() => analyse(), [analyse])
 
@@ -327,6 +452,11 @@ function useStore(initial: Project, source: DataSource) {
       ingest,
       retryFailed,
       runAnalysis,
+      draftBrief,
+      editSentence,
+      approveBrief,
+      dismissBriefError,
+      applyProject,
       resolveConflict,
       answerQuestion,
       skipQuestion,
@@ -337,7 +467,7 @@ function useStore(initial: Project, source: DataSource) {
       setLaunchDate,
       reset,
     }
-  }, [state, source, reload, ingest, retryFailed, runAnalysis, resolveConflict, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset])
+  }, [state, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset])
 }
 
 export type Store = ReturnType<typeof useStore>

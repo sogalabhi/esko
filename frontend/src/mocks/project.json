@@ -2887,7 +2887,7 @@
     ]
   },
   "brief": {
-    "version": 1,
+    "version": 3,
     "sections": [
       {
         "title": "Objective",
@@ -2898,9 +2898,299 @@
               "f-brand",
               "f-product-name",
               "f-net-qty"
-            ]
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "The agency delivers a corrected pack that passes the acceptance checklist below.",
+            "factIds": [],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
           }
         ]
+      },
+      {
+        "title": "Product facts",
+        "sentences": [
+          {
+            "text": "Statement of identity: GRANOLA — BERRY CRUNCH.",
+            "factIds": [
+              "f-identity"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Net quantity: 480 g.",
+            "factIds": [
+              "f-net-qty"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Servings per container: 8.",
+            "factIds": [
+              "f-servings"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Barcode (UPC): 1 20000 00003 6, check digit valid.",
+            "factIds": [
+              "f-upc"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          }
+        ]
+      },
+      {
+        "title": "Mandatory content by panel",
+        "sentences": [
+          {
+            "text": "Front: statement of identity, net quantity in oz and g, brand name.",
+            "factIds": [
+              "f-identity",
+              "f-net-qty",
+              "f-brand"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "Back: ingredient list, allergen statement with a Contains line, maker's name and address, barcode.",
+            "factIds": [
+              "f-ingredients",
+              "f-allergen-statement",
+              "f-producer",
+              "f-upc"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "Left: Nutrition Facts panel in the US FDA standard vertical format.",
+            "factIds": [
+              "f-panel-format"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          }
+        ]
+      },
+      {
+        "title": "Keep / Change / Add / Remove",
+        "sentences": [
+          {
+            "text": "Keep: brand name Dancing Fish and the Oven Baked claim.",
+            "factIds": [
+              "f-brand",
+              "f-claim-oven"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "Change: show the net quantity in oz as well as 480 g on the front.",
+            "factIds": [
+              "f-net-qty",
+              "f-net-qty-oz"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Add: a Contains statement and the company address (city, state, ZIP).",
+            "factIds": [
+              "f-contains",
+              "f-address"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Remove: the Certified Vegan mark and the No Added Sugar claim.",
+            "factIds": [
+              "f-mark-vegan",
+              "f-claim-nas"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "user"
+          }
+        ]
+      },
+      {
+        "title": "Allowed claims (and removed claims, with reason)",
+        "sentences": [
+          {
+            "text": "Allowed: Oven Baked.",
+            "factIds": [
+              "f-claim-oven"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Removed: Certified Vegan, because the recipe contains honey.",
+            "factIds": [
+              "f-mark-vegan",
+              "f-honey-pct"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "user"
+          },
+          {
+            "text": "Removed: No Added Sugar, because honey and coconut sugar are added sugars.",
+            "factIds": [
+              "f-claim-nas",
+              "f-sweeteners"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "user"
+          },
+          {
+            "text": "Needs proof on file before it stays: GMO Free.",
+            "factIds": [
+              "f-claim-gmo"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          }
+        ]
+      },
+      {
+        "title": "Nutrition panel instructions",
+        "sentences": [
+          {
+            "text": "Serving size 85 g, 8 servings per container, 166 kcal per serving.",
+            "factIds": [
+              "f-serving-size",
+              "f-servings",
+              "f-calories"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "Total Sugars 18 g, of which Added Sugars 0 g, to be rechecked once honey is counted as added sugar.",
+            "factIds": [
+              "f-sugars",
+              "f-added"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "Sodium 23 mg is 12% of the Daily Value, so ask R&D for the lab report.",
+            "factIds": [
+              "f-sodium",
+              "f-sodium-dv"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "Protein 40 g per serving.",
+            "factIds": [
+              "f-protein"
+            ],
+            "status": "unproven",
+            "problems": [
+              "40 is not in the facts (Protein is 34 g)"
+            ],
+            "source": "user"
+          }
+        ]
+      },
+      {
+        "title": "Open questions for the agency",
+        "sentences": [
+          {
+            "text": "Which honey percentage is correct, 9% (sheet) or 1% (carton)?",
+            "factIds": [
+              "f-honey-pct"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          },
+          {
+            "text": "Are almonds, pecans and walnuts ingredients or only possible traces?",
+            "factIds": [
+              "f-allergen-statement"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "ai"
+          }
+        ]
+      },
+      {
+        "title": "Acceptance checklist",
+        "sentences": [
+          {
+            "text": "Net quantity shows oz and g on the front panel.",
+            "factIds": [
+              "f-net-qty"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "The Contains statement lists every allergen ingredient.",
+            "factIds": [
+              "f-allergen-statement"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          },
+          {
+            "text": "The barcode scans and keeps its check digit.",
+            "factIds": [
+              "f-upc"
+            ],
+            "status": "ok",
+            "problems": [],
+            "source": "code"
+          }
+        ]
+      }
+    ],
+    "log": [
+      {
+        "who": "BriefForge",
+        "what": "Drafted version 1 from the facts and answers",
+        "at": "2026-10-15T09:00:00+00:00"
+      },
+      {
+        "who": "Abhijith",
+        "what": "Edited sentence 4 of Nutrition panel instructions",
+        "at": "2026-10-15T09:20:00+00:00"
       }
     ]
   },

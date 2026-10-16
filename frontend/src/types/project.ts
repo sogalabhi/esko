@@ -178,9 +178,18 @@ export interface Pack {
   blocks: PackBlock[]
 }
 
+export type SentenceStatus = 'ok' | 'unproven'
+export type SentenceSource = 'code' | 'ai' | 'user'
+
 export interface BriefSentence {
   text: string
   factIds: string[]
+  /** 'unproven' = the audit found a number or claim that is not in the facts. */
+  status: SentenceStatus
+  /** Plain reasons from the audit; empty when status is 'ok'. */
+  problems: string[]
+  /** Who wrote it: code (templated), AI (drafted and audited) or a person (edited). */
+  source: SentenceSource
 }
 
 export interface BriefSection {
@@ -188,11 +197,26 @@ export interface BriefSection {
   sentences: BriefSentence[]
 }
 
+export interface BriefLogEntry {
+  who: string
+  what: string
+  at: string
+}
+
 export interface Brief {
   version: number
   sections: BriefSection[]
   approvedBy?: string
   approvedAt?: string
+  /** Change log, oldest first. */
+  log?: BriefLogEntry[]
+}
+
+/** POST /api/ask answer. `refused` is set when no fact backs an answer. */
+export interface AskResult {
+  answer: string
+  factIds: string[]
+  refused?: boolean
 }
 
 export interface SelfTestRow {

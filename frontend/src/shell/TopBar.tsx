@@ -1,4 +1,4 @@
-import { Download, RotateCcw } from 'lucide-react'
+import { Download, RotateCcw, Search } from 'lucide-react'
 import { useId } from 'react'
 import { formatValue, titleCase } from '../lib/labels'
 import { useProject, type UiMarket } from '../state/project'
@@ -50,7 +50,7 @@ export function HealthRing({ percent, open }: { percent: number; open: number })
   )
 }
 
-export function TopBar() {
+export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: () => void } = {}) {
   const { project, market, setMarket, launchDate, setLaunchDate, reset } = useProject()
   const dateId = useId()
   const sliderId = useId()
@@ -77,7 +77,7 @@ export function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
+    <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <p className="min-w-0 truncate text-[16px] font-semibold">{product}</p>
 
       <div role="radiogroup" aria-label="Market" className="flex shrink-0 rounded-chip border border-border p-0.5">
@@ -125,6 +125,14 @@ export function TopBar() {
       <div className="ml-auto flex shrink-0 items-center gap-3">
         <HealthRing percent={percent} open={reqs.length - met} />
         <BackendStatus />
+        {onAsk && (
+          <button type="button" className={btn} onClick={onAsk} aria-expanded={askOpen} aria-label="Ask about this" title="Ask about this">
+            <Search size={14} aria-hidden="true" />
+            <span className="hidden xl:inline" aria-hidden="true">
+              Ask about this
+            </span>
+          </button>
+        )}
         <button type="button" className={btn} onClick={reset}>
           <RotateCcw size={14} aria-hidden="true" />
           Reset demo

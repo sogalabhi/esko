@@ -215,7 +215,7 @@ export function SourceDrawer() {
     <aside
       role="dialog"
       aria-label="Source"
-      className="drawer-in fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-border bg-surface shadow-[-8px_0_24px_rgba(22,24,29,0.08)] lg:w-[480px]"
+      className="no-print drawer-in fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-border bg-surface shadow-[-8px_0_24px_rgba(22,24,29,0.08)] lg:w-[480px]"
     >
       <header className="border-b border-border p-4">
         <div className="flex items-start justify-between gap-3">
