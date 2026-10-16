@@ -248,6 +248,12 @@ Shape details fixed in UI chunk 1 (the backend must match; see frontend/src/type
 - Brief health = met requirements ÷ all requirements.
 - file.error = plain reason when status is error (e.g. "page 2: scanned image, low resolution").
 - question.requirementIds = the requirements an answer settles (unlocks = its length).
+- Phase 5: brief sentence = {text, factIds, status: ok | unproven, problems: string[],
+  source: code | ai | user}; brief.log = [{who, what, at}].
+  Routes: POST /api/brief/draft · PATCH /api/brief/sentences {section, index, text, factIds}
+  · POST /api/brief/approve {name} (409 while unproven) · GET /api/brief/checklist.json
+  · POST /api/ask {question} → {answer, factIds, refused?} · POST /api/ask/confirm
+  {question, answer, factIds} → project (answer becomes a user-sourced fact).
 Live progress comes over a WebSocket as small events: fact_found, conflict_found,
 file_done. Ship a mock file with the Dancing Fish data from section 6.2 so the UI
 can be built before the backend exists.
