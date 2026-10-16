@@ -76,6 +76,25 @@ describe('api client', () => {
     await expect(api.postAnswer('q-1', 'a')).rejects.toThrow(/No project yet/)
   })
 
+  it('skip and undo post to the question routes with no body', async () => {
+    const f = stub(() => json({ questions: [] }))
+    await api.skipQuestion('q-1')
+    await api.undoQuestion('q-1')
+    expect(f.mock.calls.map(([u, i]) => `${i?.method} ${u}`)).toEqual(['POST /api/questions/q-1/skip', 'POST /api/questions/q-1/undo'])
+  })
+
+  it('resolveConflict sends choice and by (and text for custom); a missing route is null, a 409 throws', async () => {
+    const f = stub(() => json({ conflicts: [] }))
+    await api.resolveConflict('c-1', 'custom', 'Abhijith', 'Use 9%')
+    const [url, init] = f.mock.calls[0]
+    expect(url).toBe('/api/conflicts/c-1/resolve')
+    expect(JSON.parse(init?.body as string)).toEqual({ choice: 'custom', text: 'Use 9%', by: 'Abhijith' })
+    stub(() => json({ detail: 'Not Found' }, 404))
+    expect(await api.resolveConflict('c-1', 'left', 'A')).toBeNull()
+    stub(() => json({ detail: 'already resolved' }, 409))
+    await expect(api.resolveConflict('c-1', 'left', 'A')).rejects.toMatchObject({ status: 409, message: 'already resolved' })
+  })
+
   it('accepts the supported extensions only', () => {
     for (const n of ['a.PDF', 'b.xlsx', 'c.docx', 'd.txt', 'e.md', 'f.png', 'g.jpg', 'h.jpeg']) expect(isAccepted(n)).toBe(true)
     for (const n of ['x.exe', 'noext', 'y.zip']) expect(isAccepted(n)).toBe(false)

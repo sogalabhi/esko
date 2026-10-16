@@ -69,7 +69,7 @@ export function IngredientDiff({ left, right, leftTitle, rightTitle }: { left: s
 }
 
 export function Facts() {
-  const { project, resolveConflict } = useProject()
+  const { project, resolveConflict, answerError } = useProject()
   const [filter, setFilter] = useState<Filter>('all')
   const [railCollapsed, toggleRail] = usePersistedFlag('bf.conflicts.collapsed')
 
@@ -150,6 +150,13 @@ export function Facts() {
             ))}
           </div>
         </div>
+
+        {answerError && (
+          <p role="alert" className="mt-3 flex items-start gap-1.5 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
+            <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
+            {answerError}
+          </p>
+        )}
 
         <div className="mt-4 overflow-hidden rounded-card border border-border bg-surface">
           <table className="w-full table-fixed text-left text-[14px]">

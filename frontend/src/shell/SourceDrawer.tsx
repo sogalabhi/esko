@@ -1,5 +1,6 @@
-import { CircleCheck, Sparkles, X } from 'lucide-react'
+import { CircleAlert, CircleCheck, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { api } from '../api/client'
 import { sourceLong } from '../lib/labels'
 import { useProject } from '../state/project'
 import type { PackPanel, Source } from '../types/project'
@@ -95,7 +96,7 @@ export function PdfFrame({ source, panels, note }: { source: Source; panels: Pac
         viewBox={`${frame.x - pad} ${frame.y - pad} ${frame.w + pad * 2} ${frame.h + pad * 2}`}
         className="max-h-[360px] w-full rounded-chip border border-border bg-bg"
         role="img"
-        aria-label={`${frame.name} panel with the quote highlighted`}
+        aria-label={panel ? `${frame.name} panel with the quote highlighted` : 'Page with the quote highlighted'}
       >
         <rect x={frame.x} y={frame.y} width={frame.w} height={frame.h} fill="var(--surface)" stroke="var(--ink-2)" strokeWidth={0.6} strokeDasharray="3 2" />
         <text x={frame.x + 3} y={frame.y + 7} fontSize={5} fill="var(--ink-2)" fontFamily="IBM Plex Sans">
@@ -115,14 +116,88 @@ export function PdfFrame({ source, panels, note }: { source: Source; panels: Pac
         )}
       </svg>
       <figcaption className="mt-1 text-[12px] text-ink-2">
-        {note ?? 'Panel frame with the quote position (mm). Page crop arrives with the PDF viewer.'}
+        {note ?? (panel ? 'Panel frame with the quote position (mm). Page crop arrives with the PDF viewer.' : 'Quote position on the page (mm). Page crop arrives with the PDF viewer.')}
       </figcaption>
     </figure>
   )
 }
 
+/** Word paragraph or notes line: the quoted text in place, with its number. */
+export function TextPreview({ source, kind }: { source: Source; kind: 'docx' | 'text' }) {
+  const n = kind === 'text' ? source.where.line : source.where.paragraph
+  const word = kind === 'text' ? 'Line' : 'Paragraph'
+  return (
+    <figure>
+      <div className="flex gap-3 rounded-chip border border-border bg-bg p-3">
+        <span data-testid="text-locator" className="shrink-0 pt-0.5 font-mono text-[12px] text-ink-2">
+          {n != null ? (kind === 'text' ? n : `¶${n}`) : '—'}
+        </span>
+        <p data-target className="whitespace-pre-line border-l-2 border-info bg-info/10 pl-3 text-[14px] leading-6">
+          {source.quote}
+        </p>
+      </div>
+      <figcaption className="mt-1 text-[12px] text-ink-2">
+        {n != null ? `${word} ${n} of the original, quote highlighted` : `No ${word.toLowerCase()} number recorded for this source.`}
+      </figcaption>
+    </figure>
+  )
+}
+
+/** The original image. The region is listed in mm: the file's size in mm is not in the contract, so it cannot be drawn on the image yet. */
+export function ImagePreview({ source }: { source: Source }) {
+  const [failed, setFailed] = useState(false)
+  const b = source.where.bbox
+  if (failed) {
+    return (
+      <p role="alert" className="flex items-start gap-1.5 text-[13px] text-ink-2">
+        <CircleAlert size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
+        The original image could not be loaded from the backend.
+      </p>
+    )
+  }
+  return (
+    <figure>
+      <img
+        src={api.rawUrl(source.fileId)}
+        alt="The uploaded image"
+        onError={() => setFailed(true)}
+        className="max-h-[420px] w-full rounded-chip border border-border bg-bg object-contain"
+      />
+      <figcaption className="mt-1 text-[12px] text-ink-2">
+        {b ? (
+          <>
+            Region read by AI at <span className="font-mono">x {b[0]}, y {b[1]}, {b[2]} × {b[3]} mm</span> from the image's top left.
+          </>
+        ) : (
+          'No region recorded for this source.'
+        )}
+      </figcaption>
+    </figure>
+  )
+}
+
+function SourcePreview({ source }: { source: Source }) {
+  const { project, source: dataSource } = useProject()
+  const file = project.files.find((f) => f.id === source.fileId)
+  const live = dataSource === 'api'
+  switch (file?.type) {
+    case 'sheet':
+      return <SheetPreview source={source} />
+    case 'docx':
+    case 'text':
+      return <TextPreview source={source} kind={file.type} />
+    case 'image':
+      return live ? <ImagePreview source={source} /> : <p className="text-[13px] text-ink-2">The image is only shown when connected to the backend.</p>
+    case 'document':
+      // A plain PDF has no panels: crop the page around the quote.
+      return <PdfPreview source={source} panels={[]} live={live} />
+    default:
+      return <PdfPreview source={source} panels={project.pack.panels} live={live} />
+  }
+}
+
 export function SourceDrawer() {
-  const { project, drawer, closeDrawer, source } = useProject()
+  const { project, drawer, closeDrawer } = useProject()
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -172,7 +247,7 @@ export function SourceDrawer() {
         )}
       </header>
       <div className="flex-1 overflow-auto p-4">
-        {file?.type === 'sheet' ? <SheetPreview source={drawer} /> : <PdfPreview source={drawer} panels={project.pack.panels} live={source === 'api'} />}
+        <SourcePreview source={drawer} />
       </div>
     </aside>
   )

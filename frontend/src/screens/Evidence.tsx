@@ -1,8 +1,9 @@
-import { ArrowRight, Circle, CircleAlert, CircleCheck, FileSpreadsheet, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
+import { ArrowRight, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
 import { ACCEPT_ATTR } from '../api/client'
 import { LoadError, LoadingSkeleton, Skeleton } from '../components/LoadGate'
+import { FILE_META, fileUnits } from '../lib/labels'
 import { prefersReducedMotion } from '../lib/motion'
 import { useProject, type RunState } from '../state/project'
 import type { Fact, PackPanel, ProjectFile } from '../types/project'
@@ -96,16 +97,16 @@ function FileCard({
 }) {
   const titleId = useId()
   const st = STATUS[shown]
-  const pieces = file.type === 'sheet' ? plural(file.pages, 'sheet') : plural(file.pages, 'page')
+  const meta = FILE_META[file.type]
   return (
     <article aria-labelledby={titleId} data-file={file.id} className="flex gap-4 rounded-card border border-border bg-surface p-4">
-      {file.type === 'pdf' ? <CartonThumb panels={panels} facts={facts} fileId={file.id} /> : <ThumbPlaceholder Icon={FileSpreadsheet} />}
+      {file.type === 'pdf' ? <CartonThumb panels={panels} facts={facts} fileId={file.id} /> : <ThumbPlaceholder Icon={meta.Icon} />}
       <div className="min-w-0 flex-1">
         <h2 id={titleId} className="break-all text-[14px] font-semibold">
           {file.name}
         </h2>
         <p className="mt-0.5 text-[12px] text-ink-2">
-          {file.type === 'pdf' ? 'Dieline PDF' : 'Content spreadsheet'} · <span className="font-mono">{pieces}</span>
+          {meta.kind} · <span className="font-mono">{fileUnits(file)}</span>
         </p>
         <p className={`mt-2 flex items-center gap-1.5 text-[14px] font-medium ${st.cls}`} data-testid="file-status">
           <st.Icon size={16} aria-hidden="true" className={shown === 'reading' ? 'motion-safe:animate-spin' : ''} />

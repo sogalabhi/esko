@@ -1,4 +1,4 @@
-import type { Project } from '../types/project'
+import type { Project, ResolutionChoice } from '../types/project'
 
 /** Where the app gets its project: the real backend, or the bundled mock (VITE_USE_MOCK=1, and in tests). */
 export type DataSource = 'api' | 'mock'
@@ -90,6 +90,23 @@ export function normalizeProject(raw: Partial<Project>): Project {
   return { ...EMPTY_PROJECT, ...raw }
 }
 
+/** A "route missing" 404 or 405 (older backend), as opposed to a 404 that carries a reason. */
+export function isRouteMissing(e: unknown): boolean {
+  return e instanceof ApiError && (e.status === 405 || (e.status === 404 && e.message === 'Not Found'))
+}
+
+/** POST a decision; the backend answers with the recomputed project. Null when the route is not there. */
+async function postDecision(path: string, body?: unknown): Promise<Project | null> {
+  try {
+    const init: RequestInit =
+      body === undefined ? { method: 'POST' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    return normalizeProject(await request<Partial<Project>>(path, init))
+  } catch (e) {
+    if (isRouteMissing(e)) return null
+    throw e
+  }
+}
+
 export const api = {
   /** GET /api/project. Null when no files are uploaded yet (404). */
   async getProject(): Promise<Project | null> {
@@ -121,18 +138,23 @@ export const api = {
    * POST /api/answers. Returns null when the route does not exist (older backend), so the caller keeps
    * the answer locally. A 404 with a reason, such as "No project yet", is a real error.
    */
-  async postAnswer(questionId: string, answer: string): Promise<Project | null> {
-    try {
-      const raw = await request<Partial<Project>>('/api/answers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, answer }),
-      })
-      return normalizeProject(raw)
-    } catch (e) {
-      if (e instanceof ApiError && (e.status === 405 || (e.status === 404 && e.message === 'Not Found'))) return null
-      throw e
-    }
+  postAnswer(questionId: string, answer: string): Promise<Project | null> {
+    return postDecision('/api/answers', { questionId, answer })
+  },
+
+  /** POST /api/questions/{id}/skip. Null when the route does not exist. */
+  skipQuestion(questionId: string): Promise<Project | null> {
+    return postDecision(`/api/questions/${encodeURIComponent(questionId)}/skip`)
+  },
+
+  /** POST /api/questions/{id}/undo: takes back an answer or a skip. Null when the route does not exist. */
+  undoQuestion(questionId: string): Promise<Project | null> {
+    return postDecision(`/api/questions/${encodeURIComponent(questionId)}/undo`)
+  },
+
+  /** POST /api/conflicts/{id}/resolve. Null when the route does not exist; a second resolve is a 409. */
+  resolveConflict(conflictId: string, choice: ResolutionChoice, by: string, text?: string): Promise<Project | null> {
+    return postDecision(`/api/conflicts/${encodeURIComponent(conflictId)}/resolve`, text ? { choice, text, by } : { choice, by })
   },
 
   /** URL of the original file (PDF.js reads it). The backend route may not exist yet. */

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
-import { api, defaultDataSource, EMPTY_PROJECT, isAccepted, type DataSource } from '../api/client'
+import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, type DataSource } from '../api/client'
 import mock from '../mocks/project.json'
 import type { Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
 
@@ -34,7 +34,7 @@ interface State {
   run: RunState
   /** Answers given in this browser (the backend's `answer` is merged in by the store). */
   answers: Record<string, string>
-  /** Conflict resolutions made in this browser, kept across project refreshes (no resolve route yet). */
+  /** Conflict resolutions made in this browser, kept across project refreshes until the backend has them. */
   resolutions: Record<string, Resolution>
   answerError: string | null
   drawer: Source | null
@@ -43,7 +43,8 @@ interface State {
 }
 
 type Action =
-  | { type: 'resolve'; id: string; choice: ResolutionChoice }
+  | { type: 'resolve'; id: string; choice: ResolutionChoice; text?: string }
+  | { type: 'unresolve'; id: string }
   | { type: 'answer'; id: string; answer: string }
   | { type: 'skip'; id: string }
   | { type: 'undoAnswer'; id: string; prev: QuestionStatus }
@@ -55,7 +56,7 @@ type Action =
   | { type: 'loading' }
   | { type: 'loaded'; project: Project | null }
   | { type: 'loadFailed'; reason: string }
-  | { type: 'setProject'; project: Project }
+  | { type: 'setProject'; project: Project; settled?: string }
   | { type: 'run'; run: RunState }
   | { type: 'answerError'; message: string | null }
 
@@ -90,12 +91,17 @@ function reducer(seed: Seed) {
   return (s: State, a: Action): State => {
     switch (a.type) {
       case 'resolve': {
-        const resolution: Resolution = { choice: a.choice, by: CURRENT_USER, at: new Date().toISOString() }
+        const resolution: Resolution = { choice: a.choice, by: CURRENT_USER, at: new Date().toISOString(), ...(a.text ? { text: a.text } : {}) }
         return {
           ...s,
           resolutions: { ...s.resolutions, [a.id]: resolution },
           project: { ...s.project, conflicts: s.project.conflicts.map((c) => (c.id === a.id ? { ...c, resolution } : c)) },
         }
+      }
+      case 'unresolve': {
+        const resolutions = { ...s.resolutions }
+        delete resolutions[a.id]
+        return { ...s, resolutions, project: { ...s.project, conflicts: s.project.conflicts.map((c) => (c.id === a.id ? { ...c, resolution: undefined } : c)) } }
       }
       case 'answer':
         return {
@@ -129,8 +135,12 @@ function reducer(seed: Seed) {
           : { ...s, project: EMPTY_PROJECT, load: { status: 'empty' } }
       case 'loadFailed':
         return { ...s, load: { status: 'error', reason: a.reason } }
-      case 'setProject':
-        return { ...s, project: withResolutions(a.project, s.resolutions), answers: {}, load: { status: 'ready' } }
+      case 'setProject': {
+        // `settled`: a conflict the backend has now recorded, so the local copy is dropped.
+        const resolutions = { ...s.resolutions }
+        if (a.settled) delete resolutions[a.settled]
+        return { ...s, resolutions, project: withResolutions(a.project, resolutions), answers: {}, load: { status: 'ready' } }
+      }
       case 'run':
         return { ...s, run: a.run }
       case 'answerError':
@@ -161,9 +171,65 @@ function useStore(initial: Project, source: DataSource) {
     if (source === 'api') void reload()
   }, [source, reload])
 
-  const resolveConflict = useCallback((id: string, choice: ResolutionChoice) => dispatch({ type: 'resolve', id, choice }), [])
-  const skipQuestion = useCallback((id: string) => dispatch({ type: 'skip', id }), [])
-  const undoAnswer = useCallback((id: string, prev: QuestionStatus) => dispatch({ type: 'undoAnswer', id, prev }), [])
+  /** Fetch the project again without showing the loading state, so the screen matches the backend after a failed decision. */
+  const resync = useCallback(async () => {
+    try {
+      const fresh = await api.getProject()
+      if (fresh) dispatch({ type: 'setProject', project: fresh })
+    } catch {
+      /* keep what is shown */
+    }
+  }, [])
+
+  /** Resolve at once; in api mode also POST it and take the recomputed project back. Without the route the resolution stays local. */
+  const resolveConflict = useCallback(
+    async (id: string, choice: ResolutionChoice, text?: string) => {
+      dispatch({ type: 'resolve', id, choice, text })
+      if (source !== 'api') return
+      try {
+        const updated = await api.resolveConflict(id, choice, CURRENT_USER, text)
+        if (updated) dispatch({ type: 'setProject', project: updated, settled: id })
+      } catch (e) {
+        dispatch({ type: 'unresolve', id })
+        dispatch({ type: 'answerError', message: `The decision was not saved: ${message(e)}` })
+        if (e instanceof ApiError && e.status === 409) void resync()
+      }
+    },
+    [source, resync],
+  )
+
+  /** Skip at once; in api mode also POST it. A refused skip goes back to what it was. */
+  const skipQuestion = useCallback(
+    async (id: string) => {
+      const prev = latest.current.project.questions.find((q) => q.id === id)?.status ?? 'open'
+      dispatch({ type: 'skip', id })
+      if (source !== 'api') return
+      try {
+        const updated = await api.skipQuestion(id)
+        if (updated) dispatch({ type: 'setProject', project: updated })
+      } catch (e) {
+        dispatch({ type: 'undoAnswer', id, prev })
+        dispatch({ type: 'answerError', message: `The skip was not saved: ${message(e)}` })
+      }
+    },
+    [source],
+  )
+
+  /** Take back an answer or a skip. If the backend refuses, show its state again. */
+  const undoAnswer = useCallback(
+    async (id: string, prev: QuestionStatus) => {
+      dispatch({ type: 'undoAnswer', id, prev })
+      if (source !== 'api') return
+      try {
+        const updated = await api.undoQuestion(id)
+        if (updated) dispatch({ type: 'setProject', project: updated })
+      } catch (e) {
+        dispatch({ type: 'answerError', message: `The undo was not saved: ${message(e)}` })
+        void resync()
+      }
+    },
+    [source, resync],
+  )
   const openSource = useCallback((src: Source) => dispatch({ type: 'open', source: src }), [])
   const closeDrawer = useCallback(() => dispatch({ type: 'close' }), [])
   const setMarket = useCallback((market: UiMarket) => dispatch({ type: 'market', market }), [])

@@ -76,7 +76,7 @@ export function PdfCrop({ source, panels, onUnavailable }: { source: Source; pan
         style={{ aspectRatio: `${region.w} / ${region.h}` }}
       >
         {!ready && <div aria-hidden="true" className="absolute inset-0 animate-pulse bg-border" />}
-        <canvas ref={canvasRef} role="img" aria-label={`${source.where.panel ?? 'Page'} crop with the quote outlined`} className="block h-full w-full" />
+        <canvas ref={canvasRef} role="img" aria-label={`${source.where.panel ?? `Page ${page}`} crop with the quote outlined`} className="block h-full w-full" />
         {ready && bbox && (
           <div
             data-highlight
@@ -86,7 +86,7 @@ export function PdfCrop({ source, panels, onUnavailable }: { source: Source; pan
         )}
       </div>
       <figcaption className="mt-1 text-[12px] text-ink-2">
-        {source.where.panel ?? 'Page'} panel from the original PDF, quote outlined
+        {source.where.panel ? `${source.where.panel} panel` : `Page ${page}`} from the original PDF, quote outlined
       </figcaption>
     </figure>
   )

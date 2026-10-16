@@ -1,12 +1,11 @@
-import { FileSpreadsheet, FileText } from 'lucide-react'
-import { sourceShort } from '../lib/labels'
+import { fileIcon, sourceShort } from '../lib/labels'
 import { useProject } from '../state/project'
 import type { Source } from '../types/project'
 
 export function SourceChip({ source }: { source: Source }) {
   const { project, openSource } = useProject()
   const file = project.files.find((f) => f.id === source.fileId)
-  const Icon = file?.type === 'sheet' ? FileSpreadsheet : FileText
+  const Icon = fileIcon(file)
   const label = sourceShort(source, file)
   return (
     <button

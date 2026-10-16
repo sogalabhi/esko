@@ -1,28 +1,69 @@
-import type { Conflict, ConflictKind, ConflictSide, Fact, FactGroup, Owner, ProjectFile, ResolutionChoice, Rule, Severity, Source } from '../types/project'
+import { FileSpreadsheet, FileText, FileType as FileTypeIcon, Image as ImageIcon, StickyNote, type LucideIcon } from 'lucide-react'
+import type { Conflict, ConflictKind, ConflictSide, Fact, FactGroup, FileType, Owner, ProjectFile, ResolutionChoice, Rule, Severity, Source } from '../types/project'
 
-// §9 has no display label for a file; derive one from its type for now.
+interface FileMeta {
+  /** Chip prefix. */
+  short: string
+  /** Drawer heading prefix. */
+  long: string
+  /** Evidence card kind line. */
+  kind: string
+  /** Word for the unit count: [one, many]. */
+  unit: [string, string]
+  Icon: LucideIcon
+}
+
+// §9 has no display label for a file; derive one from its type.
+export const FILE_META: Record<FileType, FileMeta> = {
+  pdf: { short: 'Carton', long: 'Carton', kind: 'Dieline PDF', unit: ['page', 'pages'], Icon: FileText },
+  document: { short: 'Spec', long: 'Document', kind: 'PDF document', unit: ['page', 'pages'], Icon: FileText },
+  sheet: { short: 'Sheet', long: 'Content sheet', kind: 'Content spreadsheet', unit: ['sheet', 'sheets'], Icon: FileSpreadsheet },
+  docx: { short: 'Word', long: 'Word document', kind: 'Word document', unit: ['paragraph', 'paragraphs'], Icon: FileTypeIcon },
+  text: { short: 'Notes', long: 'Notes', kind: 'Text notes', unit: ['line', 'lines'], Icon: StickyNote },
+  image: { short: 'Image', long: 'Image', kind: 'Image', unit: ['image', 'images'], Icon: ImageIcon },
+}
+
 export function fileShort(file?: ProjectFile): string {
-  if (!file) return 'File'
-  return file.type === 'sheet' ? 'Sheet' : 'Carton'
+  return file ? FILE_META[file.type].short : 'File'
 }
 
 export function fileLong(file?: ProjectFile): string {
-  if (!file) return 'File'
-  return file.type === 'sheet' ? 'Content sheet' : 'Carton'
+  return file ? FILE_META[file.type].long : 'File'
+}
+
+export function fileIcon(file?: ProjectFile): LucideIcon {
+  return file ? FILE_META[file.type].Icon : FileText
+}
+
+/** "3 pages", "1 sheet", "12 lines" ... the count with the right word for the file type. */
+export function fileUnits(file: ProjectFile): string {
+  const [one, many] = FILE_META[file.type].unit
+  return `${file.pages} ${file.pages === 1 ? one : many}`
 }
 
 export function sourceShort(source: Source, file?: ProjectFile): string {
   const w = source.where
-  const spot = w.cell ?? w.panel ?? (w.page != null ? `p. ${w.page}` : '')
+  const type = file?.type
+  let spot = ''
+  if (type === 'image') spot = ''
+  else if (w.cell) spot = w.cell
+  else if (w.panel) spot = w.panel
+  else if (w.line != null) spot = `line ${w.line}`
+  else if (w.paragraph != null) spot = `¶${w.paragraph}`
+  else if (w.page != null) spot = `p.${w.page}`
   return spot ? `${fileShort(file)} · ${spot}` : fileShort(file)
 }
 
 export function sourceLong(source: Source, file?: ProjectFile): string {
   const w = source.where
-  if (w.cell) return `${fileLong(file)} · ${w.cell}`
-  if (w.panel) return `${fileLong(file)} · ${/flap/i.test(w.panel) ? w.panel : `${w.panel} panel`}`
-  if (w.page != null) return `${fileLong(file)} · page ${w.page}`
-  return fileLong(file)
+  const name = fileLong(file)
+  if (file?.type === 'image') return name
+  if (w.cell) return `${name} · ${w.cell}`
+  if (w.panel) return `${name} · ${/flap/i.test(w.panel) ? w.panel : `${w.panel} panel`}`
+  if (w.line != null) return `${name} · line ${w.line}`
+  if (w.paragraph != null) return `${name} · paragraph ${w.paragraph}`
+  if (w.page != null) return `${name} · page ${w.page}`
+  return name
 }
 
 export const GROUPS: { id: FactGroup; label: string }[] = [
@@ -63,6 +104,7 @@ export function sideName(side: ConflictSide, kind: ConflictKind, files: ProjectF
 
 export function resolutionText(conflict: Conflict, choice: ResolutionChoice, files: ProjectFile[]): string {
   if (choice === 'intended') return 'intended change'
+  if (choice === 'custom') return conflict.resolution?.text ? `own answer: ${conflict.resolution.text}` : 'own answer'
   const side = choice === 'left' ? conflict.left : conflict.right
   return `use ${sideName(side, conflict.kind, files)} value`
 }

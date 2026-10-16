@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import mock from '../mocks/project.json'
 import { calls, get, json, post, renderLive, stubFetch } from '../test/renderLive'
 import type { Project } from '../types/project'
+import { ImagePreview } from '../shell/SourceDrawer'
 import { Evidence } from './Evidence'
 import { Facts } from './Facts'
 import { Questions } from './Questions'
@@ -191,5 +192,101 @@ describe('Source drawer PDF crop', () => {
     expect(await screen.findByText(/original PDF is not available from the backend yet/)).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /panel with the quote highlighted/ })).toBeInTheDocument()
     expect(calls(f)[0]).toMatch(/^HEAD \/api\/files\/.+\/raw$/)
+  })
+})
+
+describe('Skip, undo and resolve routes', () => {
+  const card = (id: string) => document.querySelector<HTMLElement>(`li[data-question="${id}"]`)!
+  const conflictCard = (id: string) => document.querySelector<HTMLElement>(`[aria-labelledby="conflict-${id}-title"]`)!
+  const bodyOf = (f: ReturnType<typeof stubFetch>, url: string) => JSON.parse(f.mock.calls.find(([u]) => u === url)![1]!.body as string)
+
+  it('skip posts to the route and applies the returned project', async () => {
+    const returned = structuredClone(project)
+    returned.questions[0] = { ...returned.questions[0], status: 'skipped' }
+    returned.questions[1] = { ...returned.questions[1], status: 'answered', answer: 'From the server' }
+    const f = stubFetch(get('/api/project', () => json(project)), post('/api/questions/q-vegan/skip', () => json(returned)))
+    renderLive(<Questions />, { gate: true })
+    await screen.findByRole('heading', { name: 'Questions', level: 1 })
+    await userEvent.click(within(card('q-vegan')).getByRole('button', { name: 'Skip for now' }))
+    await waitFor(() => expect(screen.getByTestId('questions-progress')).toHaveTextContent(`1 of ${project.questions.length} answered`))
+    expect(card('q-vegan')).toHaveAttribute('data-status', 'skipped')
+    expect(calls(f)).toContain('POST /api/questions/q-vegan/skip')
+  })
+
+  it('skip keeps the local state when the route is missing', async () => {
+    stubFetch(get('/api/project', () => json(project)), post('/api/questions/q-vegan/skip', () => json({ detail: 'Not Found' }, 404)))
+    renderLive(<Questions />, { gate: true })
+    await screen.findByRole('heading', { name: 'Questions', level: 1 })
+    await userEvent.click(within(card('q-vegan')).getByRole('button', { name: 'Skip for now' }))
+    await waitFor(() => expect(card('q-vegan')).toHaveAttribute('data-status', 'skipped'))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('skip reverts and shows the reason when the backend refuses', async () => {
+    stubFetch(get('/api/project', () => json(project)), post('/api/questions/q-vegan/skip', () => json({ detail: 'Unknown question' }, 422)))
+    renderLive(<Questions />, { gate: true })
+    await screen.findByRole('heading', { name: 'Questions', level: 1 })
+    await userEvent.click(within(card('q-vegan')).getByRole('button', { name: 'Skip for now' }))
+    expect(await screen.findByText(/The skip was not saved: Unknown question/)).toBeInTheDocument()
+    expect(card('q-vegan')).toHaveAttribute('data-status', 'open')
+  })
+
+  it('undo after an answer posts to the undo route and applies the returned project', async () => {
+    const answered = structuredClone(project)
+    answered.questions[0] = { ...answered.questions[0], status: 'answered', answer: 'Keep honey, remove vegan claims' }
+    const f = stubFetch(
+      get('/api/project', () => json(project)),
+      post('/api/answers', () => json(answered)),
+      post('/api/questions/q-vegan/undo', () => json(project)),
+    )
+    renderLive(<Questions />, { gate: true })
+    await screen.findByRole('heading', { name: 'Questions', level: 1 })
+    await userEvent.click(within(card('q-vegan')).getByRole('button', { name: /Keep honey, remove vegan claims/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Undo' }))
+    await waitFor(() => expect(calls(f)).toContain('POST /api/questions/q-vegan/undo'))
+    await waitFor(() => expect(card('q-vegan')).toHaveAttribute('data-status', 'open'))
+  })
+
+  it('resolve posts choice and by, then shows the resolution from the returned project', async () => {
+    const returned = structuredClone(project)
+    returned.conflicts.find((x) => x.id === 'c-honey')!.resolution = { choice: 'left', by: 'Abhijith', at: '2026-10-16T10:00:00Z' }
+    const f = stubFetch(get('/api/project', () => json(project)), post('/api/conflicts/c-honey/resolve', () => json(returned)))
+    renderLive(<Facts />, { gate: true })
+    await screen.findByRole('heading', { name: 'Facts', level: 1 })
+    await userEvent.click(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' }))
+    await waitFor(() => expect(calls(f)).toContain('POST /api/conflicts/c-honey/resolve'))
+    expect(bodyOf(f, '/api/conflicts/c-honey/resolve')).toEqual({ choice: 'left', by: 'Abhijith' })
+    expect(await screen.findAllByText(/Resolved by Abhijith/)).not.toHaveLength(0)
+  })
+
+  it('resolving twice (409) reverts the card, shows the reason and refreshes', async () => {
+    const f = stubFetch(
+      get('/api/project', () => json(project)),
+      post('/api/conflicts/c-honey/resolve', () => json({ detail: 'already resolved' }, 409)),
+    )
+    renderLive(<Facts />, { gate: true })
+    await screen.findByRole('heading', { name: 'Facts', level: 1 })
+    await userEvent.click(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' }))
+    expect(await screen.findByText(/The decision was not saved: already resolved/)).toBeInTheDocument()
+    expect(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' })).toBeInTheDocument()
+    await waitFor(() => expect(calls(f).filter((c) => c === 'GET /api/project').length).toBeGreaterThan(1))
+  })
+
+  it('resolve keeps the local resolution when the route is missing', async () => {
+    stubFetch(get('/api/project', () => json(project)), post('/api/conflicts/c-honey/resolve', () => json({ detail: 'Not Found' }, 404)))
+    renderLive(<Facts />, { gate: true })
+    await screen.findByRole('heading', { name: 'Facts', level: 1 })
+    await userEvent.click(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' }))
+    expect(await screen.findAllByText(/Resolved by Abhijith/)).not.toHaveLength(0)
+    expect(screen.queryByText(/was not saved/)).toBeNull()
+  })
+})
+
+describe('Source drawer image', () => {
+  it('shows the original image from the raw route and lists the region', () => {
+    const src = { fileId: 'img1', where: { page: 1, bbox: [10, 20, 30, 5] as [number, number, number, number] }, quote: 'Vegan', quoteChecked: false }
+    renderLive(<ImagePreview source={src} />)
+    expect(screen.getByAltText('The uploaded image')).toHaveAttribute('src', '/api/files/img1/raw')
+    expect(screen.getByText(/x 10, y 20, 30 × 5 mm/)).toBeInTheDocument()
   })
 })

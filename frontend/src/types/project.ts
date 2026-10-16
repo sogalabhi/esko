@@ -1,7 +1,8 @@
 // Mirrors docs/UI.md §9 (GET /api/project). Will be replaced by types generated
 // from the backend OpenAPI schema; keep names identical to §9.
 
-export type FileType = 'pdf' | 'sheet'
+/** pdf = dieline, document = plain PDF, sheet = Excel, docx = Word, text = .txt/.md notes, image = PNG/JPG. */
+export type FileType = 'pdf' | 'document' | 'sheet' | 'docx' | 'text' | 'image'
 export type FileStatus = 'queued' | 'reading' | 'done' | 'error'
 
 export interface SkippedItem {
@@ -13,10 +14,11 @@ export interface ProjectFile {
   id: string
   name: string
   type: FileType
+  /** Unit count: pages (pdf, document), sheets (sheet), paragraphs (docx), lines (text), 1 (image). */
   pages: number
   status: FileStatus
   skipped: SkippedItem[]
-  /** Plain reason when status is 'error'. Not in the backend ProjectFile yet. */
+  /** Plain reason when status is 'error'. */
   error?: string
 }
 
@@ -29,6 +31,9 @@ export interface SourceWhere {
   bbox?: BBox
   sheet?: string
   cell?: string
+  /** Word paragraph number and notes line number (1-based). Not in the backend SourceWhere yet. */
+  paragraph?: number
+  line?: number
 }
 
 export interface Source {
@@ -66,7 +71,7 @@ export interface Fact {
 export type ConflictKind = 'value' | 'list' | 'math' | 'rule' | 'meaning'
 export type Severity = 'high' | 'medium' | 'low'
 export type Owner = 'legal' | 'rnd' | 'brand'
-export type ResolutionChoice = 'intended' | 'left' | 'right'
+export type ResolutionChoice = 'intended' | 'left' | 'right' | 'custom'
 
 export interface ConflictSide {
   value: string
@@ -78,6 +83,8 @@ export interface Resolution {
   choice: ResolutionChoice
   by: string
   at: string
+  /** The person's own answer when choice is 'custom'. */
+  text?: string
 }
 
 /** A spot on the flat dieline, in mm. Shared by every lens. */
