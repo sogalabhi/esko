@@ -2,16 +2,17 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import get_args
 
 from app.ai.cache import fingerprint
 from app.ai.client import AIClient
 from app.ai.prompts import load_prompt
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import Conflict, Fact, Project, ProjectFile, SkippedItem
+from app.models.project import Conflict, Fact, FileType, Project, ProjectFile, SkippedItem
 
-from .facts import Draft, build_draft, corroborate, fact_state, source_for
+from .facts import Draft, build_draft, build_image_draft, corroborate, fact_state, source_for
 from .ingredients import parse_ingredients
-from .inputs import ExtractionInput, carton_input, render_panels, sheet_input
+from .inputs import FIELD_NAMES, ExtractionInput, carton_input, document_input, image_input, render_panels, sheet_input
 from .quote_check import check_quote, has_assumption_note
 from .reconcile import (
     ConflictFactory,
@@ -22,7 +23,7 @@ from .reconcile import (
     validate_meaning,
     value_conflicts,
 )
-from .schemas import Extraction, MeaningResult
+from .schemas import Extraction, ImageExtraction, MeaningResult
 
 
 @dataclass
@@ -35,7 +36,15 @@ class RunReport:
 
 
 def _file_type(f: SourceFile) -> str:
-    return "pdf" if f.type == "pdf" else "sheet"
+    """The type the project shows; the reconciler treats "sheet" as the reference side of a conflict."""
+    if f.type == "xlsx":
+        return "sheet"
+    return f.type if f.type in get_args(FileType) else "pdf"
+
+
+def is_dieline_pieces(pieces: list[SourcePiece]) -> bool:
+    """A dieline PDF's pieces sit on panels; a plain-PDF document's do not."""
+    return any(p.location.panel for p in pieces)
 
 
 def to_project_file(f: SourceFile) -> ProjectFile:
@@ -52,7 +61,8 @@ def to_project_file(f: SourceFile) -> ProjectFile:
 
 def _run(client: AIClient, name: str, inp: ExtractionInput, file_id: str, schema, report: RunReport):
     template, version = load_prompt(name)
-    prompt = template.replace("{{artwork}}", inp.text).replace("{{cells}}", inp.text)
+    prompt = (template.replace("{{field_names}}", FIELD_NAMES).replace("{{artwork}}", inp.text)
+              .replace("{{cells}}", inp.text).replace("{{pieces}}", inp.text).replace("{{image_note}}", inp.text))
     report.prompt_versions[name] = version
     before = client.calls_made
     result = client.run(task=name, prompt_version=version, prompt=prompt, schema=schema, images=inp.images,
@@ -88,28 +98,41 @@ def percent_drafts(lists: list[Draft], pools: dict[str, list[SourcePiece]]) -> l
     return out
 
 
+def _dedupe(drafts: list[Draft], report: RunReport, file: SourceFile) -> list[Draft]:
+    out, seen = [], set()
+    for d in drafts:
+        key = (d.fact.group, field_key(d.fact.field), (d.fact.value or "").strip().lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        if d.fact.state == "ai_suggested" and not d.assumed and not d.image_only:
+            report.unchecked.append(f"{file.name}: {d.fact.field} = {d.fact.value} ({d.note})")
+        out.append(d)
+    return out
+
+
 def extract_file(client: AIClient, file: SourceFile, pieces: list[SourcePiece], path: Path | None,
                  report: RunReport) -> list[Draft]:
-    if file.type == "pdf":
+    document = False
+    if file.type == "image":
+        inp = image_input(pieces, path, file.name)
+        if not inp.id_map:
+            return []
+        result = _run(client, inp.task, inp, file.id, ImageExtraction, report)
+        piece = inp.id_map["IMG"]
+        return _dedupe([build_image_draft(ef, file, piece) for ef in result.facts], report, file)
+    if file.type == "pdf" and is_dieline_pieces(pieces):
         images = render_panels(path) if path and Path(path).exists() else {}
         inp = carton_input(pieces, images)
-    else:
+    elif file.type == "xlsx":
         inp = sheet_input(pieces)
+    else:  # Word, notes, plain-PDF documents
+        inp, document = document_input(pieces, file.name), True
     if not inp.id_map:
         return []
     extraction = _run(client, inp.task, inp, file.id, Extraction, report)
     pool = [p for p in pieces if p.status == "visible"]
-    drafts, seen = [], set()
-    for ef in extraction.facts:
-        key = (ef.group, field_key(ef.field), (ef.value or "").strip().lower())
-        if key in seen:
-            continue
-        seen.add(key)
-        d = build_draft(ef, file, inp.id_map, pool)
-        if d.fact.state == "ai_suggested" and not d.assumed and not d.image_only:
-            report.unchecked.append(f"{file.name}: {d.fact.field} = {d.fact.value} ({d.note})")
-        drafts.append(d)
-    return drafts
+    return _dedupe([build_draft(ef, file, inp.id_map, pool, document) for ef in extraction.facts], report, file)
 
 
 def run_pipeline(client: AIClient, files: list[SourceFile], pieces: dict[str, list[SourcePiece]],

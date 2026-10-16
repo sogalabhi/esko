@@ -20,6 +20,21 @@ class Extraction(BaseModel):
     facts: list[ExtractedFact]
 
 
+class ImageFact(BaseModel):
+    """A fact read by vision from an image. There is no text to check the quote against."""
+
+    group: FactGroup
+    field: str
+    value: str | None = None
+    unit: str | None = None
+    quote: str  # the words printed in the image, as read
+    region: list[float] = []  # [x0, y0, x1, y1] as fractions (0 to 1) of the image width and height
+
+
+class ImageExtraction(BaseModel):
+    facts: list[ImageFact]
+
+
 class MeaningItem(BaseModel):
     claim_fact_ids: list[str]
     against_fact_ids: list[str]

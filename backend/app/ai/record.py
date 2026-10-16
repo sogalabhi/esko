@@ -27,15 +27,15 @@ SAMPLES = [
 class Recorder:
     """Wraps an adapter and writes every answer it returns to FIXTURES/<task>.json."""
 
-    def __init__(self, inner):
-        self.inner, self.model = inner, inner.model
+    def __init__(self, inner, suffix: str = ""):
+        self.inner, self.model, self.suffix = inner, inner.model, suffix
 
     def generate(self, request: AIRequest) -> str:
         raw = self.inner.generate(request)
         request.schema.model_validate_json(raw)  # never save an answer the pipeline could not read
         FIXTURES.mkdir(parents=True, exist_ok=True)
-        (FIXTURES / f"{request.task}.json").write_text(raw, encoding="utf-8")
-        print(f"recorded {request.task} ({self.model}, {len(raw)} chars)")
+        (FIXTURES / f"{request.task}{self.suffix}.json").write_text(raw, encoding="utf-8")
+        print(f"recorded {request.task}{self.suffix} ({self.model}, {len(raw)} chars)")
         return raw
 
 
@@ -54,5 +54,27 @@ def main(paths: list[Path]) -> int:
     return 0
 
 
+def main_inputs() -> int:
+    """Record the three synthetic inputs (notes, Word spec, PNG label): one fixture per file, named <task>_<kind>.json."""
+    import tempfile
+
+    from app.extraction.pipeline import RunReport, extract_file
+    from app.ai.synthetic import make_docx, make_notes, make_png
+
+    live = build_ai_client(get_settings())
+    with tempfile.TemporaryDirectory() as tmp:
+        for maker, name, kind in ((make_notes, "notes.txt", "notes"), (make_docx, "spec.docx", "docx"),
+                                  (make_png, "label.png", "png")):
+            path = maker(Path(tmp) / name)
+            client = AIClient([Recorder(a, f"_{kind}") for a in live.adapters], AICache(None))
+            sf, ps = read_file(path, fingerprint(path.read_bytes()))
+            report = RunReport()
+            drafts = extract_file(client, sf, ps, path, report)
+            print(f"{kind}: calls={client.calls_made} models={sorted(set(report.models))} facts={len(drafts)} "
+                  f"prompts={report.prompt_versions}")
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main([Path(a) for a in sys.argv[1:]] or SAMPLES))
+    args = sys.argv[1:]
+    sys.exit(main_inputs() if args == ["--inputs"] else main([Path(a) for a in args] or SAMPLES))

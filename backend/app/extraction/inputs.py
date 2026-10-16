@@ -10,6 +10,16 @@ from app.readers.pdf_reader import read_page
 
 PANEL_DPI = 100
 
+# Field names the sheet and carton prompts use, so the same fact gets the same name in every file
+# and can be compared across files. Market vocabulary is not listed here.
+FIELD_NAMES = (
+    "Product name, Brand, Statement of identity, Marketing copy, Ingredient list, Allergen statement, "
+    "Dietary statement, Storage instructions, Net quantity, Servings per container, Serving size, Calories, "
+    "Total Fat, Saturated Fat, Trans Fat, Cholesterol, Sodium, Total Carbohydrate, Dietary Fiber, Total Sugars, "
+    "Incl. Added Sugars, Protein, Vitamin D, Calcium, Iron, Potassium, Claim, Certification mark, "
+    "Recycling mark, Manufacturer, Barcode"
+)
+
 
 @dataclass
 class ExtractionInput:
@@ -83,3 +93,44 @@ def sheet_input(pieces: list[SourcePiece]) -> ExtractionInput:
         note = f" | note: {_flat(p.note)}" if p.note else ""
         lines.append(f"[{cell}] {p.label or '-'} | {_flat(p.text)}{note}")
     return ExtractionInput("extract_sheet", "\n".join(lines), (), id_map)
+
+
+def describe(p: SourcePiece) -> str:
+    """Where a piece is, in words the model can use to understand the text around it."""
+    loc = p.location
+    if loc.kind == "doc":
+        where = f"table {loc.table}, row {loc.row}, column {loc.col}" if loc.table else f"paragraph {loc.paragraph}"
+    elif loc.kind == "text":
+        where = f"line {loc.line}"
+    elif loc.kind == "pdf":
+        where = f"page {loc.page}"
+    else:
+        where = loc.kind
+    if p.label and _flat(p.label) != _flat(p.text):
+        where += f"; under: {_flat(p.label)}"
+    return where
+
+
+def document_input(pieces: list[SourcePiece], name: str = "") -> ExtractionInput:
+    """Word, plain-PDF and notes pieces in reading order. Hidden and ignored pieces are never sent."""
+    id_map: dict[str, SourcePiece] = {}
+    lines = []
+    for p in pieces:
+        if p.status != "visible" or not p.text.strip():
+            continue
+        pid = f"D{len(id_map) + 1}"
+        id_map[pid] = p
+        lines.append(f"[{pid}] {describe(p)} | {_flat(p.text)}")
+    return ExtractionInput("extract_document", chr(10).join(lines), (), id_map)
+
+
+def image_input(pieces: list[SourcePiece], path: Path | None, name: str = "") -> ExtractionInput:
+    """The one whole-image piece plus the picture itself (re-encoded as PNG, whatever the source format)."""
+    piece = next((p for p in pieces if p.status == "visible" and p.location.kind == "image"), None)
+    if piece is None or path is None or not Path(path).exists():
+        return ExtractionInput("extract_image", "", (), {})
+    pix = pymupdf.Pixmap(str(path))
+    if pix.colorspace is not None and pix.colorspace.n not in (1, 3):  # CMYK and the like
+        pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+    png = pix.tobytes("png")
+    return ExtractionInput("extract_image", f"Image file: {name or Path(path).name}", (png,), {"IMG": piece})

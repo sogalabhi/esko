@@ -1,0 +1,54 @@
+{
+  "facts": [
+    {
+      "group": "identity",
+      "field": "Product name",
+      "value": "Oat Crunch Granola",
+      "unit": null,
+      "quote": "Product: Oat Crunch Granola",
+      "piece_ids": ["D1"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "identity",
+      "field": "Brand",
+      "value": "Meadow Mill",
+      "unit": null,
+      "quote": "Brand: Meadow Mill",
+      "piece_ids": ["D2"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "quantity",
+      "field": "Net quantity",
+      "value": "340",
+      "unit": "g",
+      "quote": "Net weight: 340 g",
+      "piece_ids": ["D3"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "allergens",
+      "field": "Allergen statement",
+      "value": "contains oats and almonds",
+      "unit": null,
+      "quote": "Allergens: contains oats and almonds",
+      "piece_ids": ["D4"],
+      "panel": null,
+      "from_image": false
+    },
+    {
+      "group": "packaging",
+      "field": "Storage instructions",
+      "value": "Store in a cool dry place",
+      "unit": null,
+      "quote": "Store in a cool dry place",
+      "piece_ids": ["D5"],
+      "panel": null,
+      "from_image": false
+    }
+  ]
+}
