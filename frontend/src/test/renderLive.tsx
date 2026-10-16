@@ -30,7 +30,9 @@ export const get = (path: string, res: () => Response): Handler => (url, init) =
 export const post = (path: string, res: (init?: RequestInit) => Response | Promise<Response>): Handler => (url, init) =>
   url === path && init?.method === 'POST' ? res(init) : undefined
 
-export const calls = (f: ReturnType<typeof stubFetch>) => f.mock.calls.map(([u, i]) => `${i?.method ?? 'GET'} ${u}`)
+/** Requests made through the stub, in order. The demo-availability check (/api/demo) is ignored: it is a background probe. */
+export const calls = (f: ReturnType<typeof stubFetch>) =>
+  f.mock.calls.map(([u, i]) => `${i?.method ?? 'GET'} ${u}`).filter((c) => !/ \/api\/demo$/.test(c))
 
 /** Render against the real data source (fetch is stubbed by the test). */
 export function renderLive(ui: ReactElement, { route = '/', gate = false } = {}) {

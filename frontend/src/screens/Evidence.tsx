@@ -2,6 +2,7 @@ import { ArrowRight, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, P
 import { useCallback, useEffect, useId, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
 import { ACCEPT_ATTR } from '../api/client'
+import { LoadDemoButton } from '../components/LoadDemoButton'
 import { LoadError, LoadingSkeleton, Skeleton } from '../components/LoadGate'
 import { FILE_META, fileUnits } from '../lib/labels'
 import { prefersReducedMotion } from '../lib/motion'
@@ -252,13 +253,16 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
     <div className="mx-auto max-w-[960px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-[20px] font-semibold">Evidence</h1>
-        <Link
-          to="/facts"
-          className="inline-flex items-center gap-1.5 rounded-chip bg-accent px-4 py-2 text-[14px] font-semibold text-white hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info"
-        >
-          Review facts
-          <ArrowRight size={16} aria-hidden="true" />
-        </Link>
+        <div className="flex flex-wrap items-start gap-2">
+          <LoadDemoButton label="Load demo" />
+          <Link
+            to="/facts"
+            className="inline-flex items-center gap-1.5 rounded-chip bg-accent px-4 py-2 text-[14px] font-semibold text-white hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info"
+          >
+            Review facts
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
 
       <label
