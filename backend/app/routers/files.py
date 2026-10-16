@@ -1,12 +1,27 @@
 from pathlib import Path
 
+import mimetypes
+
 from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from app import store
 from app.models.pieces import SourceFile, SourcePiece
 from app.readers import fingerprint, read_file
 
 router = APIRouter(prefix="/api/files", tags=["files"])
+
+_MEDIA_TYPES = {
+    ".pdf": "application/pdf",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".xlsm": "application/vnd.ms-excel.sheet.macroEnabled.12",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".txt": "text/plain; charset=utf-8",
+    ".md": "text/markdown; charset=utf-8",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+}
 
 UPLOAD_DIR = Path(__file__).resolve().parents[2] / "data" / "uploads"
 
@@ -46,3 +61,13 @@ def pieces(file_id: str) -> list[SourcePiece]:
     if found is None:
         raise HTTPException(status_code=404, detail="Unknown file")
     return found
+
+
+@router.api_route("/{file_id}/raw", methods=["GET", "HEAD"])
+def raw(file_id: str) -> FileResponse:
+    """The stored upload, byte for byte (PDF.js and image previews read it)."""
+    path = store.get_path(file_id)
+    if path is None or not path.is_file():
+        raise HTTPException(status_code=404, detail="file not found")
+    media = _MEDIA_TYPES.get(path.suffix.lower()) or mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return FileResponse(path, media_type=media, filename=path.name, content_disposition_type="inline")

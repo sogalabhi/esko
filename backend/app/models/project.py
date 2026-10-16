@@ -9,9 +9,12 @@ from typing import ClassVar, Literal
 from pydantic import Field, model_serializer
 from pydantic.alias_generators import to_camel
 
-from .pieces import CamelModel
+from pydantic import BaseModel
 
-FileType = Literal["pdf", "sheet"]
+from .pieces import CamelModel, SourceFile, SourcePiece
+
+# pdf = dieline PDF, document = plain PDF, sheet = Excel, docx = Word, text = notes (.txt/.md), image = png/jpg
+FileType = Literal["pdf", "document", "sheet", "docx", "text", "image"]
 FileStatus = Literal["queued", "reading", "done", "error"]
 FactGroup = Literal["identity", "ingredients", "allergens", "nutrition", "quantity", "claims", "company", "packaging"]
 FactState = Literal["confirmed", "ai_suggested", "missing", "pass"]
@@ -38,13 +41,50 @@ class SkippedItem(CamelModel):
     reason: str
 
 
-class ProjectFile(CamelModel):
+class ProjectFile(OmitNone):
+    """pages = the unit count for the type: pages (pdf, document), sheets (sheet), paragraphs (docx), lines (text),
+    1 (image). error = plain reason when status is error."""
+
+    omit_none = ("error",)
     id: str
     name: str
     type: FileType
     pages: int
     status: FileStatus
     skipped: list[SkippedItem] = []
+    error: str | None = None
+
+
+def project_file_type(f: SourceFile, pieces: list[SourcePiece]) -> FileType:
+    if f.type == "xlsx":
+        return "sheet"
+    if f.type == "pdf":  # the dieline reader tags text with a panel or layer; the document reader does not
+        return "pdf" if not pieces or any(p.location.panel or p.location.layer for p in pieces) else "document"
+    return f.type
+
+
+def project_file_units(f: SourceFile, pieces: list[SourcePiece]) -> int:
+    if f.type == "xlsx":
+        return len(f.sheets)
+    if f.type == "docx":  # paragraphs read; a document of only tables counts its cells
+        paragraphs = {p.location.paragraph for p in pieces if p.location.paragraph is not None}
+        return len(paragraphs) or len(pieces)
+    if f.type == "text":
+        return len({p.location.line for p in pieces})
+    if f.type == "image":
+        return 1
+    return f.pages or 0
+
+
+def to_project_file(f: SourceFile, pieces: list[SourcePiece] | None = None) -> ProjectFile:
+    pieces = pieces or []
+    skipped = []
+    for note in f.skipped:
+        item, _, reason = note.partition(": ")
+        skipped.append(SkippedItem(item=item, reason=reason or "Not read as a fact"))
+    ok = f.status == "read"
+    return ProjectFile(id=f.id, name=f.name, type=project_file_type(f, pieces), pages=project_file_units(f, pieces),
+                       status="done" if ok else "error", skipped=skipped, error=None if ok else f.error)
 
 
 class SourceWhere(OmitNone):
@@ -234,6 +274,18 @@ class Trust(CamelModel):
     ai_open: int = 0
     resolved: int = 0
     self_test: SelfTest = SelfTest()
+
+
+class LogEntry(BaseModel):
+    """One person's decision, kept so the project can be recomputed from the run without it (undo)."""
+
+    kind: Literal["answer", "skip", "resolve"]
+    target: str  # question id (answer, skip) or conflict id (resolve)
+    answer: str | None = None
+    choice: Literal["intended", "left", "right", "custom"] | None = None
+    text: str | None = None
+    by: str = "user"
+    at: str
 
 
 class Project(OmitNone):

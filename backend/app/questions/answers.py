@@ -9,10 +9,14 @@ from datetime import datetime, timezone
 
 from app.analysis import analyze
 from app.markets.schema import MarketPack
-from app.models.project import Conflict, Fact, Project, Question, Resolution, Source, SourceWhere
+from app.models.project import Conflict, Fact, LogEntry, Project, Question, Resolution, Source, SourceWhere
 from app.rules.adapter import side_fact_ids
 
 USER_FILE = "user"  # Source.file_id of anything a person typed
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 class AnswerError(ValueError):
@@ -33,7 +37,8 @@ def _set_action(facts: dict[str, Fact], ids: list[str], action: str, only_unset:
             f.action = action  # type: ignore[assignment]
 
 
-def _settle_conflict(p: Project, pack: MarketPack, c: Conflict, effect: str, typed: str | None, now: str) -> None:
+def _settle_conflict(p: Project, pack: MarketPack, c: Conflict, effect: str, typed: str | None, now: str,
+                     by: str = "user") -> None:
     facts = {f.id: f for f in p.facts}
     left, right = side_fact_ids(c, p.facts, "left"), side_fact_ids(c, p.facts, "right")
     claim_groups = set(pack.fact_keys.claim_groups) if pack.fact_keys else set()
@@ -47,12 +52,12 @@ def _settle_conflict(p: Project, pack: MarketPack, c: Conflict, effect: str, typ
         base = facts[(left or right or c.fact_ids)[0]]
         p.facts.append(_user_fact(f"user-{c.id}", base.group, base.field, typed))
     if typed is not None and effect not in ("left", "right"):
-        c.resolution = Resolution(choice="custom", by="user", at=now, text=typed)  # their own answer, not a side
+        c.resolution = Resolution(choice="custom", by=by, at=now, text=typed)  # their own answer, not a side
     else:
-        c.resolution = Resolution(choice=effect if effect in ("left", "right") else "intended", by="user", at=now)
+        c.resolution = Resolution(choice=effect if effect in ("left", "right") else "intended", by=by, at=now)
 
 
-def apply_answer(project: Project, pack: MarketPack, question_id: str, answer: str) -> Project:
+def apply_answer(project: Project, pack: MarketPack, question_id: str, answer: str, now: str | None = None) -> Project:
     text = (answer or "").strip()
     if not text:
         raise AnswerError("The answer is empty")
@@ -62,7 +67,7 @@ def apply_answer(project: Project, pack: MarketPack, question_id: str, answer: s
         raise AnswerError(f"No question {question_id!r}", 404)
     if q.status != "open":
         raise AnswerError(f"Question {question_id!r} is already {q.status}", 409)
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    now = now or utc_now()
     option = next((o for o in q.options if o.label.casefold() == text.casefold()), None)
     typed = None if option else text
     effect = option.effect if option else {"conflict": "typed", "missing": "value", "design": "change"}[q.kind]
@@ -90,3 +95,60 @@ def apply_answer(project: Project, pack: MarketPack, question_id: str, answer: s
     q.status = "answered"
     q.answer = text
     return analyze(p, pack)
+
+
+def apply_skip(project: Project, pack: MarketPack, question_id: str) -> Project:
+    """Leave a question for later: it stays out of the open list but nothing about the facts changes."""
+    p = project.model_copy(deep=True)
+    q = next((x for x in p.questions if x.id == question_id), None)
+    if q is None:
+        raise AnswerError(f"No question {question_id!r}", 404)
+    if q.status != "open":
+        raise AnswerError(f"Question {question_id!r} is already {q.status}", 409)
+    q.status = "skipped"
+    return analyze(p, pack)
+
+
+def apply_resolution(project: Project, pack: MarketPack, conflict_id: str, choice: str, text: str | None, by: str,
+                     now: str | None = None) -> Project:
+    """A person settles a conflict directly (intended / left / right / their own text). Never automatic."""
+    typed = (text or "").strip() or None
+    if choice not in ("intended", "left", "right", "custom"):
+        raise AnswerError(f"Unknown choice {choice!r}")
+    if choice == "custom" and typed is None:
+        raise AnswerError("A custom resolution needs text")
+    if not (by or "").strip():
+        raise AnswerError("Say who decided (by)")
+    p = project.model_copy(deep=True)
+    c = next((x for x in p.conflicts if x.id == conflict_id), None)
+    if c is None:
+        raise AnswerError(f"No conflict {conflict_id!r}", 404)
+    if c.resolution is not None:
+        raise AnswerError(f"Conflict {conflict_id!r} is already resolved", 409)
+    _settle_conflict(p, pack, c, choice, typed if choice == "custom" else None, now or utc_now(), by.strip())
+    return analyze(p, pack)
+
+
+def replay(base: Project, pack: MarketPack, log: list[LogEntry]) -> tuple[Project, list[LogEntry]]:
+    """Recompute the project from the run and the decisions, in order. A decision that no longer applies
+    (its question or conflict is gone after an earlier one was undone) is left out of the returned log."""
+    p, kept = base, []
+    for e in log:
+        try:
+            if e.kind == "answer":
+                p = apply_answer(p, pack, e.target, e.answer or "", e.at)
+            elif e.kind == "skip":
+                p = apply_skip(p, pack, e.target)
+            else:
+                p = apply_resolution(p, pack, e.target, e.choice or "", e.text, e.by, e.at)
+        except AnswerError:
+            continue
+        kept.append(e)
+    return p, kept
+
+
+def undo_question(base: Project, pack: MarketPack, log: list[LogEntry], question_id: str) -> tuple[Project, list[LogEntry]]:
+    """Back to open: recompute from the run with every decision except this question's."""
+    if not any(e.kind in ("answer", "skip") and e.target == question_id for e in log):
+        raise AnswerError(f"Question {question_id!r} has no answer to undo", 409)
+    return replay(base, pack, [e for e in log if not (e.kind in ("answer", "skip") and e.target == question_id)])
