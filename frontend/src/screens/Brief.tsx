@@ -1,7 +1,9 @@
 import {
   BadgeCheck,
+  Building2,
   CircleAlert,
   Download,
+  Eye,
   FilePlus2,
   FileText,
   Link2,
@@ -11,16 +13,21 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react'
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { api } from '../api/client'
+import { Colophon, DraftWatermark, Letterhead, PrintPageRules } from '../components/brief/Letterhead'
+import { LetterheadSettings } from '../components/brief/LetterheadSettings'
+import { SourcesAppendix } from '../components/brief/SourcesAppendix'
+import { useLetterhead } from '../components/brief/useLetterhead'
 import { Skeleton } from '../components/LoadGate'
 import { SourceDots } from '../components/SourceDots'
-import { formatValue, sourceLong } from '../lib/labels'
+import { buildSourceRefs, sentenceKey } from '../lib/briefSources'
+import { APPROVER_KEY, marketName, printTitle, productParts, readableAccent } from '../lib/letterhead'
 import { ago, stamp } from '../lib/time'
 import { useProject } from '../state/project'
 import type { BriefSentence, SentenceSource } from '../types/project'
 
-const NAME_KEY = 'bf.approver'
+const NAME_KEY = APPROVER_KEY
 const NOT_IN_FACTS = 'Not in facts — add a source or mark as assumption'
 
 const btn =
@@ -47,7 +54,17 @@ function saveName(name: string) {
   }
 }
 
-function SentenceRow({ section, index, sentence, refs }: { section: string; index: number; sentence: BriefSentence; refs: Map<string, number> }) {
+interface RowProps {
+  section: string
+  index: number
+  sentence: BriefSentence
+  /** Printed reference numbers into the Sources appendix. */
+  refs: number[]
+  /** Approved briefs print no "(unproven)" marker (none can be unproven by then). */
+  approved: boolean
+}
+
+function SentenceRow({ section, index, sentence, refs, approved }: RowProps) {
   const { editSentence, briefBusy } = useProject()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(sentence.text)
@@ -139,7 +156,14 @@ function SentenceRow({ section, index, sentence, refs }: { section: string; inde
           </span>
         )}
       </span>
-      <SourceDots factIds={sentence.factIds} refs={refs} />
+      <SourceDots factIds={sentence.factIds} />
+      {refs.length > 0 && (
+        <sup className="print-only doc-ref">
+          <span className="sr-only">Sources </span>
+          {refs.join(', ')}
+        </sup>
+      )}
+      {unproven && !approved && <span className="print-only doc-unproven"> (unproven)</span>}
       {unproven && (
         <span className="no-print ml-1 inline-flex items-center gap-1 whitespace-nowrap rounded-chip bg-ai/10 px-1.5 py-0.5 align-baseline text-[12px] font-medium text-ai">
           <TriangleAlert size={12} aria-hidden="true" />
@@ -170,7 +194,7 @@ function BriefSkeleton() {
 }
 
 export function Brief() {
-  const { project, briefBusy, briefError, draftBrief, approveBrief, dismissBriefError } = useProject()
+  const { project, market, briefBusy, briefError, draftBrief, approveBrief, dismissBriefError } = useProject()
   const brief = project.brief
   const [name, setName] = useState(readName)
   const [note, setNote] = useState<string | null>(null)
@@ -181,12 +205,35 @@ export function Brief() {
   const sentences = useMemo(() => brief.sections.flatMap((s) => s.sentences), [brief.sections])
   const unproven = sentences.filter((s) => s.status !== 'ok').length
 
-  // Printed refs: facts numbered in order of first use, with a sources appendix.
-  const refs = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const s of sentences) for (const id of s.factIds) if (!m.has(id)) m.set(id, m.size + 1)
-    return m
-  }, [sentences])
+  // Printed refs: sources numbered in order of first use (one number per source), with a sources appendix.
+  const sourceRefs = useMemo(() => buildSourceRefs(brief.sections, project.facts, project.files), [brief.sections, project.facts, project.files])
+  const letterhead = useLetterhead()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [preview, setPreview] = useState(false)
+  const settingsId = useId()
+  const [today] = useState(() => new Date())
+  const { name: productName, quantity } = productParts(project.facts)
+
+  // "Save as PDF" offers the document title as the file name.
+  const title = printTitle(productName, brief.version)
+  const savedTitle = useRef<string | null>(null)
+  useEffect(() => {
+    const before = () => {
+      if (savedTitle.current === null) savedTitle.current = document.title
+      document.title = title
+    }
+    const after = () => {
+      if (savedTitle.current !== null) document.title = savedTitle.current
+      savedTitle.current = null
+    }
+    window.addEventListener('beforeprint', before)
+    window.addEventListener('afterprint', after)
+    return () => {
+      window.removeEventListener('beforeprint', before)
+      window.removeEventListener('afterprint', after)
+      after()
+    }
+  }, [title])
 
   const drafting = briefBusy === 'drafting'
   const editedAgo = ago(brief.log?.at(-1)?.at)
@@ -268,6 +315,22 @@ export function Brief() {
     }
   }
 
+  const lh = letterhead.settings
+  const docStyle = { '--doc-accent': lh.accent, '--doc-accent-text': readableAccent(lh.accent) } as CSSProperties
+  const meta = {
+    product: productName,
+    quantity,
+    version: brief.version,
+    market: marketName(market),
+    date: (approved && brief.approvedAt ? new Date(brief.approvedAt) : today).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }),
+    approvedBy: brief.approvedBy,
+    approvedAt: brief.approvedAt ? stamp(brief.approvedAt) : undefined,
+  }
+
   const goTo = (i: number) => {
     const el = document.getElementById(`brief-section-${i}`)
     el?.scrollIntoView?.({ behavior: 'auto', block: 'start' })
@@ -308,7 +371,7 @@ export function Brief() {
 
       <div className="min-w-0">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div>
+          <div className="no-print">
             <h1 className="text-[20px] font-semibold">Brief</h1>
             <p data-testid="brief-version" className="mt-0.5 text-[13px] text-ink-2">
               {version}
@@ -347,6 +410,20 @@ export function Brief() {
                 </button>
               </div>
             )}
+            <button
+              type="button"
+              className={btn}
+              aria-expanded={settingsOpen}
+              aria-controls={settingsOpen ? settingsId : undefined}
+              onClick={() => setSettingsOpen((o) => !o)}
+            >
+              <Building2 size={14} aria-hidden="true" />
+              Letterhead
+            </button>
+            <button type="button" className={btn} aria-pressed={preview} onClick={() => setPreview((p) => !p)}>
+              <Eye size={14} aria-hidden="true" />
+              Print preview
+            </button>
             <button type="button" className={btn} onClick={() => window.print()}>
               <Printer size={14} aria-hidden="true" />
               Export PDF
@@ -361,6 +438,17 @@ export function Brief() {
             </button>
           </div>
         </div>
+
+        {settingsOpen && (
+          <div id={settingsId}>
+            <LetterheadSettings
+              settings={lh}
+              onChange={letterhead.update}
+              onClose={() => setSettingsOpen(false)}
+              persisted={letterhead.persisted}
+            />
+          </div>
+        )}
 
         <div className="no-print space-y-2" aria-live="polite">
           {reason && !approved && (
@@ -391,10 +479,22 @@ export function Brief() {
           )}
         </div>
 
-        <article aria-label="Design brief" className="brief-doc mt-2 rounded-card border border-border bg-surface p-8">
+        <PrintPageRules settings={lh} version={brief.version} />
+        <article
+          aria-label="Design brief"
+          data-preview={preview || undefined}
+          style={docStyle}
+          className={`brief-doc relative mt-2 rounded-card border border-border bg-surface p-8 ${preview ? 'is-preview' : ''}`}
+        >
+          {!approved && <DraftWatermark />}
+          <Letterhead settings={lh} meta={meta} />
           {brief.sections.map((sec, si) => (
             <section key={sec.title} aria-labelledby={`brief-section-${si}`} className="brief-section mb-8 last:mb-0">
-              <h2 id={`brief-section-${si}`} tabIndex={-1} className="mb-2 text-[16px] font-semibold focus-visible:outline-2 focus-visible:outline-info">
+              <h2
+                id={`brief-section-${si}`}
+                tabIndex={-1}
+                className="doc-h2 doc-numbered mb-2 text-[16px] font-semibold focus-visible:outline-2 focus-visible:outline-info"
+              >
                 {sec.title}
               </h2>
               {sec.sentences.length === 0 ? (
@@ -402,32 +502,22 @@ export function Brief() {
               ) : (
                 <ol className="list-none space-y-0.5 p-0">
                   {sec.sentences.map((s, i) => (
-                    <SentenceRow key={`${i}-${s.text}`} section={sec.title} index={i} sentence={s} refs={refs} />
+                    <SentenceRow
+                      key={`${i}-${s.text}`}
+                      section={sec.title}
+                      index={i}
+                      sentence={s}
+                      refs={sourceRefs.bySentence.get(sentenceKey(si, i)) ?? []}
+                      approved={approved}
+                    />
                   ))}
                 </ol>
               )}
             </section>
           ))}
 
-          <section className="print-only brief-section" aria-label="Sources">
-            <h2 className="mb-2 text-[16px] font-semibold">Sources</h2>
-            <ol className="list-none space-y-1 p-0 text-[12px]">
-              {[...refs.entries()].map(([id, n]) => {
-                const fact = project.facts.find((f) => f.id === id)
-                return (
-                  <li key={id}>
-                    <span className="font-mono">[{n}]</span> {fact ? `${fact.field}: ${formatValue(fact)}` : id}
-                    {fact?.sources.map((src, i) => (
-                      <span key={i} className="block pl-6 text-ink-2">
-                        {sourceLong(src, project.files.find((f) => f.id === src.fileId))} · “{src.quote}”
-                      </span>
-                    ))}
-                    {fact && fact.sources.length === 0 && <span className="block pl-6 text-ink-2">No source file (answered by a person)</span>}
-                  </li>
-                )
-              })}
-            </ol>
-          </section>
+          <Colophon settings={lh} version={brief.version} />
+          <SourcesAppendix entries={sourceRefs.entries} />
         </article>
 
         {(brief.log?.length ?? 0) > 0 && (

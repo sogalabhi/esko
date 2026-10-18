@@ -1,5 +1,6 @@
 import { CircleAlert, CircleCheck, CircleDashed, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
 import { QuestionCard } from '../components/QuestionCard'
 import { Toast } from '../components/Toast'
 import { rankQuestions } from '../lib/questions'
@@ -29,8 +30,11 @@ export function Questions() {
   const { project, answers, answerError, answerQuestion, skipQuestion, undoAnswer } = useProject()
   const ordered = useMemo(() => rankQuestions(project.questions), [project.questions])
   const refs = useRef(new Map<string, HTMLElement>())
-  const [current, setCurrent] = useState<string | null>(null)
-  const focusId = useRef<string | null>(null)
+  const { hash } = useLocation()
+  // A link like /questions#q-address (from the Rules map) lands on that card.
+  const linked = hash.length > 1 && project.questions.some((q) => q.id === hash.slice(1)) ? hash.slice(1) : null
+  const [current, setCurrent] = useState<string | null>(linked)
+  const focusId = useRef<string | null>(linked)
   const [toast, setToast] = useState<Undo | null>(null)
 
   const pending = ordered.filter((q) => q.status !== 'answered')
@@ -41,7 +45,9 @@ export function Questions() {
   // Move focus after the list re-renders (answer, skip, J/K).
   useEffect(() => {
     if (!focusId.current) return
-    refs.current.get(focusId.current)?.focus()
+    const el = refs.current.get(focusId.current)
+    el?.focus()
+    el?.scrollIntoView?.({ block: 'nearest' })
     focusId.current = null
   })
 

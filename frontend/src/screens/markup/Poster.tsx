@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { formatValue, OWNER_LABEL, resolutionText, titleCase } from '../../lib/labels'
-import type { MarkSet } from '../../lib/markup'
+import type { MarkGroups, MarkSet } from '../../lib/markup'
 import type { BBox, PackPanel, Project } from '../../types/project'
 import { MarkupCanvas, type Page } from './MarkupCanvas'
 import { POSTER_CSS } from './posterCss'
@@ -8,6 +8,8 @@ import { POSTER_CSS } from './posterCss'
 interface Props {
   project: Project
   set: MarkSet
+  /** Clusters and singles, drawn collapsed as on screen. */
+  groups?: MarkGroups
   page: Page
   image?: string | null
   panels: PackPanel[]
@@ -21,12 +23,15 @@ interface Props {
  * One A3 landscape page: the marked-up carton, a legend and the decisions taken.
  * Rendered into <body> and shown only when printing (see markup.css), so the app's controls never print.
  */
-export function Poster({ project, set, page, image, panels, hints, sticky, settled }: Props) {
+export function Poster({ project, set, groups, page, image, panels, hints, sticky, settled }: Props) {
   const identity = project.facts.find((f) => f.field === 'Statement of identity')
   const net = project.facts.find((f) => f.field === 'Net quantity')
   const product = [identity?.value ? titleCase(identity.value) : 'Untitled product', net ? formatValue(net) : ''].filter(Boolean).join(' · ')
   const answered = project.questions.filter((q) => q.status === 'answered')
   const today = new Date().toISOString().slice(0, 10)
+  const singles = groups?.singles ?? set.marks
+  const clusters = groups?.clusters ?? []
+  const rows = [...singles.map((m) => ({ n: m.n, m, c: undefined })), ...clusters.map((c) => ({ n: c.n, m: undefined, c }))].sort((a, b) => a.n - b.n)
 
   return createPortal(
     <div className="bf-poster grid-cols-[1fr_100mm] gap-[8mm] bg-white text-[9pt] text-ink" aria-hidden="true" data-testid="poster">
@@ -39,16 +44,41 @@ export function Poster({ project, set, page, image, panels, hints, sticky, settl
             {today}
           </p>
         </header>
-        <MarkupCanvas page={page} image={image} panels={panels} hints={hints} set={set} marked sticky={sticky} animate={false} interactive={false} label="Carton markup" />
+        <MarkupCanvas page={page} image={image} panels={panels} hints={hints} set={set} groups={groups} marked sticky={sticky} animate={false} interactive={false} label="Carton markup" />
         <p className="mt-[2mm] text-[8pt] text-ink-2">
           Positions in mm on the original dieline. Every mark is a finding from BriefForge with its sources checked by code.
         </p>
+        {clusters.length > 0 && (
+          <table className="mt-[2mm] w-full border-collapse text-[7.5pt]" data-testid="poster-clusters">
+            <caption className="pb-[1mm] text-left text-[9pt] font-semibold">Findings inside the boxes</caption>
+            <tbody>
+              {clusters.map((c) => [
+                <tr key={c.id} className="border-b border-ink">
+                  <th scope="rowgroup" colSpan={3} className="pt-[1mm] text-left font-semibold">
+                    <span className="font-mono">{c.n}.</span> {c.note}
+                  </th>
+                </tr>,
+                ...c.marks.map((m) => (
+                  <tr key={`${c.id}-${m.conflict.id}`} className="border-b border-border align-top" data-member={m.conflict.id}>
+                    <td className="w-[7mm] pr-[1mm] text-right font-mono">{m.n}</td>
+                    <td className="pr-[2mm]">
+                      {m.conflict.explanation}
+                      {m.correction && <span className="font-mono"> → {m.correction}</span>}
+                    </td>
+                    <td className="w-[14mm] text-ink-2">{OWNER_LABEL[m.owner]}</td>
+                  </tr>
+                )),
+              ])}
+            </tbody>
+          </table>
+        )}
       </div>
       <aside className="min-w-0 space-y-[4mm] border-l border-border pl-[5mm]">
         <section>
           <h2 className="text-[11pt] font-semibold">Legend</h2>
           <ul className="mt-[1mm] space-y-[0.8mm]">
             <li>Red circle: a problem at this spot (number = the finding below)</li>
+            {clusters.length > 0 && <li>Red box: several problems in one place (listed under the carton)</li>}
             <li>Struck through: a claim to take off or a wrong printed value</li>
             <li>Written above: the value code computed</li>
             <li>Green tick “pass”: a check that passed</li>
@@ -66,12 +96,18 @@ export function Poster({ project, set, page, image, panels, hints, sticky, settl
         <section>
           <h2 className="text-[11pt] font-semibold">Open findings ({set.marks.length + set.offPack.length})</h2>
           <ol className="mt-[1mm] space-y-[0.8mm]">
-            {set.marks.map((m) => (
-              <li key={m.conflict.id} className="flex gap-[1.5mm]">
-                <span className="w-[5mm] shrink-0 text-right font-mono">{m.n}.</span>
-                <span>
-                  {m.conflict.explanation} <span className="text-ink-2">· {OWNER_LABEL[m.owner]}</span>
-                </span>
+            {rows.map(({ n, m, c }) => (
+              <li key={m ? m.conflict.id : c!.id} className="flex gap-[1.5mm]">
+                <span className="w-[5mm] shrink-0 text-right font-mono">{n}.</span>
+                {m ? (
+                  <span>
+                    {m.conflict.explanation} <span className="text-ink-2">· {OWNER_LABEL[m.owner]}</span>
+                  </span>
+                ) : (
+                  <span>
+                    {c!.note} <span className="text-ink-2">· see the table under the carton</span>
+                  </span>
+                )}
               </li>
             ))}
             {set.offPack.map((c) => (

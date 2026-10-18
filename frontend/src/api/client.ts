@@ -27,6 +27,53 @@ export interface UploadedFile {
   pieceCount: number
 }
 
+export interface PackOutResponse {
+  fileId: string
+  market?: string
+  pageW: number
+  pageH: number
+  panels: Array<{
+    name: string
+    kind: string
+    x: number
+    y: number
+    w: number
+    h: number
+    live: [number, number, number, number]
+    outline: Array<[number, number]>
+  }>
+  folds: Array<{
+    a: string
+    b: string
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+  }>
+  zones: Array<{
+    id: string
+    panel: string
+    kind: string
+    label: string
+    x: number
+    y: number
+    w: number
+    h: number
+  }>
+  /** Where the fit engine puts each required item (present after a run). `covers` = the requirement items it carries. */
+  blocks?: Array<{
+    item: string
+    label: string
+    panel: string
+    x: number
+    y: number
+    w: number
+    h: number
+    state: string
+    covers?: string[]
+  }>
+}
+
 /** An API failure with a plain reason a person can read. */
 export class ApiError extends Error {
   readonly status: number
@@ -177,6 +224,19 @@ export const api = {
       return normalizeProject(await request<Partial<Project>>('/api/project'))
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) return null
+      throw e
+    }
+  },
+
+  /**
+   * GET /api/pack. Null when no dieline PDF is available (404). A dieline whose geometry cannot be read
+   * (422) throws with the backend's reason, so the screen shows the error instead of an empty pack.
+   */
+  async getPack(): Promise<PackOutResponse | null> {
+    try {
+      return await request<PackOutResponse>('/api/pack')
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 404 || isRouteMissing(e))) return null
       throw e
     }
   },

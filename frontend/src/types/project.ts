@@ -237,6 +237,14 @@ export interface Project {
   market?: string | null
   /** True while unapproved rules are in use. */
   demoMode?: boolean
+  /** redesign = a dieline PDF or pack image is among the files; new_product = no pack file. */
+  mode?: 'redesign' | 'new_product'
+  /** Why that mode, e.g. 'No pack file among the inputs'. */
+  modeReason?: string
+  /** Ranked questions that did not fit the open window; they move up as open ones are answered. */
+  waitingQuestions?: Question[]
+  /** How many are waiting (the header shows '10 open · N waiting'). */
+  questionsWaiting?: number
   files: ProjectFile[]
   facts: Fact[]
   conflicts: Conflict[]

@@ -1,12 +1,13 @@
 import { CameraControls } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Box, CircleDashed, FileWarning, Image as ImageIcon, PanelsTopLeft, RotateCcw, ScanEye, ShieldCheck } from 'lucide-react'
+import { Box, CircleCheck, CircleDashed, FileWarning, Image as ImageIcon, PanelsTopLeft, RotateCcw, ScanEye, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
 import { prefersReducedMotion } from '../lib/motion'
 import { useArtwork, type ArtworkTexture } from './artwork'
 import { faceView, homeView, type CameraView } from './camera'
 import { CartonModel, useCartonLayout } from './CartonModel'
-import { placePins } from './geometry'
+import type { ClusterRegion } from '../lib/clusters'
+import { pinGroups, type PinCluster } from './geometry'
 import { MISSING_META, REGULATED_META, SEVERITY_META } from './meta'
 import type { PackArtwork, PackFinding, PackGeometry, PackRegion } from './types'
 import { webglAvailable } from './webgl'
@@ -37,8 +38,13 @@ export interface PackView3DProps {
   findings?: PackFinding[]
   regulated?: PackRegion[]
   missing?: PackRegion[]
+  /** Missing required items with no slot on the pack: listed, never drawn at a made-up spot. */
+  unslotted?: string[]
   selectedId?: string | null
+  /** A finding or a cluster id was picked. */
   onSelect?: (id: string) => void
+  /** Regions that group crowded findings into one pin with a count (defaults to `regulated`). */
+  clusterRegions?: ClusterRegion[]
   /** Fold to the closed box once mounted. */
   autoFold?: boolean
   initialFold?: number
@@ -180,10 +186,13 @@ export function PackView3D(props: PackView3DProps) {
   return <PackView3DReady {...props} geometry={geometry} />
 }
 
-function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regulated = [], missing = [], selectedId, onSelect, autoFold, initialFold = 0, ref }: PackView3DProps & { geometry: PackGeometry }) {
+type Row = { kind: 'single'; id: string; i: number; finding: PackFinding; panel: string } | { kind: 'cluster'; id: string; i: number; cluster: PinCluster }
+
+function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regulated = [], missing = [], unslotted = [], clusterRegions, selectedId, onSelect, autoFold, initialFold = 0, ref }: PackView3DProps & { geometry: PackGeometry }) {
   const reduced = useMemo(prefersReducedMotion, [])
   const [webgl, setWebgl] = useState(webglAvailable)
   const [xray, setXray] = useState(false)
+  const [showPassed, setShowPassed] = useState(false)
   const [localSelected, setLocalSelected] = useState<string | null>(null)
   const selected = selectedId !== undefined ? selectedId : localSelected
   const { fold, animateTo, jumpTo } = useFoldAnimation(initialFold, reduced)
@@ -191,7 +200,27 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
   const art = useArtwork(geometry.panels, artwork)
   const rig = useRef<Rig | null>(null)
   const labels = useRef<HTMLDivElement>(null)
-  const { placed, unplaced } = useMemo(() => placePins(findings, geometry.panels), [findings, geometry.panels])
+  const regions = clusterRegions ?? regulated
+  const groups = useMemo(() => pinGroups(findings, geometry.panels, regions, showPassed), [findings, geometry.panels, regions, showPassed])
+  const { unplaced } = groups
+  /** The panel to fly to for a finding or cluster id. */
+  const panelOf = useCallback(
+    (id: string) =>
+      groups.singles.find((p) => p.finding.id === id)?.panel ??
+      groups.clusters.find((c) => c.id === id || c.members.some((f) => f.id === id))?.panel ??
+      groups.passed.find((p) => p.finding.id === id)?.panel,
+    [groups],
+  )
+  // List order: as the findings came in, a cluster at its first member.
+  const rows = useMemo(() => {
+    const at = new Map(findings.map((f, i) => [f.id, i]))
+    const list: Row[] = [
+      ...groups.singles.map((p) => ({ kind: 'single' as const, id: p.finding.id, i: at.get(p.finding.id) ?? 0, finding: p.finding, panel: p.panel })),
+      ...groups.clusters.map((c) => ({ kind: 'cluster' as const, id: c.id, i: at.get(c.members[0].id) ?? 0, cluster: c })),
+    ]
+    return list.sort((a, b) => a.i - b.i)
+  }, [groups, findings])
+  const pinned = groups.singles.length + groups.clusters.reduce((n, c) => n + c.members.length, 0)
 
   // Latest layout for imperative calls, without re-creating the handle every frame.
   const live = useRef({ tree, layout, fold })
@@ -224,26 +253,29 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
   useImperativeHandle(ref, () => ({ snapshot: () => rig.current?.snapshot() ?? null, resetView: () => resetView(), flyTo, foldTo }), [resetView, flyTo, foldTo])
 
   // Auto-fold once the artwork is on the faces (or has fallen back to flat colours).
+  // No crease lines: the dieline is shown flat and the fold controls are off.
+  const canFold = geometry.folds.length > 0
   const autoFolded = useRef(false)
   useEffect(() => {
-    if (!autoFold || autoFolded.current || art.status === 'loading') return
+    if (!autoFold || !canFold || autoFolded.current || art.status === 'loading') return
     autoFolded.current = true
     foldTo(1)
-  }, [autoFold, art.status, foldTo])
+  }, [autoFold, canFold, art.status, foldTo])
 
   const select = (id: string) => {
     setLocalSelected(id)
     onSelect?.(id)
-    const pin = placed.find((p) => p.finding.id === id)
-    if (pin) flyTo(pin.panel)
+    const panel = panelOf(id)
+    if (panel) flyTo(panel)
   }
 
   // An outside selection (e.g. from a list elsewhere) also flies the camera.
   useEffect(() => {
     if (!selectedId) return
-    const pin = placed.find((p) => p.finding.id === selectedId)
-    if (pin) flyTo(pin.panel)
-  }, [selectedId, placed, flyTo])
+    const panel = panelOf(selectedId)
+    if (panel) flyTo(panel)
+  }, [selectedId, panelOf, flyTo])
+  const selectedCluster = groups.clusters.find((c) => c.id === selected || c.members.some((f) => f.id === selected))
 
   const folded = fold >= 0.999
   const btn =
@@ -252,7 +284,7 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
   return (
     <section aria-label="3D pack view" className="flex flex-col gap-3">
       <div role="toolbar" aria-label="3D view controls" className="flex flex-wrap items-center gap-2">
-        <button type="button" className={btn} onClick={() => foldTo(folded ? 0 : 1)}>
+        <button type="button" className={btn} onClick={() => foldTo(folded ? 0 : 1)} disabled={!canFold} title={canFold ? undefined : 'No crease lines in the dieline, so it cannot fold'}>
           {folded ? <PanelsTopLeft size={16} aria-hidden="true" /> : <Box size={16} aria-hidden="true" />}
           {folded ? 'Unfold' : 'Fold box'}
         </button>
@@ -265,6 +297,7 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
             step={1}
             value={Math.round(fold * 100)}
             onChange={(e) => jumpTo(Number(e.target.value) / 100)}
+            disabled={!canFold}
             className="w-32 accent-[var(--accent)]"
           />
           <output className="w-10 font-mono tabular-nums text-ink">{Math.round(fold * 100)}%</output>
@@ -272,6 +305,16 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
         <button type="button" className={`${btn} ${xray ? 'border-info text-info' : ''}`} aria-pressed={xray} onClick={() => setXray((v) => !v)}>
           <ScanEye size={16} aria-hidden="true" />
           X-ray {xray ? 'on' : 'off'}
+        </button>
+        <button
+          type="button"
+          className={`${btn} ${showPassed ? 'border-ok text-ok' : ''}`}
+          aria-pressed={showPassed}
+          onClick={() => setShowPassed((v) => !v)}
+          disabled={groups.passed.length === 0}
+        >
+          <CircleCheck size={16} aria-hidden="true" />
+          Show passed checks <span className="font-mono tabular-nums">{groups.passed.length}</span>
         </button>
         <button type="button" className={btn} onClick={() => resetView()} disabled={!webgl}>
           <RotateCcw size={16} aria-hidden="true" />
@@ -286,7 +329,7 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
       <div className="grid grid-cols-[minmax(0,1fr)_260px] gap-4">
         {webgl ? (
           <div className="relative h-[560px] overflow-hidden rounded-card border border-border bg-bg" data-testid="pack-canvas">
-            <div ref={labels} className="pointer-events-none absolute inset-0 z-10 [&>*]:pointer-events-auto" />
+            <div ref={labels} data-label-bounds className="pointer-events-none absolute inset-0 z-10 [&>*]:pointer-events-auto" />
             <Canvas
               flat
               dpr={[1, 2]}
@@ -308,6 +351,9 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
                 missing={missing}
                 selectedId={selected}
                 onPinClick={(f) => select(f.id)}
+                onClusterClick={(c) => select(c.id)}
+                clusterRegions={regions}
+                showPassed={showPassed}
                 reducedMotion={reduced}
                 htmlPortal={labels}
               />
@@ -346,31 +392,92 @@ function PackView3DReady({ geometry, geometryNote, artwork, findings = [], regul
               </ul>
             </div>
           )}
+          {unslotted.length > 0 && (
+            <div aria-label="Not on the pack yet" className="flex flex-col gap-1 rounded-chip border border-dashed border-warn/60 px-2.5 py-2 text-[12px]">
+              <span className="inline-flex items-center gap-1 font-medium text-warn">
+                <CircleDashed size={14} aria-hidden="true" /> Not on the pack yet: {unslotted.join(', ')}
+              </span>
+              <span className="text-ink-2">Required, but no space was found for {unslotted.length === 1 ? 'it' : 'them'} on this dieline yet.</span>
+            </div>
+          )}
           <h2 className="text-[14px] font-semibold text-ink">
-            Findings on the box <span className="font-mono text-ink-2">{placed.length}</span>
+            Findings on the box <span className="font-mono text-ink-2">{pinned}</span>
           </h2>
           {findings.length === 0 && <p className="text-ink-2">No findings to pin.</p>}
           <ul className="flex flex-col gap-1.5">
-            {placed.map(({ finding: f, panel }) => {
-              const meta = SEVERITY_META[f.severity]
+            {rows.map((row) => {
+              if (row.kind === 'single') {
+                const f = row.finding
+                const meta = SEVERITY_META[f.severity]
+                return (
+                  <li key={f.id}>
+                    <button
+                      type="button"
+                      onClick={() => select(f.id)}
+                      aria-current={selected === f.id ? 'true' : undefined}
+                      className={`flex w-full flex-col items-start gap-0.5 rounded-chip border bg-surface px-2.5 py-2 text-left hover:bg-bg focus-visible:outline-2 focus-visible:outline-info ${selected === f.id ? 'border-ink' : 'border-border'}`}
+                    >
+                      <span className={`inline-flex items-center gap-1 text-[12px] font-medium ${meta.cls.split(' ')[0]}`}>
+                        <meta.Icon size={14} aria-hidden="true" /> {meta.word}
+                      </span>
+                      <span className="text-[14px] text-ink">{f.label}</span>
+                      <span className="text-[12px] text-ink-2">{row.panel}</span>
+                    </button>
+                  </li>
+                )
+              }
+              const c = row.cluster
+              const meta = SEVERITY_META[c.worst]
+              const open = selectedCluster?.id === c.id
               return (
-                <li key={f.id}>
+                <li key={c.key}>
                   <button
                     type="button"
-                    onClick={() => select(f.id)}
-                    aria-current={selected === f.id ? 'true' : undefined}
-                    className={`flex w-full flex-col items-start gap-0.5 rounded-chip border bg-surface px-2.5 py-2 text-left hover:bg-bg focus-visible:outline-2 focus-visible:outline-info ${selected === f.id ? 'border-ink' : 'border-border'}`}
+                    onClick={() => select(c.id)}
+                    aria-expanded={open}
+                    aria-label={c.name}
+                    aria-current={selected === c.id ? 'true' : undefined}
+                    className={`flex w-full flex-col items-start gap-0.5 rounded-chip border bg-surface px-2.5 py-2 text-left hover:bg-bg focus-visible:outline-2 focus-visible:outline-info ${open ? 'border-ink' : 'border-border'}`}
                   >
                     <span className={`inline-flex items-center gap-1 text-[12px] font-medium ${meta.cls.split(' ')[0]}`}>
-                      <meta.Icon size={14} aria-hidden="true" /> {meta.word}
+                      <meta.Icon size={14} aria-hidden="true" /> {meta.word} <span className="font-mono tabular-nums">×{c.members.length}</span>
                     </span>
-                    <span className="text-[14px] text-ink">{f.label}</span>
-                    <span className="text-[12px] text-ink-2">{panel}</span>
+                    <span className="text-[14px] text-ink">{c.name}</span>
+                    <span className="text-[12px] text-ink-2">{c.panel}</span>
                   </button>
+                  {open && (
+                    <ul aria-label={`Findings in ${c.label}`} className="ml-3 mt-1 flex flex-col gap-1 border-l border-border pl-2">
+                      {c.members.map((f) => {
+                        const m = SEVERITY_META[f.severity]
+                        return (
+                          <li key={f.id}>
+                            <button
+                              type="button"
+                              onClick={() => select(f.id)}
+                              aria-label={`${m.word}: ${f.label}`}
+                              aria-current={selected === f.id ? 'true' : undefined}
+                              className={`flex w-full flex-col items-start rounded-chip border px-2 py-1 text-left text-[13px] hover:bg-bg focus-visible:outline-2 focus-visible:outline-info ${selected === f.id ? 'border-ink' : 'border-transparent'}`}
+                            >
+                              <span className={`inline-flex items-center gap-1 text-[12px] font-medium ${m.cls.split(' ')[0]}`}>
+                                <m.Icon size={13} aria-hidden="true" /> {m.word}
+                              </span>
+                              <span className="text-ink">{f.label}</span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
                 </li>
               )
             })}
           </ul>
+          {!showPassed && groups.passed.length > 0 && (
+            <p className="inline-flex items-center gap-1 text-[12px] text-ink-2">
+              <CircleCheck size={14} aria-hidden="true" className="text-ok" />
+              {groups.passed.length} passed check{groups.passed.length === 1 ? '' : 's'} hidden. Use Show passed checks to pin {groups.passed.length === 1 ? 'it' : 'them'}.
+            </p>
+          )}
           {unplaced.length > 0 && (
             <div>
               <h3 className="text-[12px] font-semibold text-warn">Not on a panel ({unplaced.length})</h3>

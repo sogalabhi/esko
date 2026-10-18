@@ -1,12 +1,15 @@
-import { CircleAlert, CircleCheck, Eye, EyeOff, FileUp, GitCompareArrows, Printer, RotateCcw, StickyNote } from 'lucide-react'
+import { ChevronUp, CircleAlert, CircleCheck, Eye, EyeOff, GitCompareArrows, Printer, RotateCcw, StickyNote } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
 import { ConflictCard } from '../components/ConflictCard'
+import { NoPackState } from '../components/NoPackState'
 import { Skeleton } from '../components/LoadGate'
 import { OWNER_LABEL } from '../lib/labels'
 import { prefersReducedMotion } from '../lib/motion'
-import { buildMarks, isOpenFinding, packFileId, type Mark, type PassTick, type Spot } from '../lib/markup'
+import { regionsFromFacts } from '../lib/clusters'
+import { buildMarks, clusterMarks, isOpenFinding, packFileId, type Mark, type MarkCluster, type PassTick, type Spot } from '../lib/markup'
+import { usePackZones } from '../lib/usePackZones'
 import { buildTrackChanges } from '../lib/trackChanges'
+import { SEVERITY_META } from '../three/meta'
 import { useProject } from '../state/project'
 import type { BBox, Project } from '../types/project'
 import { MarkupCanvas, type Page } from './markup/MarkupCanvas'
@@ -58,9 +61,12 @@ export function Markup() {
   const [replay, setReplay] = useState(0)
   const [attempt, setAttempt] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
+  /** The open cluster, by its place (stays open when one of its findings is resolved). */
+  const [expanded, setExpanded] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLElement>(null)
   const findingRef = useRef<HTMLElement>(null)
+  const clusterRef = useRef<HTMLElement>(null)
 
   const packId = packFileId(project)
   const packFile = project.files.find((f) => f.id === packId)
@@ -68,6 +74,10 @@ export function Markup() {
   const hide = useMemo(() => guideLayers(packFile?.skipped ?? []), [packFile])
   const img = useCartonImage(packId, !mockMode && !!packId, attempt, hide)
   const set = useMemo(() => buildMarks(project, packId ?? '', mockMode), [project, packId, mockMode])
+  const zones = usePackZones(mockMode, packId)
+  const regions = useMemo(() => [...zones, ...(packId ? regionsFromFacts(project.facts, packId) : [])], [zones, project.facts, packId])
+  const groups = useMemo(() => clusterMarks(set.marks, regions), [set.marks, regions])
+  const openCluster = groups.clusters.find((c) => c.key === expanded)
   const sections = useMemo(() => (packId ? buildTrackChanges(project, packId) : []), [project, packId])
   const refFile = useMemo(() => {
     const ids = sections.flatMap((s) => s.rows.flatMap((r) => r.newSources.map((x) => x.fileId)))
@@ -90,6 +100,11 @@ export function Markup() {
     [openSource],
   )
   const onPass = useCallback((t: PassTick) => openSource(t.source), [openSource])
+  const onCluster = useCallback((c: MarkCluster) => setExpanded((k) => (k === c.key ? null : c.key)), [])
+
+  useEffect(() => {
+    if (expanded) clusterRef.current?.scrollIntoView?.({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' })
+  }, [expanded])
 
   useEffect(() => {
     if (track) trackRef.current?.scrollIntoView?.({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
@@ -105,7 +120,7 @@ export function Markup() {
       if (k !== 'j' && k !== 'k') return
       const root = canvasRef.current
       if (!root) return
-      const btns = [...root.querySelectorAll<SVGGElement>('[data-mark] > [role="button"]')].sort(
+      const btns = [...root.querySelectorAll<SVGGElement>('[data-mark] > [role="button"], [data-cluster] > [role="button"]')].sort(
         (a, b) => Number(a.parentElement?.getAttribute('data-n')) - Number(b.parentElement?.getAttribute('data-n')),
       )
       if (!btns.length) return
@@ -118,22 +133,15 @@ export function Markup() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  if (!packId) {
-    return (
-      <section className="mx-auto mt-16 max-w-md rounded-card border border-border bg-surface p-8 text-center">
-        <FileUp size={24} aria-hidden="true" className="mx-auto text-ink-2" />
-        <h1 className="mt-3 text-[20px] font-semibold">No carton PDF yet</h1>
-        <p className="mt-1 text-ink-2">The markup is drawn on the pack dieline. Add the carton PDF first.</p>
-        <Link to="/evidence" className={`${btn} mt-4`}>
-          Go to Evidence
-        </Link>
-      </section>
-    )
-  }
+  // New-product mode: no old pack to mark up (PLAN "Two modes").
+  if (!packId) return <NoPackState />
 
   const open = set.marks.length + set.offPack.length
   const resolvedNow = project.conflicts.filter((c) => !isOpenFinding(c, project.questions, mockMode)).length
-  const canvasLabel = `Carton markup: ${set.marks.length} open finding${set.marks.length === 1 ? '' : 's'} marked`
+  const grouped = groups.clusters.reduce((n, c) => n + c.marks.length, 0)
+  const canvasLabel =
+    `Carton markup: ${set.marks.length} open finding${set.marks.length === 1 ? '' : 's'} marked` +
+    (groups.clusters.length ? `, ${grouped} of them in ${groups.clusters.length} box${groups.clusters.length === 1 ? '' : 'es'}` : '')
 
   return (
     <section aria-labelledby="markup-title" className="mx-auto max-w-[1400px] space-y-4">
@@ -222,6 +230,7 @@ export function Markup() {
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-2">
           <span>Numbers match the notes.</span>
           <span>Circle: problem at this spot</span>
+          <span>Box: several problems in one place (opens the list)</span>
           <span>Struck: take off, or wrong value</span>
           <span>Written above: value computed by code</span>
           <span>Green tick “pass”: check passed</span>
@@ -248,11 +257,14 @@ export function Markup() {
             panels={project.pack.panels}
             hints={hints}
             set={set}
+            groups={groups}
             marked={marked}
             sticky={sticky}
             animate
             selectedId={selected}
             onSelect={onSelect}
+            onCluster={onCluster}
+            expandedId={openCluster?.id ?? null}
             onPass={onPass}
             label={canvasLabel}
           />
@@ -288,6 +300,51 @@ export function Markup() {
         </section>
       )}
 
+      {marked && openCluster && (
+        <section ref={clusterRef} id="cluster-panel" aria-labelledby="cluster-title" className="rounded-card border border-border bg-surface p-4">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 id="cluster-title" className="text-[14px] font-semibold">
+                <span className="font-mono">{openCluster.n}.</span> {openCluster.name}
+              </h2>
+              <p className="text-[13px] text-ink-2">One box on the carton marks these. Pick one to ring it on the carton and open its sources.</p>
+            </div>
+            <button type="button" onClick={() => setExpanded(null)} className={btn}>
+              <ChevronUp size={15} aria-hidden="true" />
+              Close list
+            </button>
+          </div>
+          <ol className="mt-3 grid gap-1.5" aria-label={`Findings in ${openCluster.label}`}>
+            {openCluster.marks.map((m) => {
+              const meta = SEVERITY_META[m.conflict.severity]
+              const current = selected === m.conflict.id
+              return (
+                <li key={m.conflict.id}>
+                  <button
+                    type="button"
+                    aria-current={current ? 'true' : undefined}
+                    aria-label={`${m.n}. ${meta.word}: ${m.conflict.explanation}${m.correction ? ` Computed: ${m.correction}.` : ''} ${OWNER_LABEL[m.owner]}`}
+                    onClick={() => m.spots[0] && onSelect(m, m.spots[0])}
+                    className={`flex w-full items-start gap-2 rounded-chip border px-2.5 py-1.5 text-left text-[13px] hover:bg-bg focus-visible:outline-2 focus-visible:outline-info ${current ? 'border-ink' : 'border-border'}`}
+                  >
+                    <span className="w-6 shrink-0 text-right font-mono tabular-nums text-ink-2">{m.n}.</span>
+                    <span className={`inline-flex w-[72px] shrink-0 items-center gap-1 text-[12px] font-medium ${meta.cls.split(' ')[0]}`}>
+                      <meta.Icon size={14} aria-hidden="true" />
+                      {meta.word}
+                    </span>
+                    <span className="flex-1">
+                      {m.conflict.explanation}
+                      {m.correction && <span className="ml-1 font-mono text-ink-2">→ {m.correction}</span>}
+                    </span>
+                    <span className="shrink-0 text-[12px] text-ink-2">{OWNER_LABEL[m.owner]}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+      )}
+
       {selectedConflict && (
         <section ref={findingRef} aria-labelledby="finding-title" className="space-y-2">
           <h2 id="finding-title" className="text-[14px] font-semibold">
@@ -303,7 +360,7 @@ export function Markup() {
         </div>
       )}
 
-      <Poster project={project} set={set} page={page} image={img.status === 'ready' ? img.url : null} panels={project.pack.panels} hints={hints} sticky={sticky} settled={settled} />
+      <Poster project={project} set={set} groups={groups} page={page} image={img.status === 'ready' ? img.url : null} panels={project.pack.panels} hints={hints} sticky={sticky} settled={settled} />
     </section>
   )
 }

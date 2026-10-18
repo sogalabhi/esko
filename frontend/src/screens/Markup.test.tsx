@@ -17,8 +17,12 @@ vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({ default: 'worker.js'
 const project = (): Project => structuredClone(mockProject)
 const onCarton = (p: Project) => p.conflicts.filter((c) => c.locations.some((l) => l.fileId === 'f-carton'))
 
-const markButtons = () => [...document.querySelectorAll('[data-mark] > [role="button"]')]
+const markButtons = () => [...document.querySelectorAll('[data-mark] > [role="button"], [data-cluster] > [role="button"]')]
 const canvas = () => screen.getByRole('group', { name: /Carton markup/ })
+const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+/** The single-spot findings printed in the mock carton's nutrition table. */
+const NUTRITION = ['c-carbs', 'c-dv-fat', 'c-dv-vitd', 'c-dv-calcium', 'c-calories', 'c-serving', 'c-sodium']
+const clusterButton = () => within(canvas()).getByRole('button', { name: /^Nutrition: 7 problems/ })
 
 beforeEach(() => {
   // Each test starts with the poster class off.
@@ -27,16 +31,94 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('Markup: red pen', () => {
-  it('marks every open finding at each of its carton spots, named by the finding text', () => {
+  it('marks every open finding at each of its carton spots, named by the finding text; the nutrition table is one box', () => {
     const p = project()
     renderWithProject(<Markup />, '/markup', p)
-    const spots = onCarton(p).flatMap((c) => c.locations.filter((l) => l.fileId === 'f-carton'))
-    expect(markButtons()).toHaveLength(spots.length)
-    for (const c of onCarton(p)) {
+    const singles = onCarton(p).filter((c) => !NUTRITION.includes(c.id))
+    const spots = singles.flatMap((c) => c.locations.filter((l) => l.fileId === 'f-carton'))
+    expect(document.querySelectorAll('[data-mark] > [role="button"]')).toHaveLength(spots.length)
+    for (const c of singles) {
       const n = c.locations.filter((l) => l.fileId === 'f-carton').length
       const name = n > 1 ? `${c.explanation} (spot 1 of ${n})` : c.explanation
       expect(within(canvas()).getByRole('button', { name })).toBeInTheDocument()
     }
+    // The table's findings have no mark of their own: one box with the count stands for them.
+    for (const id of NUTRITION) expect(document.querySelector(`[data-mark="${id}"]`)).toBeNull()
+    expect(clusterButton()).toHaveAttribute('aria-expanded', 'false')
+    expect(canvas().querySelectorAll('[data-cluster]')).toHaveLength(1)
+    expect(canvas().getAttribute('aria-label')).toMatch(/7 of them in 1 box/)
+  })
+
+  it('draws the nutrition findings as one box, one number, one margin note and one arrow, not one each', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    const svg = canvas()
+    const notes = [...svg.querySelectorAll('[data-note]')]
+    const clusterNotes = notes.filter((n) => n.getAttribute('data-note-kind') === 'cluster')
+    expect(clusterNotes).toHaveLength(1)
+    expect(clusterNotes[0]).toHaveTextContent('7 problems in Nutrition')
+    for (const id of NUTRITION) expect(svg.querySelector(`[data-note="${id}"]`)).toBeNull()
+    // One note per single plus one for the box; one arrow per note.
+    const singles = new Set([...svg.querySelectorAll('[data-mark]')].map((e) => e.getAttribute('data-mark')))
+    expect(notes).toHaveLength(singles.size + 1)
+    expect(svg.querySelectorAll('[data-layer="marks"] > g[aria-hidden="true"]:not([data-note])')).toHaveLength(notes.length)
+  })
+
+  it('keeps the corrections inside a collapsed box: strike on the printed value, computed value written by it', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    const fat = canvas().querySelector('[data-cluster] [data-member="c-dv-fat"]') as HTMLElement
+    expect(within(fat).getByText('≈19%')).toBeInTheDocument()
+    expect(fat.querySelectorAll('path.pen-stroke')).toHaveLength(2) // the double strike
+  })
+
+  it('opening the box lists every finding in it beside the carton; picking one rings its spot and opens the drawer', async () => {
+    const user = userEvent.setup()
+    const p = project()
+    renderWithProject(<Markup />, '/markup', p)
+    await user.click(clusterButton())
+    expect(clusterButton()).toHaveAttribute('aria-expanded', 'true')
+    const panel = screen.getByRole('region', { name: /Nutrition: 7 problems/ })
+    const items = within(within(panel).getByRole('list', { name: 'Findings in Nutrition' })).getAllByRole('button')
+    expect(items).toHaveLength(NUTRITION.length)
+    for (const id of NUTRITION) expect(within(panel).getByRole('button', { name: new RegExp(esc(p.conflicts.find((c) => c.id === id)!.explanation)) })).toBeInTheDocument()
+    // Still one note for the box: the list is in the panel, not in the margin.
+    expect(canvas().querySelectorAll('[data-note-kind="cluster"]')).toHaveLength(1)
+    for (const id of NUTRITION) expect(canvas().querySelector(`[data-note="${id}"]`)).toBeNull()
+
+    const fat = p.conflicts.find((c) => c.id === 'c-dv-fat')!
+    await user.click(within(panel).getByRole('button', { name: new RegExp(esc(fat.explanation)) }))
+    expect(canvas().querySelector('[data-focus="c-dv-fat"]')).not.toBeNull()
+    expect(within(panel).getByRole('button', { name: new RegExp(esc(fat.explanation)) })).toHaveAttribute('aria-current', 'true')
+    expect(screen.getByRole('dialog', { name: 'Source' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Finding \d+ · Legal/ })).toBeInTheDocument()
+
+    // Close the list from the panel.
+    await user.click(within(panel).getByRole('button', { name: 'Close list' }))
+    expect(screen.queryByRole('region', { name: /Nutrition: 7 problems/ })).toBeNull()
+  })
+
+  it('the box note opens the list too', async () => {
+    const user = userEvent.setup()
+    renderWithProject(<Markup />, '/markup', project())
+    await user.click(canvas().querySelector('[data-note-kind="cluster"]')!)
+    expect(screen.getByRole('region', { name: /Nutrition: 7 problems/ })).toBeInTheDocument()
+  })
+
+  it('the honey mark stays its own mark; the drawer opens the carton source and the card the sheet source', async () => {
+    const user = userEvent.setup()
+    const p = project()
+    renderWithProject(<Markup />, '/markup', p)
+    const honey = p.conflicts.find((c) => c.id === 'c-honey')!
+    expect(document.querySelector('[data-cluster] [data-member="c-honey"]')).toBeNull()
+    expect(document.querySelector('[data-note="c-honey"]')).toHaveTextContent('sheet says 9%')
+    await user.click(within(canvas()).getByRole('button', { name: honey.explanation }))
+    const drawer = screen.getByRole('dialog', { name: 'Source' })
+    expect(drawer).toHaveTextContent('Honey (1%)')
+    await user.click(within(drawer).getByRole('button', { name: 'Close source' }))
+    const card = screen.getByRole('heading', { name: /Finding 1 · R&D/ }).parentElement!
+    const sheetChip = within(card).getAllByRole('button').find((b) => /^Sheet/.test(b.getAttribute('aria-label') ?? b.textContent ?? ''))!
+    await user.click(sheetChip)
+    expect(screen.getByRole('dialog', { name: 'Source' })).toHaveTextContent(/Sheet|Content sheet/)
+    expect(screen.getByRole('dialog', { name: 'Source' })).not.toHaveTextContent('Honey (1%)')
   })
 
   it('draws each mark at its location, in the page mm frame', () => {
@@ -59,7 +141,7 @@ describe('Markup: red pen', () => {
 
   it('writes the computed value above a wrong printed one, and a sheet note for a value conflict', () => {
     renderWithProject(<Markup />, '/markup', project())
-    expect(within(document.querySelector('[data-mark="c-dv-fat"]') as HTMLElement).getByText('≈19%')).toBeInTheDocument()
+    expect(within(canvas().querySelector('[data-member="c-dv-fat"]') as HTMLElement).getByText('≈19%')).toBeInTheDocument()
     expect(document.querySelector('[data-note="c-honey"]')).toHaveTextContent('sheet says 9%')
   })
 
@@ -146,7 +228,11 @@ describe('Markup: toggles', () => {
     expect(honey.getAttribute('data-owner')).toBe('rnd')
     expect(honey).toHaveTextContent('R&D · #1')
     expect(document.querySelector('[data-note="c-added-sugar"]')).toHaveTextContent(/^LEGAL/)
-    expect(canvas().querySelectorAll('[data-note]')).toHaveLength(onCarton(p).length)
+    // One sticky per single finding and one for the nutrition box, in its main owner's colour.
+    expect(canvas().querySelectorAll('[data-note]')).toHaveLength(onCarton(p).length - NUTRITION.length + 1)
+    const box = canvas().querySelector('[data-note-kind="cluster"]')!
+    expect(box.getAttribute('data-owner')).toBe('legal')
+    expect(box).toHaveTextContent(/^LEGAL · #\d+7 problems in Nutrition/)
   })
 
   it('track changes shows insertions, deletions and duplicates from carton to sheet', async () => {
@@ -213,7 +299,14 @@ describe('Markup: A3 poster', () => {
     expect(poster).toHaveClass('bf-poster')
     expect(poster).toHaveAttribute('aria-hidden', 'true')
     expect(poster.querySelectorAll('button, [role="button"], input')).toHaveLength(0)
-    expect(new Set([...poster.querySelectorAll('[data-mark]')].map((e) => e.getAttribute('data-mark'))).size).toBe(onCarton(p).length - 1)
+    const drawn = new Set([...poster.querySelectorAll('[data-mark], svg [data-member]')].map((e) => e.getAttribute('data-mark') ?? e.getAttribute('data-member')))
+    expect(drawn.size).toBe(onCarton(p).length - 1)
+    // Same collapsed view as on screen, plus a footnote table of what each box holds.
+    expect(poster.querySelectorAll('[data-cluster]')).toHaveLength(1)
+    const table = within(poster).getByTestId('poster-clusters')
+    expect(table).toHaveTextContent('6 problems in Nutrition')
+    expect(table.querySelectorAll('tr[data-member]')).toHaveLength(6)
+    expect(table).toHaveTextContent('≈19%')
     expect(poster).toHaveTextContent('Legend')
     expect(poster).toHaveTextContent(/Decisions \(1\)/)
     expect(poster).toHaveTextContent(/Sodium differs .* use sheet value · Abhijith/)
@@ -226,8 +319,11 @@ describe('Markup: states', () => {
     p.files = p.files.filter((f) => f.type !== 'pdf')
     p.conflicts = []
     renderWithProject(<Markup />, '/markup', p)
-    expect(screen.getByRole('heading', { name: 'No carton PDF yet' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Go to Evidence' })).toHaveAttribute('href', '/evidence')
+    expect(screen.getByRole('heading', { name: 'No current pack' })).toBeInTheDocument()
+    expect(screen.getByText(/The brief works without it/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Upload the old pack' })).toHaveAttribute('href', '/evidence')
+    expect(screen.queryByRole('group', { name: /Carton markup/ })).toBeNull()
+    expect(document.querySelectorAll('[data-mark], [data-cluster]')).toHaveLength(0)
   })
 
   it('lists open findings that have no spot on the carton', () => {

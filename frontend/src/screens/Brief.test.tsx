@@ -302,10 +302,112 @@ describe('Brief screen: print', () => {
     const row = sentence('Objective:0')
     const sup = row.querySelector('sup')!
     expect(sup).toHaveClass('print-only')
-    expect(sup).toHaveTextContent('[1, 2, 3]')
+    expect(sup.textContent).toMatch(/^Sources 1, 2, 3/)
     const appendix = screen.getByRole('region', { name: 'Sources' })
     expect(appendix).toHaveClass('print-only')
     expect(within(appendix).getAllByRole('listitem').length).toBeGreaterThan(5)
-    expect(appendix).toHaveTextContent('[1] Brand: Dancing Fish')
+    const first = appendix.querySelector('li[data-ref="1"]')!
+    expect(first).toHaveTextContent('Sheet · B13')
+    expect(first).toHaveTextContent('DancingFish_Granola_BerryCrunch_US_Content_Sheet.xlsx')
+    expect(first).toHaveTextContent('“Dancing Fish”')
+    expect(first).toHaveTextContent('For: Brand')
+  })
+
+  /** What the printed page shows: the article without anything marked no-print. */
+  const printedText = () => {
+    const doc = screen.getByRole('article', { name: 'Design brief' }).cloneNode(true) as HTMLElement
+    doc.querySelectorAll('.no-print').forEach((el) => el.remove())
+    return doc.textContent ?? ''
+  }
+
+  it('every cited source of every sentence has a number in the appendix, and no internal ids print', () => {
+    const p = clone()
+    renderWithProject(<Brief />, '/', p)
+    const appendix = screen.getByRole('region', { name: 'Sources' })
+    const listed = new Set([...appendix.querySelectorAll('li[data-ref]')].map((li) => Number(li.getAttribute('data-ref'))))
+    p.brief.sections.forEach((sec) =>
+      sec.sentences.forEach((s, i) => {
+        if (s.factIds.length === 0) return
+        const sup = sentence(`${sec.title}:${i}`).querySelector('sup')!
+        const nums = sup.textContent!.replace('Sources ', '').split(', ').map(Number)
+        const expected = s.factIds.reduce((n, id) => n + Math.max(1, p.facts.find((f) => f.id === id)?.sources.length ?? 1), 0)
+        expect(nums.length).toBeGreaterThan(0)
+        expect(nums.length).toBeLessThanOrEqual(expected)
+        for (const n of nums) expect(listed.has(n)).toBe(true)
+      }),
+    )
+    const text = printedText()
+    for (const f of p.facts) expect(text).not.toContain(f.id)
+    for (const f of p.files) expect(text).not.toContain(f.id)
+  })
+
+  it('a draft prints "(unproven)" after an unproven sentence and a DRAFT watermark; an approved brief prints neither', () => {
+    const { unmount } = renderWithProject(<Brief />)
+    expect(within(sentence(UNPROVEN)).getByText('(unproven)')).toHaveClass('print-only')
+    expect(screen.getByTestId('draft-watermark')).toHaveTextContent('DRAFT · NOT APPROVED')
+    expect(screen.getByTestId('doc-status')).toHaveTextContent('Draft')
+    unmount()
+
+    const approved = allProven()
+    approved.brief.approvedBy = 'Priya'
+    approved.brief.approvedAt = '2026-10-17T14:05:00+00:00'
+    renderWithProject(<Brief />, '/', approved)
+    expect(screen.queryByTestId('draft-watermark')).toBeNull()
+    expect(screen.queryByText('(unproven)')).toBeNull()
+    expect(screen.getByTestId('doc-status')).toHaveTextContent(/^Approved by Priya · /)
+  })
+
+  it('the printed header shows the product, version and market; letterhead settings add the company', async () => {
+    window.localStorage.setItem('bf.approver', 'Priya')
+    renderWithProject(<Brief />)
+    const head = screen.getByTestId('letterhead')
+    expect(head).toHaveClass('print-only')
+    expect(head).toHaveTextContent('Granola — Berry Crunch · 480 g')
+    expect(head).toHaveTextContent('v3')
+    expect(head).toHaveTextContent('United States')
+    expect(head).toHaveTextContent('Prepared byPriya')
+    expect(within(head).queryByRole('img')).toBeNull()
+
+    const toggle = screen.getByRole('button', { name: 'Letterhead' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.type(screen.getByLabelText('Company name'), 'Acme Foods')
+    await userEvent.type(screen.getByLabelText('Reference / project code'), 'PKG-0042')
+    expect(head).toHaveTextContent('Acme Foods')
+    expect(head).toHaveTextContent('PKG-0042')
+    expect(JSON.parse(window.localStorage.getItem('bf.letterhead')!)).toMatchObject({ company: 'Acme Foods', reference: 'PKG-0042' })
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByLabelText('Company name')).toBeNull()
+  })
+
+  it('the running footer carries the footer note, the version and page numbers', () => {
+    renderWithProject(<Brief />)
+    const rules = screen.getByTestId('print-page-rules').textContent!
+    expect(rules).toContain('@bottom-left { content: "Confidential · for the design agency · v3"')
+    expect(rules).toContain('@bottom-right { content: "Page " counter(page) " of " counter(pages)')
+    expect(document.querySelector('.doc-colophon')).toHaveTextContent('Confidential · for the design agency · Design brief v3')
+  })
+
+  it('Print preview is a pressed toggle that shows the printed layout on screen', async () => {
+    renderWithProject(<Brief />)
+    const btn = screen.getByRole('button', { name: 'Print preview' })
+    const doc = screen.getByRole('article', { name: 'Design brief' })
+    expect(btn).toHaveAttribute('aria-pressed', 'false')
+    expect(doc).not.toHaveClass('is-preview')
+    await userEvent.click(btn)
+    expect(btn).toHaveAttribute('aria-pressed', 'true')
+    expect(doc).toHaveClass('is-preview')
+    expect(css).toMatch(/\.brief-doc\.is-preview \.print-only\s*{\s*display:\s*revert/)
+    expect(css).toMatch(/\.brief-doc\.is-preview \.no-print\s*{\s*display:\s*none/)
+  })
+
+  it('beforeprint names the document for Save as PDF and afterprint restores the title', () => {
+    document.title = 'BriefForge'
+    renderWithProject(<Brief />)
+    window.dispatchEvent(new Event('beforeprint'))
+    expect(document.title).toBe('Design brief – Granola — Berry Crunch – v3')
+    window.dispatchEvent(new Event('afterprint'))
+    expect(document.title).toBe('BriefForge')
   })
 })

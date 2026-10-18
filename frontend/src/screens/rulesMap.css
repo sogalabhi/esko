@@ -1,0 +1,29 @@
+/* Rules map (React Flow). Tokens come from index.css. */
+.rules-map .react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+  min-width: 1px;
+  min-height: 1px;
+  width: 1px;
+  height: 1px;
+  border: 0;
+}
+
+.rules-map .react-flow__node {
+  cursor: default;
+}
+
+.rules-map .react-flow__controls-button:focus-visible {
+  outline: 2px solid var(--info);
+  outline-offset: 1px;
+}
+
+/* A node whose state just changed: one short pulse. The global reduced-motion rule turns it off; the
+   "Updated" word stays either way, so the change never depends on motion. */
+@keyframes rules-node-changed {
+  from { box-shadow: 0 0 0 6px var(--info-tint); transform: scale(0.97); }
+  to { box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+}
+.rules-node-changed {
+  animation: rules-node-changed 250ms ease-out;
+}

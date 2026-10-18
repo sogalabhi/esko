@@ -17,6 +17,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/setupTests.ts',
+    // Screen tests render whole pages; under a full parallel run on a laptop a 1 s test can take 6 s.
+    testTimeout: 15000,
   },
 })
 

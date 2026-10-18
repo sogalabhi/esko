@@ -4,6 +4,7 @@ import { Evidence } from './screens/Evidence'
 import { Brief } from './screens/Brief'
 import { Facts } from './screens/Facts'
 import { Markup } from './screens/Markup'
+import { Pack } from './screens/Pack'
 import { Questions } from './screens/Questions'
 import { AppShell, NotBuilt } from './shell/AppShell'
 import { ProjectProvider } from './state/project'
@@ -17,7 +18,7 @@ export default function App() {
           <Route path="/evidence" element={<Evidence />} />
           <Route path="/facts" element={<LoadGate><Facts /></LoadGate>} />
           <Route path="/questions" element={<LoadGate><Questions /></LoadGate>} />
-          <Route path="/pack" element={<NotBuilt title="Pack" phase="6" />} />
+          <Route path="/pack" element={<LoadGate><Pack /></LoadGate>} />
           <Route path="/brief" element={<LoadGate><Brief /></LoadGate>} />
           <Route path="/markup" element={<LoadGate><Markup /></LoadGate>} />
           <Route path="/rules" element={<NotBuilt title="Rules map" phase="7" />} />

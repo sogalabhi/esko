@@ -18,7 +18,7 @@ function regionOf(source: Source, panels: PackPanel[]): { x: number; y: number; 
  * Calls onUnavailable when the backend has no raw-file route or the PDF cannot be drawn,
  * so the caller can show the placeholder frame instead.
  */
-export function PdfCrop({ source, panels, onUnavailable }: { source: Source; panels: PackPanel[]; onUnavailable: () => void }) {
+export function PdfCrop({ source, panels, onUnavailable }: { source: Source; panels: PackPanel[]; onUnavailable: (reason: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [ready, setReady] = useState(false)
   const region = regionOf(source, panels)
@@ -29,7 +29,7 @@ export function PdfCrop({ source, panels, onUnavailable }: { source: Source; pan
 
   useEffect(() => {
     if (!region) {
-      onUnavailable()
+      onUnavailable('this source has no panel or position to crop')
       return
     }
     let cancelled = false
@@ -38,7 +38,8 @@ export function PdfCrop({ source, panels, onUnavailable }: { source: Source; pan
       try {
         const url = api.rawUrl(fileId)
         const head = await fetch(url, { method: 'HEAD' })
-        if (!head.ok) throw new Error('no raw file')
+        if (!head.ok) throw new Error(head.status === 404 ? 'the backend has no copy of this file (restart it, or re-upload)' : `the backend answered ${head.status}`)
+        if (!(head.headers.get('content-type') ?? '').includes('pdf')) throw new Error('the backend did not return a PDF (is it running and restarted?)')
         const pdfjs = await import('pdfjs-dist')
         pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default
         const task = pdfjs.getDocument({ url })
@@ -56,8 +57,12 @@ export function PdfCrop({ source, panels, onUnavailable }: { source: Source; pan
         const viewport = pg.getViewport({ scale: (k * 25.4) / 72 })
         await pg.render({ canvas, canvasContext: ctx, viewport, transform: [1, 0, 0, 1, -region.x * k, -region.y * k] }).promise
         if (!cancelled) setReady(true)
-      } catch {
-        if (!cancelled) onUnavailable()
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
+        const reason = /dynamically imported module/i.test(msg)
+          ? 'the PDF viewer failed to load (restart npm run dev and hard-refresh)'
+          : msg
+        if (!cancelled) onUnavailable(reason)
       }
     })()
     return () => {

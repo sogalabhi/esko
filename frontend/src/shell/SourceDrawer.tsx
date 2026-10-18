@@ -66,20 +66,26 @@ export function SheetPreview({ source }: { source: Source }) {
 
 /** Real PDF.js crop when the backend serves the original file; otherwise the panel frame placeholder. */
 export function PdfPreview({ source, panels, live = false }: { source: Source; panels: PackPanel[]; live?: boolean }) {
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<string | null>(null)
   // A new source gets a fresh try.
   const id = `${source.fileId}|${source.where.panel}|${source.where.page}|${source.where.bbox}`
   const [seen, setSeen] = useState(id)
   if (seen !== id) {
     setSeen(id)
-    setFailed(false)
+    setFailed(null)
   }
-  if (live && !failed) return <PdfCrop source={source} panels={panels} onUnavailable={() => setFailed(true)} />
+  if (live && !failed) return <PdfCrop source={source} panels={panels} onUnavailable={(reason) => setFailed(reason)} />
   return (
     <PdfFrame
       source={source}
       panels={panels}
-      note={live ? 'The original PDF is not available from the backend yet, so this shows the panel frame only.' : undefined}
+      note={
+        live
+          ? failed
+            ? `The original PDF is not available from the backend yet (${failed}). Showing the panel frame only.`
+            : 'The original PDF is not available from the backend yet, so this shows the panel frame only.'
+          : undefined
+      }
     />
   )
 }

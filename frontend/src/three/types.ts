@@ -39,6 +39,8 @@ export interface PackFinding {
   y: number
   severity: PinSeverity
   label: string
+  /** Never grouped into a cluster pin (e.g. a finding that links several places on the pack). */
+  solo?: boolean
 }
 
 /** A box on a face: a regulated content block (X-ray) or where a missing item should go. */

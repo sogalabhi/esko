@@ -1,3 +1,4 @@
+import { clusterFindings, clusterName, clusterNote, type Box, type Cluster, type ClusterItem, type ClusterRegion } from './clusters'
 import { fileShort } from './labels'
 import type { BBox, Conflict, ConflictLocation, Fact, Owner, Project, Question, Source } from '../types/project'
 
@@ -110,6 +111,52 @@ export function wobblyTick(x: number, y: number, size: number, seed: number): st
   const b: Pt = [x + j(), y + j()]
   const c: Pt = [x + size * 0.7 + j(), y - size * 1.0 + j()]
   return smooth([a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 0.2], b, [(b[0] + c[0]) / 2 - 0.3, (b[1] + c[1]) / 2], c])
+}
+
+/**
+ * A hand-drawn rounded box: the pen goes round clockwise with a slight tremor and overshoots its start,
+ * so the corners round off the way a quick pen box does.
+ */
+export function wobblyRect(x: number, y: number, w: number, h: number, seed: number): string {
+  const r = rng(seed)
+  const c = Math.min(4, w / 4, h / 4)
+  const j = () => (r() - 0.5) * 0.7
+  const corners: Pt[] = [
+    [x + c, y],
+    [x + w - c, y],
+    [x + w - c * 0.3, y + c * 0.3],
+    [x + w, y + c],
+    [x + w, y + h - c],
+    [x + w - c * 0.3, y + h - c * 0.3],
+    [x + w - c, y + h],
+    [x + c, y + h],
+    [x + c * 0.3, y + h - c * 0.3],
+    [x, y + h - c],
+    [x, y + c],
+    [x + c * 0.3, y + c * 0.3],
+  ]
+  const pts: Pt[] = []
+  corners.forEach((p, i) => {
+    const q = corners[(i + 1) % corners.length]
+    const steps = Math.max(1, Math.round(Math.hypot(q[0] - p[0], q[1] - p[1]) / 14))
+    for (let k = 0; k < steps; k++) {
+      const t = k / steps
+      pts.push([p[0] + (q[0] - p[0]) * t + j(), p[1] + (q[1] - p[1]) * t + j()])
+    }
+  })
+  // Overshoot past the start along the top edge.
+  pts.push([x + c + Math.min(8, w * 0.15), y - 0.6 + j() * 0.5])
+  return smooth(pts)
+}
+
+/** Where a ray from a box's centre toward (tx, ty) leaves the box, `pad` mm further out. */
+export function boxEdgeToward(b: Box, tx: number, ty: number, pad = 0.8): [number, number] {
+  const cx = b.x + b.w / 2
+  const cy = b.y + b.h / 2
+  const dx = tx - cx
+  const dy = ty - cy
+  const t = Math.min(dx ? (b.w / 2 + pad) / Math.abs(dx) : Infinity, dy ? (b.h / 2 + pad) / Math.abs(dy) : Infinity)
+  return Number.isFinite(t) ? [cx + dx * t, cy + dy * t] : [cx, cy]
 }
 
 /* ---------- findings to marks ---------- */
@@ -278,6 +325,48 @@ export function spotLabel(mark: Mark, spot: Spot): string {
   return total > 1 ? `${mark.conflict.explanation} (spot ${k} of ${total})` : mark.conflict.explanation
 }
 
+/* ---------- clusters ---------- */
+
+export interface MarkCluster extends Cluster {
+  /** The number written by the box: the lowest finding number in it. */
+  n: number
+  /** The owner with the most findings in it (sticky-note colour). */
+  owner: Owner
+  marks: Mark[]
+  name: string
+  note: string
+}
+
+export interface MarkGroups {
+  clusters: MarkCluster[]
+  singles: Mark[]
+}
+
+const OWNER_ORDER: Owner[] = ['legal', 'rnd', 'brand']
+
+/**
+ * Group the marks that crowd one region. A finding that links several places on this file stays a single
+ * mark, so its rings and arrows still join those places.
+ */
+export function clusterMarks(marks: Mark[], regions: ClusterRegion[]): MarkGroups {
+  const items: ClusterItem[] = marks.flatMap((m) => {
+    const s = m.spots[0]
+    if (!s) return []
+    return [{ id: m.conflict.id, panel: m.conflict.locations[s.index]?.panel ?? '', x: s.x, y: s.y, w: s.w, h: s.h, severity: m.conflict.severity, solo: m.spots.length > 1 }]
+  })
+  const { clusters } = clusterFindings(items, regions)
+  const byId = new Map(marks.map((m) => [m.conflict.id, m]))
+  const inCluster = new Set(clusters.flatMap((c) => c.members))
+  const out: MarkCluster[] = clusters.map((c) => {
+    const list = c.members.map((id) => byId.get(id)!).sort((a, b) => a.n - b.n)
+    const tally = new Map<Owner, number>()
+    list.forEach((m) => tally.set(m.owner, (tally.get(m.owner) ?? 0) + 1))
+    const owner = [...tally.entries()].sort((a, b) => b[1] - a[1] || OWNER_ORDER.indexOf(a[0]) - OWNER_ORDER.indexOf(b[0]))[0][0]
+    return { ...c, n: list[0].n, owner, marks: list, name: clusterName(c), note: clusterNote(c) }
+  })
+  return { clusters: out.sort((a, b) => a.n - b.n), singles: marks.filter((m) => !inCluster.has(m.conflict.id)) }
+}
+
 /* ---------- margin notes ---------- */
 
 /** Greedy word wrap; the last line ends in an ellipsis when the text does not fit. */
@@ -302,8 +391,29 @@ export function wrapText(text: string, maxChars: number, maxLines: number): stri
   return kept
 }
 
+/** Something a margin note points at: a single finding's first spot, or a cluster's box. */
+export interface NoteTarget {
+  id: string
+  n: number
+  owner: Owner
+  note: string
+  box: Box
+  mark?: Mark
+  cluster?: MarkCluster
+}
+
+export function noteTargets(singles: Mark[], clusters: MarkCluster[] = []): NoteTarget[] {
+  const out: NoteTarget[] = []
+  for (const m of singles) {
+    const s = m.spots[0]
+    if (s) out.push({ id: m.conflict.id, n: m.n, owner: m.owner, note: m.note, box: { x: s.x, y: s.y, w: s.w, h: s.h }, mark: m })
+  }
+  for (const c of clusters) out.push({ id: c.id, n: c.n, owner: c.owner, note: c.note, box: c.bbox, cluster: c })
+  return out
+}
+
 export interface NoteBox {
-  mark: Mark
+  target: NoteTarget
   side: 'left' | 'right'
   x: number
   y: number
@@ -322,23 +432,24 @@ export interface NoteLayout {
 }
 
 /**
- * Notes go in the margin on the side nearer their mark, stacked top to bottom near their mark's height
- * without overlapping and kept inside the page height.
+ * Notes go in the margin on the side nearer what they point at, stacked top to bottom in the order of
+ * those places' heights, near them, without overlapping and kept inside the page height.
  */
-export function layoutNotes(marks: Mark[], page: { w: number; h: number }, opt: NoteLayout): NoteBox[] {
+export function layoutNotes(targets: NoteTarget[], page: { w: number; h: number }, opt: NoteLayout): NoteBox[] {
   const gap = 2.5
-  const boxes: (NoteBox & { want: number })[] = marks
-    .filter((m) => m.spots.length)
-    .map((m) => {
-      const s = m.spots[0]
-      const lines = wrapText(m.note, opt.maxChars, 4)
-      const h = opt.header + lines.length * opt.lineHeight + 3
-      const side: 'left' | 'right' = s.x + s.w / 2 < page.w / 2 ? 'left' : 'right'
-      const x = side === 'left' ? -opt.width - 4 : page.w + 4
-      return { mark: m, side, x, y: 0, w: opt.width, h, lines, want: s.y + s.h / 2 - h / 2 }
-    })
+  const boxes: (NoteBox & { want: number; mid: number })[] = targets.map((t) => {
+    const s = t.box
+    const lines = wrapText(t.note, opt.maxChars, 4)
+    const h = opt.header + lines.length * opt.lineHeight + 3
+    const side: 'left' | 'right' = s.x + s.w / 2 < page.w / 2 ? 'left' : 'right'
+    const x = side === 'left' ? -opt.width - 4 : page.w + 4
+    const mid = s.y + s.h / 2
+    // A tall box (a cluster) gets its note level with its top part, not its middle.
+    const anchor = t.cluster ? Math.min(mid, s.y + 12) : mid
+    return { target: t, side, x, y: 0, w: opt.width, h, lines, want: anchor - h / 2, mid }
+  })
   for (const side of ['left', 'right'] as const) {
-    const col = boxes.filter((b) => b.side === side).sort((a, b) => a.want - b.want || a.mark.n - b.mark.n)
+    const col = boxes.filter((b) => b.side === side).sort((a, b) => a.mid - b.mid || a.target.n - b.target.n)
     let bottom = -Infinity
     for (const b of col) {
       b.y = Math.max(b.want, bottom + gap, 2)
@@ -351,5 +462,5 @@ export function layoutNotes(marks: Mark[], page: { w: number; h: number }, opt: 
       top = b.y - gap
     }
   }
-  return boxes.map((b) => ({ mark: b.mark, side: b.side, x: b.x, y: b.y, w: b.w, h: b.h, lines: b.lines }))
+  return boxes.map((b) => ({ target: b.target, side: b.side, x: b.x, y: b.y, w: b.w, h: b.h, lines: b.lines }))
 }

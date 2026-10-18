@@ -1,7 +1,8 @@
-import { Download, RotateCcw, Search } from 'lucide-react'
-import { useId } from 'react'
+import { Download, PackagePlus, RefreshCw, RotateCcw, Search } from 'lucide-react'
 import { formatValue, titleCase } from '../lib/labels'
+import { packFileId } from '../lib/markup'
 import { useProject, type UiMarket } from '../state/project'
+import type { Project } from '../types/project'
 import { BackendStatus } from './BackendStatus'
 
 const MARKETS: { id: UiMarket; label: string }[] = [
@@ -9,20 +10,38 @@ const MARKETS: { id: UiMarket; label: string }[] = [
   { id: 'IN', label: 'India' },
 ]
 
-const btn =
-  'inline-flex items-center gap-1.5 rounded-chip border border-border bg-surface px-3 py-1.5 text-[13px] font-medium hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info'
+const btnBase =
+  'inline-flex items-center gap-1.5 rounded-chip border px-3 py-1.5 text-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info'
+const btn = `${btnBase} border-border bg-surface hover:border-ink-2`
 
-const SLIDER_MAX = 24
-const TODAY = new Date().toISOString().slice(0, 10)
-function addMonths(base: string, months: number): string {
-  const d = new Date(`${base}T00:00:00Z`)
-  d.setUTCMonth(d.getUTCMonth() + months)
-  return d.toISOString().slice(0, 10)
+const MODE_META = {
+  redesign: { word: 'Redesign', Icon: RefreshCw, reason: 'A pack file is among the inputs' },
+  new_product: { word: 'New product', Icon: PackagePlus, reason: 'No pack file among the inputs' },
+} as const
+
+/** The project's mode (PLAN "Two modes"): from the backend when it says, else from whether a pack file is in. */
+export function projectMode(project: Project): { mode: keyof typeof MODE_META; reason: string } | null {
+  if (project.mode) return { mode: project.mode, reason: project.modeReason ?? MODE_META[project.mode].reason }
+  if (project.files.length === 0) return null
+  const mode = packFileId(project) ? 'redesign' : 'new_product'
+  return { mode, reason: MODE_META[mode].reason }
 }
-function monthsFrom(base: string, date: string): number {
-  const a = new Date(`${base}T00:00:00Z`)
-  const b = new Date(`${date}T00:00:00Z`)
-  return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth())
+
+export function ModeChip({ project }: { project: Project }) {
+  const m = projectMode(project)
+  if (!m) return null
+  const { word, Icon } = MODE_META[m.mode]
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1 rounded-chip border border-border px-2 py-0.5 text-[12px] font-medium text-ink-2"
+      title={m.reason}
+      aria-label={`Mode: ${word}. ${m.reason}`}
+      data-mode={m.mode}
+    >
+      <Icon size={13} aria-hidden="true" />
+      {word}
+    </span>
+  )
 }
 
 export function HealthRing({ percent, open }: { percent: number; open: number }) {
@@ -51,9 +70,8 @@ export function HealthRing({ percent, open }: { percent: number; open: number })
 }
 
 export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: () => void } = {}) {
-  const { project, market, setMarket, launchDate, setLaunchDate, reset } = useProject()
-  const dateId = useId()
-  const sliderId = useId()
+  const { project, market, reset } = useProject()
+  const marketLabel = MARKETS.find((m) => m.id === market)?.label ?? market
 
   // §9 has no product block; derive the name from the identity and net quantity facts.
   const identity = project.facts.find((f) => f.field === 'Statement of identity')
@@ -80,47 +98,12 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
     <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <p className="min-w-0 truncate text-[16px] font-semibold">{product}</p>
 
-      <div role="radiogroup" aria-label="Market" className="flex shrink-0 rounded-chip border border-border p-0.5">
-        {MARKETS.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            role="radio"
-            aria-checked={market === m.id}
-            onClick={() => setMarket(m.id)}
-            className={`rounded-[4px] px-2.5 py-1 text-[13px] font-medium focus-visible:outline-2 focus-visible:outline-info ${
-              market === m.id ? 'bg-accent text-white' : 'text-ink-2 hover:text-ink'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      <ModeChip project={project} />
 
-      <div className="flex shrink-0 items-center gap-2">
-        <label htmlFor={dateId} className="text-[12px] text-ink-2">
-          Launch
-        </label>
-        <input
-          id={dateId}
-          type="date"
-          value={launchDate}
-          onChange={(e) => e.target.value && setLaunchDate(e.target.value)}
-          className="rounded-chip border border-border bg-surface px-2 py-1 font-mono text-[12px] focus-visible:outline-2 focus-visible:outline-info"
-        />
-        <label htmlFor={sliderId} className="sr-only">
-          Move launch date by months
-        </label>
-        <input
-          id={sliderId}
-          type="range"
-          min={0}
-          max={SLIDER_MAX}
-          value={Math.min(SLIDER_MAX, Math.max(0, monthsFrom(TODAY, launchDate)))}
-          onChange={(e) => setLaunchDate(addMonths(TODAY, Number(e.target.value)))}
-          className="hidden w-20 accent-[var(--accent)] xl:block"
-        />
-      </div>
+      {/* One market for now: the switch and the launch date return when the other market packs are finished. */}
+      <span className="shrink-0 rounded-chip border border-border px-2.5 py-1 text-[13px] font-medium text-ink" aria-label={`Market: ${marketLabel}`}>
+        {marketLabel}
+      </span>
 
       <div className="ml-auto flex shrink-0 items-center gap-3">
         <HealthRing percent={percent} open={reqs.length - met} />
@@ -137,7 +120,7 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
           <RotateCcw size={14} aria-hidden="true" />
           Reset demo
         </button>
-        <button type="button" className={`${btn} border-accent bg-accent text-white hover:border-accent`} onClick={exportJson}>
+        <button type="button" className={`${btnBase} border-accent bg-accent text-white`} onClick={exportJson}>
           <Download size={14} aria-hidden="true" />
           Export
         </button>

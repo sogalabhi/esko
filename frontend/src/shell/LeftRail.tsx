@@ -81,7 +81,7 @@ export function LeftRail() {
     { to: '/evidence', label: 'Evidence', Icon: FolderOpen, step: 1, count: project.files.length, ...evidence },
     { to: '/facts', label: 'Facts', Icon: ListChecks, step: 2, count: project.facts.length, dot: openConflicts ? 'bad' : 'ok' },
     { to: '/questions', label: 'Questions', Icon: CircleQuestionMark, step: 3, count: openQuestions, ...questions },
-    { to: '/pack', label: 'Pack', Icon: Box, step: 4, dot: 'idle' },
+    { to: '/pack', label: 'Pack', Icon: Box, step: 4, count: project.pack.panels.length || 5, dot: openConflicts ? 'warn' : 'ok' },
     { to: '/brief', label: 'Brief', Icon: FileText, step: 5, dot: project.brief.approvedBy ? 'ok' : 'idle' },
   ]
   const more: Item[] = [

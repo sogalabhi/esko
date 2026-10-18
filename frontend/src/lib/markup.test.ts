@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { mockProject } from '../state/project'
 import type { Project } from '../types/project'
-import { buildMarks, isOpenFinding, layoutNotes, packFileId, shortCorrection, spotLabel, wobblyEllipse, wobblyLine, wrapText } from './markup'
+import { SAMPLE_REGULATED } from '../three/fixture'
+import { regionsFromFacts } from './clusters'
+import { boxEdgeToward, buildMarks, clusterMarks, isOpenFinding, layoutNotes, noteTargets, packFileId, shortCorrection, spotLabel, wobblyEllipse, wobblyLine, wobblyRect, wrapText } from './markup'
 
 const project = (): Project => structuredClone(mockProject)
 
@@ -92,6 +94,63 @@ describe('hand-drawn geometry', () => {
     expect(wobblyEllipse(10, 10, 5, 3, 42)).toBe(wobblyEllipse(10, 10, 5, 3, 42))
     expect(wobblyEllipse(10, 10, 5, 3, 42)).not.toBe(wobblyEllipse(10, 10, 5, 3, 43))
     expect(wobblyLine(0, 0, 20, 0, 7)).toMatch(/^M/)
+    expect(wobblyRect(0, 0, 40, 80, 3)).toBe(wobblyRect(0, 0, 40, 80, 3))
+    expect(wobblyRect(0, 0, 40, 80, 3)).toMatch(/^M/)
+  })
+
+  it('finds where a line from a box centre to a point leaves the box', () => {
+    expect(boxEdgeToward({ x: 0, y: 0, w: 20, h: 10 }, 100, 5, 0)).toEqual([20, 5])
+    expect(boxEdgeToward({ x: 0, y: 0, w: 20, h: 10 }, 10, -50, 0)).toEqual([10, 0])
+  })
+})
+
+describe('clusterMarks', () => {
+  const regions = () => [...SAMPLE_REGULATED, ...regionsFromFacts(mockProject.facts, 'f-carton')]
+
+  it('groups the single-spot findings in the nutrition table into one cluster; the rest stay single', () => {
+    const { marks } = buildMarks(project(), 'f-carton', true)
+    const { clusters, singles } = clusterMarks(marks, regions())
+    expect(clusters).toHaveLength(1)
+    const c = clusters[0]
+    expect(c.label).toBe('Nutrition')
+    expect(c.panel).toBe('Left')
+    expect(c.marks.map((m) => m.conflict.id).sort()).toEqual(['c-dv-calcium', 'c-calories', 'c-carbs', 'c-dv-fat', 'c-dv-vitd', 'c-serving', 'c-sodium'].sort())
+    expect(c.n).toBe(Math.min(...c.marks.map((m) => m.n)))
+    expect(c.note).toBe('7 problems in Nutrition')
+    expect(c.worst).toBe('high')
+    // The honey mark and every multi-spot finding (e.g. added sugar, which also has a spot in the table) stay single.
+    const ids = singles.map((m) => m.conflict.id)
+    expect(ids).toContain('c-honey')
+    expect(ids).toContain('c-added-sugar')
+    expect(singles.length + c.marks.length).toBe(marks.length)
+  })
+
+  it('stays put when one member is resolved, and dissolves below three', () => {
+    const p = project()
+    const before = clusterMarks(buildMarks(p, 'f-carton', true).marks, regions()).clusters[0]
+    p.conflicts.find((c) => c.id === 'c-sodium')!.resolution = { choice: 'left', by: 'A', at: '2026-10-16T10:00:00Z' }
+    const after = clusterMarks(buildMarks(p, 'f-carton', true).marks, regions()).clusters[0]
+    expect(after.key).toBe(before.key)
+    expect(after.id).not.toBe(before.id)
+    expect(after.marks).toHaveLength(6)
+    for (const id of ['c-carbs', 'c-dv-fat', 'c-dv-vitd', 'c-dv-calcium']) p.conflicts.find((c) => c.id === id)!.resolution = { choice: 'left', by: 'A', at: '2026-10-16T10:00:00Z' }
+    const left = clusterMarks(buildMarks(p, 'f-carton', true).marks, regions())
+    expect(left.clusters).toHaveLength(0)
+    expect(left.singles.map((m) => m.conflict.id)).toEqual(expect.arrayContaining(['c-calories', 'c-serving']))
+  })
+
+  it('lays out notes for singles and clusters only, in the order of what they point at', () => {
+    const { marks } = buildMarks(project(), 'f-carton', true)
+    const { clusters, singles } = clusterMarks(marks, regions())
+    const targets = noteTargets(singles, clusters)
+    expect(targets).toHaveLength(singles.length + 1)
+    const page = { w: 456, h: 381 }
+    const boxes = layoutNotes(targets, page, { width: 78, lineHeight: 7.4, maxChars: 24, header: 0 })
+    for (const side of ['left', 'right'] as const) {
+      const col = boxes.filter((b) => b.side === side).sort((a, b) => a.y - b.y)
+      const mids = col.map((b) => b.target.box.y + b.target.box.h / 2)
+      expect(mids).toEqual([...mids].sort((a, b) => a - b))
+    }
   })
 })
 
@@ -107,7 +166,7 @@ describe('notes', () => {
     const p = project()
     const { marks } = buildMarks(p, 'f-carton', true)
     const page = { w: 456, h: 381 }
-    const boxes = layoutNotes(marks, page, { width: 78, lineHeight: 7.4, maxChars: 24, header: 0 })
+    const boxes = layoutNotes(noteTargets(marks), page, { width: 78, lineHeight: 7.4, maxChars: 24, header: 0 })
     expect(boxes).toHaveLength(marks.length)
     for (const side of ['left', 'right'] as const) {
       const col = boxes.filter((b) => b.side === side).sort((a, b) => a.y - b.y)

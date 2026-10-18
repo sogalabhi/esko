@@ -1,5 +1,6 @@
 import { Box3, Matrix4, Quaternion, Vector3 } from 'three'
-import type { DielinePanel, PackFinding, PackGeometry } from './types'
+import { clusterFindings, clusterName, type ClusterRegion } from '../lib/clusters'
+import type { DielinePanel, PackFinding, PackGeometry, PinSeverity } from './types'
 
 /**
  * Fold geometry for a flat dieline. Pure code, no WebGL, so it is unit-tested.
@@ -252,4 +253,60 @@ export function placePins(findings: PackFinding[], panels: DielinePanel[]): { pl
     else unplaced.push(f)
   }
   return { placed, unplaced }
+}
+
+/** Findings that crowd one region, shown as one pin with a count. */
+export interface PinCluster {
+  id: string
+  /** The place only (stable while members are resolved). */
+  key: string
+  label: string
+  /** Accessible name, e.g. "Nutrition: 13 problems". */
+  name: string
+  panel: string
+  /** Page mm: the middle of the cluster's box. */
+  x: number
+  y: number
+  members: PackFinding[]
+  worst: PinSeverity
+}
+
+export interface PinGroups {
+  singles: PlacedPin[]
+  clusters: PinCluster[]
+  /** Passed checks (shown only when asked for). */
+  passed: PlacedPin[]
+  unplaced: PackFinding[]
+}
+
+/**
+ * Pins after clustering: problems that crowd one region (or sit close together) become one cluster pin;
+ * passed checks are kept apart and only pinned when `showPassed` is on.
+ */
+export function pinGroups(findings: PackFinding[], panels: DielinePanel[], regions: ClusterRegion[] = [], showPassed = false): PinGroups {
+  const { placed, unplaced } = placePins(findings, panels)
+  const passed = placed.filter((p) => p.finding.severity === 'pass')
+  const problems = placed.filter((p) => p.finding.severity !== 'pass')
+  const { clusters } = clusterFindings(
+    problems.map((p) => ({ id: p.finding.id, panel: p.panel, x: p.finding.x, y: p.finding.y, w: 0, h: 0, severity: p.finding.severity, solo: p.finding.solo })),
+    regions,
+  )
+  const byId = new Map(problems.map((p) => [p.finding.id, p.finding]))
+  const grouped = new Set(clusters.flatMap((c) => c.members))
+  return {
+    clusters: clusters.map((c) => ({
+      id: c.id,
+      key: c.key,
+      label: c.label,
+      name: clusterName(c),
+      panel: c.panel,
+      x: c.bbox.x + c.bbox.w / 2,
+      y: c.bbox.y + c.bbox.h / 2,
+      members: c.members.map((id) => byId.get(id)!),
+      worst: c.worst,
+    })),
+    singles: [...problems.filter((p) => !grouped.has(p.finding.id)), ...(showPassed ? passed : [])],
+    passed,
+    unplaced,
+  }
 }

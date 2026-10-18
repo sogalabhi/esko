@@ -1,5 +1,9 @@
 {
   "_note": "Mock for UI development (docs/UI.md §9). Fact values and quotes come from Esko's Dancing Fish sample files; panel coordinates (mm) are approximate. Rules are ILLUSTRATIVE summaries, not legal text.",
+  "mode": "redesign",
+  "modeReason": "Dieline PDF among the inputs: DancingFish_Granola_Berry_US_Carton.pdf",
+  "questionsWaiting": 0,
+  "waitingQuestions": [],
   "files": [
     {
       "id": "f-carton",
