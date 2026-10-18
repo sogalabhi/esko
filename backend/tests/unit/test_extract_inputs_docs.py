@@ -192,9 +192,9 @@ def test_questions_name_each_source_by_its_real_type(tmp_path, monkeypatch):
     seen = {}
     real = analysis.build_conflict_candidates
 
-    def spy(pack, facts, conflicts, reqs, names=None):
+    def spy(pack, facts, conflicts, reqs, names=None, pack_ids=None):
         seen.update(names or {})
-        return real(pack, facts, conflicts, reqs, names)
+        return real(pack, facts, conflicts, reqs, names, pack_ids)
 
     monkeypatch.setattr(analysis, "build_conflict_candidates", spy)
     project, _, sheet_f, sf = run_with(tmp_path, "docx", "150mg", "Sodium", "150", "mg", "nutrition")

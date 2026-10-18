@@ -28,18 +28,31 @@ def test_a_follow_up_with_no_requirements_sits_right_after_the_question_that_hol
     assert [c.id for c in ranked][:3] == ["lead", "follow", "other"]
 
 
-def test_at_most_ten_open_questions_and_design_only_fills_what_is_left():
+def test_at_most_the_budget_open_and_design_keeps_its_reserved_seats():
     decisions = [cand(f"d{i}", 12 - i, severity=3) for i in range(15)]
     design = [cand(f"x{i}", kind="design") for i in range(5)]
     chosen = pick(decisions, design)
-    assert len(chosen) == BUDGET and not [c for c in chosen if c.kind == "design"]  # no reserved slots
-    few = pick(decisions[:8], design)
-    assert [c.id for c in few if c.kind == "design"] == ["x0", "x1"] and len(few) == BUDGET
+    assert len(chosen) == BUDGET and sum(c.kind == "design" for c in chosen) == 3  # 7 decisions + 3 design
+    few = pick(decisions[:6], design)  # seats decisions do not use go to more design questions
+    assert [c.id for c in few if c.kind == "design"] == ["x0", "x1", "x2", "x3"] and len(few) == BUDGET
 
 
 def test_design_fills_the_list_when_there_are_few_decisions():
     chosen = pick([cand("d0", 1)], [cand(f"x{i}", kind="design") for i in range(20)])
     assert len(chosen) == BUDGET and sum(c.kind == "design" for c in chosen) == 9
+
+
+def test_the_waiting_count_is_reported_and_answering_moves_the_next_one_up():
+    pack = mini_pack()
+    pack.settings.question_budget, pack.settings.design_slots = 3, 1
+    before = analyze(mini_project(), pack)
+    opened = [q for q in before.questions if q.status == "open"]
+    assert len(opened) == 3 and before.questions_waiting == len(before.waiting_questions) > 0
+    first_waiting = before.waiting_questions[0]
+    after = apply_answer(before, pack, next(q.id for q in opened if q.kind == "missing"), "1 Fish Way, Austin TX 78701")
+    assert len([q for q in after.questions if q.status == "open"]) == 3  # the window stays full
+    assert first_waiting.id in [q.id for q in after.questions if q.status == "open"] or first_waiting.kind == "design"
+    assert not {q.id for q in after.questions if q.status == "open"} & {q.id for q in after.waiting_questions}
 
 
 def test_questions_are_built_with_unlocks_equal_to_requirement_ids():

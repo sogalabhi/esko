@@ -9,7 +9,7 @@ import yaml
 from pydantic import ValidationError
 
 from app.markets.schema import (
-    AllergenList, ClaimWord, DailyValue, FactKeys, MarketPack, MarketSettings, PackItem, Rule,
+    AllergenList, BriefInput, ClaimWord, DailyValue, FactKeys, MarketPack, MarketSettings, PackItem, Rule,
 )
 
 
@@ -88,6 +88,7 @@ def load_pack(path: str | Path) -> MarketPack:
         claims=many("claims.yaml", ClaimWord, "claims"),
         pack_items=many("pack_items.yaml", PackItem, "pack_items"),
         fact_keys=fact_keys,
+        brief_inputs=many("brief_inputs.yaml", BriefInput, "brief_inputs"),
     )
 
 
@@ -126,6 +127,8 @@ def layer_packs(base: MarketPack, *overlays: MarketPack) -> MarketPack:
     for o in overlays:
         out.rules += o.rules
         out.claims += o.claims
+        have_inputs = {i.key for i in out.brief_inputs}
+        out.brief_inputs += [i for i in o.brief_inputs if i.key not in have_inputs]
         have = {i.item for i in out.pack_items}
         out.pack_items += [i for i in o.pack_items if i.item not in have]
         out.layers.append(o.settings)

@@ -3,7 +3,9 @@
 from pathlib import Path
 
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import LogEntry, Project
+from app.models.project import Brief, Fact, LogEntry, Project
+
+ASK_PREFIX = "ask-"  # ids of facts a person confirmed from an answer in the Ask panel
 
 _files: dict[str, SourceFile] = {}
 _pieces: dict[str, list[SourcePiece]] = {}
@@ -47,10 +49,37 @@ def get_log() -> list[LogEntry]:
 
 
 def commit(project: Project, log: list[LogEntry]) -> None:
-    """Keep the project after a decision (or an undo) together with the decisions that produced it."""
+    """Keep the project after a decision (or an undo) together with the decisions that produced it.
+
+    The brief and the facts a person confirmed through "Ask" are not part of the replayed decisions, so they are
+    carried over from the project this one replaces."""
     global _project
+    if _project is not None and project is not _project:
+        if project.brief.version == 0 and _project.brief.version > 0:
+            project = project.model_copy(update={"brief": _project.brief})
+        have = {f.id for f in project.facts}
+        kept = [f for f in _project.facts if f.id.startswith(ASK_PREFIX) and f.id not in have]
+        if kept:
+            project = project.model_copy(update={"facts": [*project.facts, *kept]})
     _project = project
     _log[:] = log
+
+
+def set_brief(brief: Brief) -> Project | None:
+    """Replace the brief of the current project (a draft, an edit, an approval). None when there is no project."""
+    global _project
+    if _project is None:
+        return None
+    _project = _project.model_copy(update={"brief": brief})
+    return _project
+
+
+def set_project_facts(facts: list[Fact]) -> Project | None:
+    global _project
+    if _project is None:
+        return None
+    _project = _project.model_copy(update={"facts": facts})
+    return _project
 
 
 def get_file(file_id: str) -> SourceFile | None:

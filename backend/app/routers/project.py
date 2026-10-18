@@ -5,7 +5,7 @@ from app.analysis import analyze
 from app.ai.client import AIClient, build_ai_client
 from app.ai.errors import AIError
 from app.extraction.pipeline import run_pipeline
-from app.models.project import Project, to_project_file
+from app.models.project import Project, project_mode, to_project_file
 from app.settings import get_settings
 
 router = APIRouter(prefix="/api/project", tags=["project"])
@@ -27,7 +27,9 @@ def get_project() -> Project:
     project = store.get_project()
     if project is not None:
         return project
-    return Project(files=[to_project_file(f, store.get_pieces(f.id)) for f in files])
+    listed = [to_project_file(f, store.get_pieces(f.id)) for f in files]
+    mode, reason = project_mode(listed)
+    return Project(files=listed, mode=mode, mode_reason=reason)
 
 
 @router.post("/run", response_model=Project, response_model_by_alias=True)
@@ -45,5 +47,6 @@ def run(client: AIClient = Depends(get_ai_client)) -> Project:
         raise HTTPException(status_code=502, detail=f"AI step failed: {e}") from e
     project = analyze(project, client=client)  # math findings, requirements, questions
     project.files = [to_project_file(f, pieces[f.id]) for f in files]  # real types, counts and errors
+    project.mode, project.mode_reason = project_mode(project.files)
     store.set_project(project)
     return project

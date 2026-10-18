@@ -1,0 +1,61 @@
+# Inputs a design brief needs that product files rarely hold. Each becomes a design question unless a fact already
+# supplies it; the answer is stored as a person-sourced fact the brief can cite.
+# modes: redesign = an old pack is among the files; new_product = no pack file.
+brief_inputs:
+  - key: logo_file
+    label: Logo file
+    group: identity
+    fields: [logo file, logo]
+    question: "Which logo file should the agency use?"
+    why: "There is no current pack to take the logo from, so the agency needs the file."
+    modes: [new_product]
+
+  - key: target_buyer
+    label: Target buyer
+    group: identity
+    fields: [target buyer, target audience, audience, target consumer]
+    question: "Who is this pack for? Describe the target buyer."
+    why: "The agency designs for a specific shopper. The files do not say who it is."
+    modes: [redesign, new_product]
+
+  - key: pack_feel
+    label: How the pack should feel
+    group: packaging
+    fields: [pack feel, look and feel, brand feel, tone, mood]
+    question: "How should the new pack feel?"
+    why: "The look of the pack depends on it, and nothing in the files describes it."
+    modes: [redesign, new_product]
+    suggestions: ["Natural and simple", "Playful and bright", "Premium and calm", "Bold and modern"]
+
+  - key: deadline
+    label: Deadline
+    group: company
+    fields: [deadline, due date, launch date, launch, go live]
+    question: "When does the finished artwork need to be ready?"
+    why: "The agency plans its work and the printer's slot around this date."
+    modes: [redesign, new_product]
+
+  - key: print_method
+    label: Print method
+    group: packaging
+    fields: [print method, printing method, printing process, print process]
+    question: "How will the pack be printed?"
+    why: "The print method sets colour limits, minimum text sizes and file set-up."
+    modes: [redesign, new_product]
+    suggestions: ["Offset", "Digital", "Flexo", "Gravure"]
+
+  - key: brand_colours
+    label: Brand colours
+    group: packaging
+    fields: [brand colour, brand colours, colours, colour palette]
+    question: "What are the brand colours?"
+    why: "There is no current pack to take the colours from."
+    modes: [new_product]
+
+  - key: product_photo
+    label: Product photo
+    group: packaging
+    fields: [product photo, photo, product image]
+    question: "Which product photo should go on the pack?"
+    why: "There is no current pack to take the photo from, so the agency needs one."
+    modes: [new_product]

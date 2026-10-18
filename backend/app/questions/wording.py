@@ -5,6 +5,7 @@ id or an empty text falls back to the code's own wording. No AI client (tests, o
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 from pydantic import BaseModel
@@ -45,8 +46,14 @@ def candidates_text(cands: Sequence[Candidate]) -> str:
     return "\n\n".join(blocks)
 
 
+PRINTED = re.compile(r"\bprint(?:ed|s|ing)?\b", re.IGNORECASE)
+
+
 def _numbers_ok(c: Candidate, text: str) -> bool:
-    """The AI may only use numbers that code computed or that the files state."""
+    """The AI may only use numbers that code computed or that the files state, and may not say "printed" about
+    a value that is not on a pack (the code's wording names the real source)."""
+    if c.no_print and PRINTED.search(text):
+        return False
     return numbers_in(text) <= c.allowed_numbers
 
 

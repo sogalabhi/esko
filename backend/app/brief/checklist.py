@@ -27,7 +27,7 @@ class Checklist(BaseModel):
 
 
 def _look_for(r: ChecklistRequirement) -> str:
-    where = f"on the {r.panel} panel" if r.panel else "on the pack"
+    where = f"on the {r.panel} panel" if r.panel and r.panel != "any" else "on the pack"
     return f"Check that {r.item} is present {where} and matches the approved brief."
 
 

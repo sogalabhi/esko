@@ -63,6 +63,21 @@ def project_file_type(f: SourceFile, pieces: list[SourcePiece]) -> FileType:
     return f.type
 
 
+# File types that are a current pack (a dieline PDF or a pack image). Their values are "printed"; any other
+# file type states a value in words ("the content sheet says").
+PACK_FILE_TYPES: tuple[str, ...] = ("pdf", "image")
+Mode = Literal["redesign", "new_product"]
+
+
+def project_mode(files: list["ProjectFile"]) -> tuple[Mode, str]:
+    """(mode, reason). Redesign iff a pack file is among the inputs; otherwise a new product."""
+    for f in files:
+        if f.type in PACK_FILE_TYPES:
+            kind = "Dieline PDF" if f.type == "pdf" else "Pack image"
+            return "redesign", f"{kind} among the inputs: {f.name}"
+    return "new_product", "No pack file among the inputs"
+
+
 def project_file_units(f: SourceFile, pieces: list[SourcePiece]) -> int:
     if f.type == "xlsx":
         return len(f.sheets)
@@ -246,6 +261,9 @@ class Pack(CamelModel):
 class BriefSentence(CamelModel):
     text: str
     fact_ids: list[str] = []
+    status: Literal["ok", "unproven"] = "unproven"
+    problems: list[str] = []
+    source: Literal["code", "ai", "user"] = "code"
 
 
 class BriefSection(CamelModel):
@@ -253,12 +271,21 @@ class BriefSection(CamelModel):
     sentences: list[BriefSentence] = []
 
 
+class BriefLogEntry(CamelModel):
+    who: str
+    what: str
+    at: str
+
+
 class Brief(OmitNone):
+    """version 0 = no draft yet. approved_by / approved_at are set by Approve and cleared by any edit."""
+
     omit_none = ("approved_by", "approved_at")
     version: int = 0
     sections: list[BriefSection] = []
     approved_by: str | None = None
     approved_at: str | None = None
+    log: list[BriefLogEntry] = []
 
 
 class SelfTestRow(OmitNone):
@@ -296,12 +323,18 @@ class LogEntry(BaseModel):
 class Project(OmitNone):
     omit_none = ("market",)
     market: str | None = None
+    # redesign = a dieline PDF or pack image is among the files; new_product = no pack file (see project_mode)
+    mode: Mode = "redesign"
+    mode_reason: str = ""
     # True while rules that nobody has approved yet are used (demo mode); see rules/engine include_unapproved.
     demo_mode: bool = False
     files: list[ProjectFile] = []
     facts: list[Fact] = []
     conflicts: list[Conflict] = []
     questions: list[Question] = []
+    # Ranked questions that did not fit the open window (budget); they move up as open ones are answered.
+    waiting_questions: list[Question] = []
+    questions_waiting: int = 0
     requirements: list[Requirement] = []
     rules: list[Rule] = []
     pack: Pack = Pack()

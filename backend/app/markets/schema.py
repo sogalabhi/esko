@@ -20,6 +20,10 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
 
+DEFAULT_QUESTION_BUDGET = 10  # open questions at once when no pack says otherwise
+DEFAULT_DESIGN_SLOTS = 3  # of those, reserved for design and brand questions
+
+
 class MarketSettings(_Strict):
     id: str
     name: str
@@ -31,6 +35,10 @@ class MarketSettings(_Strict):
     # Printed unit token (lowercase) -> unit the checks understand, e.g. a market that prints "cal" for kcal.
     unit_aliases: dict[str, str] = {}
     short_name: str | None = None  # how the UI shows the market (for example a two-letter code); defaults to id
+    # The question window: at most `question_budget` open at once, `design_slots` of them kept for design questions.
+    # Unset here means "not decided by this pack" (a layered pack, then the defaults, decide).
+    question_budget: int | None = Field(default=None, ge=1)
+    design_slots: int | None = Field(default=None, ge=0)
 
 
 class FactEquals(_Strict):
@@ -185,6 +193,20 @@ class FactKeys(_Strict):
     design_assets: list[DesignAsset] = []
 
 
+class BriefInput(_Strict):
+    """Something the brief needs that files rarely hold (target buyer, deadline, logo file...). Asked as a design
+    question unless a fact already supplies it; the answer becomes a person-sourced fact."""
+
+    key: str
+    question: str
+    why: str
+    modes: list[Literal["redesign", "new_product"]] = ["redesign", "new_product"]
+    label: str | None = None  # the fact field the answer is stored under; defaults to the key in words
+    group: Literal["identity", "ingredients", "allergens", "nutrition", "quantity", "claims", "company", "packaging"] = "packaging"
+    fields: list[str] = []  # other fact fields that already supply it (case and punctuation insensitive)
+    suggestions: list[str] = []  # one-tap answers
+
+
 class MarketPack(_Strict):
     settings: MarketSettings
     rules: list[Rule] = []
@@ -194,3 +216,19 @@ class MarketPack(_Strict):
     pack_items: list[PackItem] = []
     fact_keys: FactKeys | None = None
     layers: list[MarketSettings] = []  # settings of the packs layered on top (company rules)
+    brief_inputs: list[BriefInput] = []
+
+    @property
+    def question_budget(self) -> int:
+        """The last layer that sets it wins (the company pack), then the market, then the default."""
+        for s in [*reversed(self.layers), self.settings]:
+            if s.question_budget is not None:
+                return s.question_budget
+        return DEFAULT_QUESTION_BUDGET
+
+    @property
+    def design_slots(self) -> int:
+        for s in [*reversed(self.layers), self.settings]:
+            if s.design_slots is not None:
+                return min(s.design_slots, self.question_budget)
+        return min(DEFAULT_DESIGN_SLOTS, self.question_budget)

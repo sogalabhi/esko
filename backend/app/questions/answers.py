@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from app.analysis import analyze
 from app.markets.schema import MarketPack
 from app.models.project import Conflict, Fact, LogEntry, Project, Question, Resolution, Source, SourceWhere
+from app.questions.build import INPUT_PREFIX
 from app.rules.adapter import side_fact_ids
 
 USER_FILE = "user"  # Source.file_id of anything a person typed
@@ -90,6 +91,12 @@ def apply_answer(project: Project, pack: MarketPack, question_id: str, answer: s
         group = meta.group if meta and meta.group else "packaging"
         p.facts = [f for f in p.facts if f.id != f"miss-{q.subject}"]
         p.facts.append(_user_fact(f"user-{q.subject}", group, label, text))
+    elif q.subject.startswith(INPUT_PREFIX):  # brand basics: the answer is a fact from this person
+        key = q.subject.removeprefix(INPUT_PREFIX)
+        inp = next((i for i in pack.brief_inputs if i.key == key), None)
+        label = (inp.label if inp and inp.label else key.replace("_", " ").capitalize())
+        p.facts = [f for f in p.facts if f.id != f"user-input-{key}"]
+        p.facts.append(_user_fact(f"user-input-{key}", inp.group if inp else "packaging", label, text))
     else:  # design: keep / change / remove (a typed answer is a change request)
         _set_action(facts, q.fact_ids, effect if effect in ("keep", "change", "remove") else "change")
     q.status = "answered"

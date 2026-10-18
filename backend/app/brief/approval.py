@@ -22,7 +22,7 @@ def edit_sentence(
 ) -> Brief:
     """Replace a sentence. It becomes unproven until the audit runs again."""
     old = brief.sections[section].sentences[index]
-    new = Sentence(text=text, factIds=list(old.factIds if fact_ids is None else fact_ids))
+    new = Sentence(text=text, factIds=list(old.factIds if fact_ids is None else fact_ids), source="user")
     sections = [s.model_copy(deep=True) for s in brief.sections]
     sentences = sections[section].sentences
     sections[section] = Section(title=sections[section].title,

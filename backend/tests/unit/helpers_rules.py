@@ -1,7 +1,7 @@
 """An in-memory market pack and project for the Phase 3 unit tests (no disk, no AI)."""
 
 from app.markets.schema import MarketPack
-from app.models.project import Conflict, ConflictSide, Fact, Project, Source, SourceWhere
+from app.models.project import Conflict, ConflictSide, Fact, Project, ProjectFile, Source, SourceWhere
 
 SETTINGS = {"id": "t", "name": "Test", "units": ["g"], "currency": "USD", "number_format": "western",
             "languages": ["English"]}
@@ -68,11 +68,17 @@ def meaning_conflict(cid, claim_facts, against_facts, claim="Sweet claim", again
                     explanation=f"{claim} against {against}.")
 
 
-def mini_project() -> Project:
+PACK_PDF = ProjectFile(id="pack", name="carton.pdf", type="pdf", pages=1, status="done")
+SHEET = ProjectFile(id="sheet", name="sheet.xlsx", type="sheet", pages=1, status="done")
+
+
+def mini_project(files: list[ProjectFile] | None = None) -> Project:
+    """The default has a sheet and a dieline PDF (a redesign); pass files=[SHEET] for a new product."""
     f1 = fact("f-1", "ingredients", "Ingredient list", "Almonds, Sugar, Oats")
     f2 = fact("f-2", "claims", "Claim", "Sweet claim")
     f3 = fact("f-3", "quantity", "Net quantity", "480", "g")
     f4 = fact("f-4", "identity", "Brand", "Acme")
     f5 = fact("f-5", "company", "Manufacturer", "ACME CO.")
     f6 = fact("f-6", "allergens", "Allergen statement", "May contain almonds")
-    return Project(facts=[f1, f2, f3, f4, f5, f6], conflicts=[meaning_conflict("c-1", [f2], [f1])])
+    return Project(files=[SHEET, PACK_PDF] if files is None else files, facts=[f1, f2, f3, f4, f5, f6],
+                   conflicts=[meaning_conflict("c-1", [f2], [f1])])

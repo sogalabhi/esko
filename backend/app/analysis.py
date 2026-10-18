@@ -13,12 +13,14 @@ from app.ai.client import AIClient
 from app.markets import layer_packs, load_pack, packs_root
 from app.markets.loader import active_rules
 from app.markets.schema import MarketPack
-from app.models.project import Conflict, Fact, Project, Requirement, Rule
+from app.models.project import PACK_FILE_TYPES, Conflict, Fact, Project, Requirement, Rule, project_mode
 from app.questions.build import (
     MISSING_PREFIX,
     build_conflict_candidates,
     build_design_candidates,
+    build_input_candidates,
     build_missing_candidates,
+    interleave,
     pick,
     rank,
 )
@@ -122,15 +124,22 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
     reqs, missing, _ = build_requirements(pack, live, contested, on_date)
     facts = facts + missing
 
-    conf_cands, absorbed = build_conflict_candidates(pack, facts, conflicts, reqs, {f.id: SOURCE_NAMES.get(f.type, "the file") for f in out.files})
+    out.mode, out.mode_reason = project_mode(out.files)
+    names = {f.id: SOURCE_NAMES.get(f.type, "the file") for f in out.files}
+    conf_cands, absorbed = build_conflict_candidates(pack, facts, conflicts, reqs, names,
+                                                     {f.id for f in out.files if f.type in PACK_FILE_TYPES})
     decisions = rank(conf_cands + build_missing_candidates(pack, facts, reqs, absorbed))
-    design = build_design_candidates(pack, facts, conflicts)
+    # keep / change / remove questions are about assets on an old pack; brand basics are asked in both modes
+    assets = build_design_candidates(pack, facts, conflicts) if out.mode == "redesign" else []
+    design = interleave(assets, build_input_candidates(pack, facts, out.mode))
     closed = [q for q in out.questions if q.status != "open"]
     closed_ids = {q.id for q in closed}
     decisions = [c for c in decisions if c.id not in closed_ids]
     design = [c for c in design if c.id not in closed_ids]
-    chosen = pick(decisions, design)
-    reuse_wording(chosen, out.questions)
+    chosen = pick(decisions, design, pack.question_budget, pack.design_slots)
+    taken = {c.id for c in chosen}
+    waiting = [c for c in [*decisions, *design] if c.id not in taken]
+    reuse_wording(chosen + waiting, out.questions + out.waiting_questions)
     fresh = [c for c in chosen if c.kind in ("conflict", "missing") and not any(q.id == c.id for q in out.questions)]
     if client is not None and fresh:
         reword(client, fresh)
@@ -140,6 +149,8 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
     out.facts, out.conflicts, out.requirements = facts, conflicts, reqs
     out.rules = _rules_for_ui(pack)
     out.questions = closed + [c.to_question() for c in chosen]
+    out.waiting_questions = [c.to_question() for c in waiting]
+    out.questions_waiting = len(waiting)
     return out
 
 

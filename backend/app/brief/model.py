@@ -8,6 +8,7 @@ SECTION_OBJECTIVE = "Objective"
 SECTION_PRODUCT_FACTS = "Product facts"
 SECTION_MANDATORY = "Mandatory content by panel"
 SECTION_CHANGES = "Keep / Change / Add / Remove"
+SECTION_MUST_INCLUDE = "Must include"  # SECTION_CHANGES in a new product brief (there is no old pack to change)
 SECTION_CLAIMS = "Allowed claims (and removed claims, with reason)"
 SECTION_NUTRITION = "Nutrition panel instructions"
 SECTION_QUESTIONS = "Open questions for the agency"
@@ -25,6 +26,7 @@ class Sentence(BaseModel):
     # Unproven until an audit has said otherwise.
     status: Literal["ok", "unproven"] = "unproven"
     problems: list[str] = Field(default_factory=list)
+    source: Literal["code", "ai", "user"] = "code"
 
 
 class Section(BaseModel):

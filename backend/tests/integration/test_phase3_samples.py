@@ -113,7 +113,8 @@ def test_at_most_ten_questions_honey_vegan_is_in_the_top_three_and_honey_percent
 
 
 def test_every_open_high_severity_conflict_has_a_question(project):
-    asked = {cid for q in project.questions if q.status == "open" for cid in q.subject.split(",")}
+    # open now, or waiting for a free seat in the window: never dropped
+    asked = {cid for q in [*project.questions, *project.waiting_questions] if q.status == "open" for cid in q.subject.split(",")}
     high = [c.id for c in project.conflicts if c.resolution is None and c.severity == "high"]
     assert high and set(high) <= asked, set(high) - asked
 
@@ -127,11 +128,11 @@ def test_the_calorie_question_names_both_files_figures_and_folds_in_the_carbohyd
 
 
 def test_ai_wording_never_adds_a_number_the_files_did_not_state(project):
-    ounces = next(q for q in project.questions if q.id == "q-miss-net_quantity_ounces")
+    ounces = next(q for q in [*project.questions, *project.waiting_questions] if q.id == "q-miss-net_quantity_ounces")
     assert ounces.answers == ["16.9 oz (480 g)"]  # computed by code, one decimal
     from app.questions.build import numbers_in
     for q in project.questions:
-        if q.kind != "design":
+        if q.kind == "conflict" or q.kind == "missing":
             shown = numbers_in(" ".join([q.text, q.why, *q.answers]))
             ctx = numbers_in(" ".join(c.explanation + c.left.value + c.right.value for c in project.conflicts)
                              + " ".join((f.value or "") + (f.unit or "") for f in project.facts) + " 16.9 60")
@@ -139,7 +140,7 @@ def test_ai_wording_never_adds_a_number_the_files_did_not_state(project):
 
 
 def test_missing_gaps_and_math_get_questions_and_duplicates_are_merged(project):
-    ids = {q.id for q in project.questions}
+    ids = {q.id for q in [*project.questions, *project.waiting_questions]}
     assert {"q-miss-net_quantity_ounces", "q-miss-manufacturer_address_city_state_zip"} <= ids
     assert "q-miss-allergen_declaration" not in ids  # merged into the tree-nut conflict
     assert "q-miss-no_added_sugar_claim_conditions" not in ids  # merged into the added-sugar claim conflict
@@ -147,22 +148,20 @@ def test_missing_gaps_and_math_get_questions_and_duplicates_are_merged(project):
     assert next(q for q in project.questions if q.id.startswith("q-math-dv")).subject.count(",") >= 9
 
 
-def test_design_questions_fill_the_slots_high_severity_decisions_leave_free(project, pack):
-    assert not [q for q in project.questions if q.kind == "design" and q.status == "open"] or len(
-        [q for q in project.questions if q.status == "open"]) <= 10
-    p = project
-    for _ in range(12):  # settle the top decision questions (a person passing them on) until slots free up
-        top = next((q for q in p.questions if q.status == "open" and q.kind != "design"), None)
-        if top is None or any(q.kind == "design" for q in p.questions):
-            break
-        p = apply_answer(p, pack, top.id, next(o.label for o in top.options if o.effect == "defer") if any(
-            o.effect == "defer" for o in top.options) else top.answers[0])
-    design = [q for q in p.questions if q.kind == "design"]
+def test_design_questions_have_reserved_seats_and_the_rest_wait(project, pack):
+    opened = [q for q in project.questions if q.status == "open"]
+    design = [q for q in opened if q.kind == "design"]
+    assert len(opened) == 10 and len(design) == 3 and project.questions_waiting == len(project.waiting_questions) > 0
     logo = next(q for q in design if q.id.startswith("q-d-logo"))
     assert logo.text == "Keep the Dancing Fish logo as is?"
     assert logo.answers == ["Keep", "Change", "Remove"] and logo.unlocks == 0
-    assert len([q for q in p.questions if q.status == "open"]) <= 10
-    kept = apply_answer(p, pack, logo.id, "Keep")
+    # answering one question brings the next waiting one up and keeps the window full
+    top = next(q for q in opened if q.kind != "design")
+    after = apply_answer(project, pack, top.id, next(o.label for o in top.options if o.effect != "defer"))
+    assert len([q for q in after.questions if q.status == "open"]) == 10
+    first_waiting = next(q.id for q in project.waiting_questions if q.kind != "design")
+    assert first_waiting in [q.id for q in after.questions if q.status == "open"]
+    kept = apply_answer(project, pack, logo.id, "Keep")
     assert next(f for f in kept.facts if f.id == logo.fact_ids[0]).action == "keep"
 
 

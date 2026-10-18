@@ -10,12 +10,13 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from app.checks.units import convert, parse_quantity
-from app.markets.schema import MarketPack
+from app.markets.schema import DEFAULT_DESIGN_SLOTS, DEFAULT_QUESTION_BUDGET, MarketPack
 from app.models.project import AnswerOption, Conflict, Fact, Question, Requirement
 from app.rules.adapter import claim_rule_ids, contested_fact_ids, norm_field, side_fact_ids
 from app.rules.findings import DV_FAMILY
 
-BUDGET = 10  # open questions at most (decisions first, keep/change/remove questions fill what is left)
+BUDGET = DEFAULT_QUESTION_BUDGET  # the default window; the real size is the pack's `question_budget`
+INPUT_PREFIX = "input:"  # Question.subject of a brief-input (brand basics) question
 SEVERITY = {"high": 3, "medium": 2, "low": 1}
 MISSING_PREFIX = "miss-"
 
@@ -37,6 +38,7 @@ class Candidate:
     locked: bool = False  # worded by code only (several conflicts with per-conflict effects)
     fixed_options: list[AnswerOption] = field(default_factory=list)  # computed by code, always kept first
     allowed_numbers: set[float] = field(default_factory=set)  # the only numbers AI wording may use
+    no_print: bool = False  # nothing here comes from a pack, so no wording may say "printed"
 
     def to_question(self) -> Question:
         return Question(
@@ -88,11 +90,45 @@ def _is_folded(group: list[Conflict]) -> bool:
     return group[0].kind == "math" and _family(group[0]) != "math-dv" and (len(group) > 1)
 
 
-def _file_name(c_side, names: dict[str, str]) -> str:
-    return names.get(c_side.sources[0].file_id, "the file") if c_side.sources else "the file"
+@dataclass
+class Src:
+    """Where values come from: file id -> how a question names that file ("the content sheet"), and which files are
+    a pack (a dieline or a pack image). Only a value on a pack is "printed"."""
+
+    names: dict[str, str] = field(default_factory=dict)
+    pack_ids: set[str] = field(default_factory=set)
+    assume_pack: bool = False  # no file info (unit tests): every value counts as printed
+
+    def is_pack(self, side) -> bool:
+        return self.assume_pack or any(s.file_id in self.pack_ids for s in side.sources)
+
+    def name(self, side) -> str:
+        if not side.sources:
+            return "the file"
+        first = next((s for s in side.sources if s.file_id in self.pack_ids), side.sources[0])
+        return self.names.get(first.file_id, "the file")
+
+    def says(self, side, value: str | None = None) -> str:
+        """'Printed 18 g' for a pack, 'The content sheet says 18 g' for anything else."""
+        v = side.value if value is None else value
+        return f"Printed {v}" if self.is_pack(side) else f"{upper_first(self.name(side))} says {v}"
+
+    def no_print(self, conflicts: Sequence[Conflict]) -> bool:
+        return not self.assume_pack and not any(self.is_pack(c.left) or self.is_pack(c.right) for c in conflicts)
 
 
-def folded_options(group: list[Conflict], names: dict[str, str]) -> list[AnswerOption]:
+def upper_first(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+def plain_why(text: str, src: Src, group: Sequence[Conflict]) -> str:
+    """The code's explanation says 'printed'; when no side is on a pack it says 'listed' instead."""
+    if not src.no_print(group):
+        return text
+    return re.sub(r"\bprinted\b", "listed", re.sub(r"\bPrinted\b", "Listed", text))
+
+
+def folded_options(group: list[Conflict], src: Src) -> list[AnswerOption]:
     maths = [c for c in group if c.kind == "math"]
     values = [c for c in group if c.kind == "value"]
     out: list[AnswerOption] = []
@@ -100,34 +136,41 @@ def folded_options(group: list[Conflict], names: dict[str, str]) -> list[AnswerO
         for eff, side in (("left", v.left), ("right", v.right)):
             per = {c.id: "right" for c in maths}  # whichever figure is right, the printed value must be recomputed
             per[v.id] = eff
-            out.append(AnswerOption(label=f"{_file_name(side, names).capitalize()} is right ({side.value})", effect=eff, effects=per))
+            out.append(AnswerOption(label=f"{upper_first(src.name(side))} is right ({side.value})", effect=eff, effects=per))
     if not values:
         out.append(AnswerOption(label="Recompute from the amounts on the label", effect="right"))
-        out.append(AnswerOption(label=f"Keep the printed {maths[0].left.value} (R&D confirms)", effect="left"))
+        keep = (f"Keep the printed {maths[0].left.value}" if src.is_pack(maths[0].left)
+                else f"Keep {maths[0].left.value} as {src.name(maths[0].left)} gives it")
+        out.append(AnswerOption(label=f"{keep} (R&D confirms)", effect="left"))
     return out + [AnswerOption(label="Ask someone", effect="defer")]
 
 
-def folded_text(group: list[Conflict], names: dict[str, str]) -> tuple[str, str]:
+def folded_text(group: list[Conflict], src: Src) -> tuple[str, str]:
     maths = [c for c in group if c.kind == "math"]
     values = [c for c in group if c.kind == "value"]
     head = maths[0].explanation.split(":")[0]
-    got = "; ".join(f"{c.right.value} from the {_file_name(c.left, names).removeprefix("the ")} amounts" for c in maths)
-    text = f"{head} is printed as {maths[0].left.value}, but the amounts give {got}."
+    got = "; ".join(f"{c.right.value} from the {src.name(c.left).removeprefix('the ')} amounts" for c in maths)
+    left = maths[0].left
+    text = (f"{head} is printed as {left.value}, but the amounts give {got}." if src.is_pack(left)
+            else f"{head} is {left.value} in {src.name(left)}, but the amounts give {got}.")
     for v in values:
-        text += (f" {v.explanation.split(':')[0]} differs too: {v.left.value} in {_file_name(v.left, names)}, "
-                 f"{v.right.value} in {_file_name(v.right, names)}.")
-    return text + " Which figures are right?", " ".join(c.explanation for c in group)
+        text += (f" {v.explanation.split(':')[0]} differs too: {v.left.value} in {src.name(v.left)}, "
+                 f"{v.right.value} in {src.name(v.right)}.")
+    return text + " Which figures are right?", plain_why(" ".join(c.explanation for c in group), src, group)
 
 
-def conflict_options(group: list[Conflict]) -> list[AnswerOption]:
+def conflict_options(group: list[Conflict], src: Src | None = None) -> list[AnswerOption]:
+    src = src or Src(assume_pack=True)
     c = group[0]
     if _family(c) == "math-dv":
+        keep = "Keep the printed values" if src.is_pack(c.left) else "Keep the values as given"
         return [AnswerOption(label="Recompute every % from the amounts", effect="right"),
-                AnswerOption(label="Keep the printed values (R&D confirms)", effect="left"),
+                AnswerOption(label=f"{keep} (R&D confirms)", effect="left"),
                 AnswerOption(label="Ask someone", effect="defer")]
     if c.kind == "math":
+        keep = f"Keep what is printed ({c.left.value})" if src.is_pack(c.left) else f"Keep what {src.name(c.left)} says ({c.left.value})"
         return [AnswerOption(label=f"Use the computed value ({c.right.value})", effect="right"),
-                AnswerOption(label=f"Keep what is printed ({c.left.value})", effect="left"),
+                AnswerOption(label=keep, effect="left"),
                 AnswerOption(label="Ask someone", effect="defer")]
     if c.kind == "meaning":
         return [AnswerOption(label=f"Keep: {c.right.value}. Remove: {c.left.value}", effect="right"),
@@ -142,19 +185,25 @@ def conflict_options(group: list[Conflict]) -> list[AnswerOption]:
             AnswerOption(label="Ask someone", effect="defer")]
 
 
-def conflict_text(group: list[Conflict]) -> tuple[str, str]:
+def conflict_text(group: list[Conflict], src: Src | None = None) -> tuple[str, str]:
+    src = src or Src(assume_pack=True)
     c = group[0]
+    why = plain_why(c.explanation, src, group)
     if _family(c) == "math-dv":
-        return (f"{len(group)} printed % Daily Values do not match the amounts. Use the computed values?",
-                " ".join(g.explanation for g in group))
+        what = "printed % Daily Values" if src.is_pack(c.left) else f"% Daily Values in {src.name(c.left)}"
+        return (f"{len(group)} {what} do not match the amounts. Use the computed values?",
+                plain_why(" ".join(g.explanation for g in group), src, group))
     if c.kind == "meaning":
         return (f"{c.left.value} against {c.right.value}. What should change?", c.explanation)
     if c.kind == "list":
         return ("The ingredient lists do not agree. Which one is right?", " ".join(g.explanation for g in group))
     if c.kind == "math":
-        return (f"Printed {c.left.value} but the math gives {c.right.value}. Which do you use?", c.explanation)
+        if src.is_pack(c.left):
+            return (f"Printed {c.left.value} but the math gives {c.right.value}. Which do you use?", why)
+        return (f"{src.says(c.left)}, but the math gives {c.right.value}. Which do you use?", why)
     if c.kind == "rule":
-        return (f"This pack shows \"{c.left.value[:80]}\". Change it?", c.explanation)
+        shows = "This pack shows" if src.is_pack(c.left) else upper_first(src.name(c.left)) + " shows"
+        return (f"{shows} \"{c.left.value[:80]}\". Change it?", c.explanation)
     return (f"{c.explanation.split(':')[0]}: {c.left.value} or {c.right.value}?", c.explanation)
 
 
@@ -167,10 +216,12 @@ def _claim_rules(pack: MarketPack, text: str) -> set[str]:
 
 
 def build_conflict_candidates(pack: MarketPack, facts: Sequence[Fact], conflicts: Sequence[Conflict],
-                              requirements: Sequence[Requirement], names: dict[str, str] | None = None
-                              ) -> tuple[list[Candidate], set[str]]:
-    """Returns (candidates, ids of missing requirements already absorbed into them)."""
-    names = names or {}
+                              requirements: Sequence[Requirement], names: dict[str, str] | None = None,
+                              pack_ids: set[str] | None = None) -> tuple[list[Candidate], set[str]]:
+    """Returns (candidates, ids of missing requirements already absorbed into them). `names`: file id -> how a question
+    names the file; `pack_ids`: the files that are a pack (only their values are "printed"). Without `names`
+    nothing is known about the files and every value counts as printed."""
+    src = Src(names, pack_ids or set()) if names is not None else Src(assume_pack=True)
     by_id = {f.id: f for f in facts}
     open_conf = [c for c in conflicts if c.resolution is None]
     absorbed: set[str] = set()
@@ -196,8 +247,8 @@ def build_conflict_candidates(pack: MarketPack, facts: Sequence[Fact], conflicts
                     absorbed.add(r.id)
         rule_ids = list(dict.fromkeys(rule_ids + [r.rule_id for r in requirements if r.id in reqs]))
         folded = _is_folded(group)
-        text, why = folded_text(group, names) if folded else conflict_text(group)
-        options = folded_options(group, names) if folded else conflict_options(group)
+        text, why = folded_text(group, src) if folded else conflict_text(group, src)
+        options = folded_options(group, src) if folded else conflict_options(group, src)
         ctx = [f"conflict {c.id} ({c.kind}): {c.explanation} | left: {c.left.value} | right: {c.right.value}" for c in group]
         ctx += [_fact_line(by_id[i]) + " | " + "; ".join(s.quote[:100] for s in by_id[i].sources[:1])
                 for i in fact_ids[:10] if i in by_id]
@@ -205,7 +256,7 @@ def build_conflict_candidates(pack: MarketPack, facts: Sequence[Fact], conflicts
             id=f"q-{group[0].id}", kind="conflict", subject=",".join(c.id for c in group), text=text, why=why,
             fact_ids=fact_ids, requirement_ids=reqs, rule_ids=rule_ids,
             severity=max(SEVERITY[c.severity] for c in group), options=options,
-            context=NL.join(ctx), conflicts=group, locked=folded))
+            context=NL.join(ctx), conflicts=group, locked=folded, no_print=src.no_print(group)))
     for c in out:
         c.allowed_numbers = numbers_in(" ".join([c.context, c.text, c.why, *(o.label for o in c.options)]))
     return out, absorbed
@@ -309,8 +360,36 @@ def rank(cands: list[Candidate]) -> list[Candidate]:
     return out
 
 
-def pick(decisions: list[Candidate], design: list[Candidate], open_already: int = 0) -> list[Candidate]:
-    """At most BUDGET open questions: decisions first, keep/change/remove questions fill what is left."""
-    room = max(0, BUDGET - open_already)
-    chosen = decisions[:room]
-    return chosen + design[: room - len(chosen)]
+def build_input_candidates(pack: MarketPack, facts: Sequence[Fact], mode: str) -> list[Candidate]:
+    """Brand basics: the brief inputs of this mode that no fact supplies yet, as design questions (data: `brief_inputs.yaml`)."""
+    out: list[Candidate] = []
+    for inp in pack.brief_inputs:
+        if mode not in inp.modes:
+            continue
+        names = {norm_field(x) for x in [inp.label or inp.key.replace("_", " "), inp.key.replace("_", " "), *inp.fields]}
+        if any(norm_field(f.field) in names and (f.value or "").strip() and f.state != "missing" and f.action != "remove"
+               for f in facts):
+            continue
+        options = [AnswerOption(label=x, effect="value") for x in inp.suggestions]
+        options.append(AnswerOption(label="Ask someone", effect="defer"))
+        out.append(Candidate(
+            id=f"q-in-{inp.key}", kind="design", subject=f"{INPUT_PREFIX}{inp.key}", text=inp.question, why=inp.why,
+            fact_ids=[], severity=1, options=options, context=f"brief input {inp.key}"))
+    return out
+
+
+def interleave(first: list[Candidate], second: list[Candidate]) -> list[Candidate]:
+    """One from each list in turn, so a small design window shows both kinds (a logo, then the target buyer...)."""
+    out: list[Candidate] = []
+    for i in range(max(len(first), len(second))):
+        out += first[i:i + 1] + second[i:i + 1]
+    return out
+
+
+def pick(decisions: list[Candidate], design: list[Candidate], budget: int = DEFAULT_QUESTION_BUDGET,
+         design_slots: int = DEFAULT_DESIGN_SLOTS) -> list[Candidate]:
+    """At most `budget` open questions. Up to `design_slots` are kept for design questions; seats they do not
+    use go to decisions, and seats decisions do not use go to more design questions. Decisions are listed first."""
+    reserved = min(len(design), design_slots, budget)
+    chosen = decisions[: budget - reserved]
+    return chosen + design[: budget - len(chosen)]

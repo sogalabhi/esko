@@ -6,3 +6,7 @@ units: [g, oz]
 currency: USD
 number_format: western
 languages: [English]
+# The question window: how many questions are open at once, and how many of those seats are kept for design
+# and brand questions so they do not wait behind every regulatory decision.
+question_budget: 10
+design_slots: 3
