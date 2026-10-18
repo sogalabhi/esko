@@ -68,6 +68,48 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
 
 ---
 
+## Finish line (18–22 Oct) · submission 22 Oct, submit by afternoon
+
+This section replaces the dates in Phases 6A–10. **In:** Rules map, Claims and Trust (US only, each framed as feeding the brief). **Cut until after submission:** 6A (shopper lenses), the India switch, Time Machine, the 8 bake-off, all of 10. **Hard feature freeze at the end of 20 Oct**; 21 Oct is for the video only.
+
+**18 Oct — close Phase 5, hide loose ends**
+- Commit the brief writer, the brief and ask routes, `Pack.tsx` and their tests. Make the flaky frontend tests (5 s timeouts) reliable. Tag `phase-4`, `phase-5`, `milestone-e2e`.
+- Regenerate `backend/demo/snapshot.json` so "Load demo" reaches the brief (now `brief` and `trust` are null).
+- Hide unbuilt controls: the India toggle and the launch-date slider. Keep `markets/in/` as data. It's the answer to "how do you add a country?". The Rules map, Claims and Trust links stay; they get built on 19–20 Oct.
+- **Commit and tag before the day ends** (once the running agents report): review, full `npm test`, chunked commits, tags `phase-4`, `phase-5`, `milestone-e2e`.
+- Declutter the 3D pins and the 2D red pen: findings in one region become one mark with a count (in progress).
+- Pack screen: no fixture fallback (`SAMPLE_FINDINGS`, `SAMPLE_MISSING`) on a live project, which shows an empty state instead. Missing items go to their fit-engine slot, not one hard-coded spot.
+- Wording: "can't lie" and "zero hallucination" become "every claim traces to its source" (PLAN.md, PRODUCT_OVERVIEW.md, UI copy).
+- Lock the demo story (below).
+
+**19 Oct — Problem 1 fit**
+- Questions as planned in PLAN.md, Smart Questions: a window of 10, 3 slots for design, brand basics (target buyer, how the pack should feel, deadline, print method) from `markets/company/`, and waiting or unanswered questions sent to the brief. Tests: the Phase 3 list.
+- Every finding feeds the brief: each resolved finding becomes one line in Keep / Change / Add / Remove, and each open one becomes a line in Open questions. Test: no finding on the samples is missing from the brief.
+- Conflict answer options use the code template ("Keep: X. Remove: Y"), never a vague AI label like "Keep Certified Vegan claim".
+- New-product mode (PLAN.md, Smart Questions, "Two modes"). Tests: `test_project_mode` (sheet only gives new product; sheet + dieline gives redesign; a pack photo gives redesign); `test_question_source_wording` (no "Printed" for a value that is only on the sheet); integration `test_sheet_only` (the Excel alone with recorded AI gives facts, the math conflicts, brand-basics questions that ask for things, a brief with "Must include" and no "Keep" lines); frontend: with no dieline, Pack, 3D and the markup screen show the empty state and no sample pins.
+- UI: the 5 steps stay the main path. Rename Markup to "What to change on the old pack" and move it and the 3D view under "More tools". Each step ends with one next button ("Next: answer 3 questions").
+- Facts table: a small "read by AI · checked by code" line per fact, and "AI-suggested · quote not found" when the check failed.
+- **Claims** (UI.md 6.7, US only): each claim word in the pack copy and the sheet is underlined red (not allowed), amber (needs proof or a condition) or green (fine). Hover shows the rule, the reason and safer wording to discuss with legal. Verdicts come from `markets/us/claims.yaml` plus the rule engine (code). AI only judges meaning with a rule citation, and a verdict citing no rule is dropped. A person's keep or remove decision is logged and feeds the brief's "Allowed claims" section. Tests: No Added Sugar with honey is red; Certified Vegan with honey is red; GMO free is amber; USDA Organic is amber without a certificate on file; every verdict carries a rule ID; the brief's claims section matches the decisions.
+- **Rules map** (UI.md 6.6, React Flow, US only, no market fade): Product facts → Rules → Required pack items, built from `project.facts`, `project.rules` and `project.requirements`. Node colour plus an icon and a word for each state. Clicking a rule opens its text, source link, dates and why it applies here. Answering a question turns the affected nodes green. Tests: every requirement node links to at least one rule and one fact; states match the requirements; nodes have accessible names.
+
+**20 Oct — prove it isn't hard-coded, then ship**
+- Trimmed Phase 8: changed copies of the samples (honey % changed, address removed, allergen deleted, net quantity changed, a "100%" claim added). Each run on recorded AI is caught. The result "caught X of Y" with every miss and its reason goes on a minimal Trust screen.
+- **Trust** (UI.md 6.8, PLAN.md section 9): cards for evidence coverage (% of facts with a checked quote), AI-suggested still open, conflicts resolved by a person, and the self-test score. A "Run self-test" button shows planted problems as Caught or Missed, with the reason for each miss. Below that, the change log and the rules used (clause, link, approved or not).
+- The Trust screen also has "AI was wrong, code caught it" (quotes downgraded, made-up fact IDs rejected, sentences the audit blocked) and "What we can't catch yet": a wrong sentence with no number, unit or claim word in it; a fact the AI never extracted; artwork text hidden in an image the vision model misread.
+- Show a clear UI message and a retry button when the AI provider is rate-limited (the client already retries and falls back between models).
+- Hand the files to someone non-technical and watch for 10 minutes without helping. Fix every place they get stuck, and remove jargon.
+- Phase 9 ship: README in a few steps, sample files included, repo under 50 MB, a hosted link, and a fresh-clone test.
+
+**21 Oct — the video and the write-up**
+- Record the 4-minute story: the problem in Esko's own words (20 s) → drop the files, the hidden EU table caught (30 s) → honey 9% vs 1% with the source crop, and 480 g vs 16.9 oz *not* flagged (50 s) → ranked questions, answer one and watch the ripple, a logo question visible (50 s) → brief: type a wrong number, the violet underline locks Approve, fix it, approve (50 s) → export and checklist, 3D in under 15 s (25 s) → one-line close that names the limits (15 s).
+- Write the voiceover, cut out loading waits, zoom in on what matters. Simplify the architecture diagram for judges.
+
+**22 Oct — buffer.** Submit by afternoon.
+
+**Campus round prep (10 min demo + 5 min Q&A):** "What if the AI misses a fact?" · "How do you add a new country?" (show `markets/in/`) · "Does it work on other files?" (the changed copies) · "Why Gemini?" · sources for the 45% recall and 33% budget figures.
+
+---
+
 ## Phase 0 — Setup (15 Oct, morning)
 
 **Build**
@@ -198,7 +240,10 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
 - `test_calories`: 15 g fat, 66 g carbs and 34 g protein give about 535 kcal, so 166 is flagged; a consistent label passes.
 - `test_serving_math`: 8 × 85 g ≠ 480 g is flagged; 8 × 60 g passes; a serving size with no unit is flagged.
 - `test_barcode`: 120000000036 is valid; changing any digit makes it invalid; one EAN-13 example.
-- `test_question_rank`: more unlocks ranks higher; at most 10; answering one removes the questions it settles.
+- `test_question_rank`: more unlocks ranks higher; at most `question_budget` (10) open; answering one removes the questions it settles and the next waiting one moves up; the waiting count is reported.
+- `test_question_slots`: with 12 decisions and 5 design questions, 7 decisions and 3 design are open; with 1 design question, 9 decisions fill the rest; the budget and reserved slots are read from the company pack, not code.
+- `test_brand_basics`: with no target buyer, feel or deadline in the files, each becomes a design question; when a file gives one, it isn't asked.
+- `test_open_questions_in_brief`: open and waiting questions all appear in "Open questions for the agency", marked not confirmed.
 - `test_no_market_leak` (static): no US values in `backend/app/`.
 
 **Integration tests (samples + US pack)**
@@ -211,7 +256,7 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
   - the missing address;
   - the missing oz on the front.
 - The barcode passes.
-- There are at most 10 questions, and the honey/vegan question is in the top 3.
+- There are at most 10 open questions, at least one is a design question (the logo), and the honey/vegan question is in the top 3.
 - Answering "keep honey, remove vegan claims" resolves the vegan conflicts and changes the expected requirements (the ripple).
 
 **Checkpoint:** `uv run python scripts/score.py` (in `backend/`) prints the answer key coverage (caught / missed, with reasons). It's our first honest score; write it in the commit message.

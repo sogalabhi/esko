@@ -6,7 +6,7 @@ Oct 14, 2026 · @Abhi
 
 **BriefForge turns a brand manager's messy files into a packaging brief where every line is proven, every gap is asked about, and every rule is checked before a designer draws anything.**
 
-One-line promise: *From messy files to a brief that can't lie, plus the checklist the final artwork must pass.*
+One-line promise: *From messy files to a brief where every claim traces to its source, plus the checklist the final artwork must pass.*
 
 Most tools wait for finished artwork and then hunt for mistakes. Esko's own 2025 recall study shows where those mistakes start: the spec changes and the label doesn't. BriefForge fixes the input instead of policing the output. That's the story we tell Esko: their tools catch errors at the end, and we stop them at the start.
 
@@ -117,7 +117,18 @@ The app is one guided flow with five steps in a left rail: **Evidence → Facts 
 
 - **What you see:** a few question cards, ranked by impact: "Answering this unlocks 6 requirements." Each card has the question, a plain **Why we ask** line linked to the facts and rules behind it, and suggested answers pulled from the files for one-tap replies.
 - **Can't answer?** "Ask someone" writes a short message for R&D or legal containing just that question and its context.
-- **Why it matters:** this is the problem statement's "ask smart follow-up questions", done in a way that respects a busy person's time. The target is under 10 questions per brief.
+- **Why it matters:** this is the problem statement's "ask smart follow-up questions", done in a way that respects a busy person's time.
+- **A window of 10, not a limit of 10:** at most 10 questions are open at once. Every answer recomputes the list, so the next-ranked question moves up into the free slot. The header shows what's waiting ("10 open · 6 waiting"), and "Show all" lists the rest for anyone who wants to clear them in one go. The window size is data (`question_budget` in `markets/company/market.yaml`), not code.
+- **Design gets a seat:** 3 of the 10 slots are reserved for design and brand questions, so they don't wait behind every regulatory decision. Two kinds:
+  - *keep / change / remove* for assets on the current pack (logo, product photo, brand colours, tagline, marks), as now;
+  - *brand basics* the files rarely hold: target buyer, how the new pack should feel, the deadline and the print method. These are required brief inputs listed in `markets/company/`, so any market gets them.
+  If fewer than 3 design questions exist, decisions use the spare slots.
+- **Nothing drops silently:** a question still open or waiting when the brief is written goes into the brief's "Open questions for the agency" section, marked not confirmed, with its "why" line. Stopping early never loses a question.
+- **Two modes, read from the inputs:** the old pack is optional.
+  - *Redesign*: a dieline PDF or a pack photo is among the files. Everything above applies, and the brief has "Keep / Change / Add / Remove".
+  - *New product*: no pack. Brand basics ask for things instead of asking what to keep: the logo file, brand colours, a product photo, target buyer, feel, deadline, print method. The brief section becomes "Must include". The Pack, 3D and "What to change" screens show "No current pack: upload one to compare" and never fall back to sample data.
+  - The mode and why it was chosen ("No pack file among the inputs") show in the top bar.
+  - Question and brief wording name the real source ("The content sheet says 18 g"), never "printed" unless the value is on a pack.
 - **Wow detail:** the stack shrinks live as answers come in, because one answer often settles several questions.
 
 ### 5. Pack Canvas (will it fit?)
@@ -290,7 +301,7 @@ The rule behind everything: **the AI may suggest, but only sources and humans ca
 | No fact without a source | The AI must return a quote and a location for each fact. Code checks that the quote really exists at that page, paragraph or cell. If not, the fact drops to AI-suggested | A chatbot inventing a policy (Air Canada, 2024) |
 | The brief can only use proven facts | Each sentence in the brief carries the IDs of the facts it uses. Code pulls every number and claim out of the draft and rejects any that isn't in the Fact Sheet | Made-up numbers slipping into print |
 | Conflicts are never settled silently | Code catches unit mismatches first (480 g equals 16.9 oz, so no false conflict). AI catches conflicts in meaning ("Certified Vegan" vs honey in the ingredients). A person decides, and the decision is logged | Spec and label drifting apart, the top recall cause |
-| Fewer, better questions | We ask only when an answer unlocks a requirement, ranked by impact, with a budget of about 10. Unsure items go to "needs review" instead of raising alarms | Alert fatigue: in one hospital study only 7.3% of alerts were relevant and 92.9% were overridden |
+| Fewer, better questions | We ask only when an answer unlocks a requirement, ranked by impact, at most 10 open at a time (3 kept for design), the rest waiting in line and never dropped: unanswered ones go to the agency as open questions. Unsure items go to "needs review" instead of raising alarms | Alert fatigue: in one hospital study only 7.3% of alerts were relevant and 92.9% were overridden |
 | Rules come from documents, never from AI memory | Every rule is stored with its clause, link and dates. Rules the AI drafts from a company rulebook stay "proposed" until a person accepts them | Rules that sound right but aren't real |
 | A human signs off | Approve stamps name and time; every change is in the log | Nobody owning the final call |
 
