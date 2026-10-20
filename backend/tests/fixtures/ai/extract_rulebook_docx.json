@@ -1,0 +1,278 @@
+{
+ "_handmade": "Hand-made, NOT recorded from a model. Built from rulebooks/dancing_fish_us_label_rulebook.yaml and the pieces the docx reader returns. Re-record with `npm run test:record -- --rulebook`; the recording replaces this file.",
+ "rules": [
+  {
+   "id": "DF-01",
+   "title": "Approved content sheet",
+   "status": "in_force",
+   "text": "Artwork may only be signed off against a content sheet whose status is Approved. If the content sheet is still Draft or In Review, Regulatory must confirm the sheet before the artwork can be released.",
+   "quote": "Artwork may only be signed off against a content sheet whose status is Approved. If the content sheet is still Draft or In Review, Regulatory must confirm the sheet before the artwork can be released.",
+   "piece_ids": [
+    "D22",
+    "D23",
+    "D24"
+   ],
+   "check_type": "exact"
+  },
+  {
+   "id": "DF-02",
+   "title": "Copy matches the content sheet",
+   "status": "in_force",
+   "text": "All copy on the artwork must match the approved content sheet word for word, including ingredient order, ingredient percentages, allergen wording, claims and every nutrition value. Any difference is a release blocker until the artwork or the content sheet is corrected.",
+   "quote": "All copy on the artwork must match the approved content sheet word for word, including ingredient order, ingredient percentages, allergen wording, claims and every nutrition value. Any difference is a release blocker until the artwork or the content sheet is corrected.",
+   "piece_ids": [
+    "D26",
+    "D27",
+    "D28"
+   ],
+   "check_type": "exact"
+  },
+  {
+   "id": "DF-03",
+   "title": "Statement of identity",
+   "status": "in_force",
+   "text": "The common name of the food must appear on the front panel and must be the largest text on that panel.",
+   "quote": "The common name of the food must appear on the front panel and must be the largest text on that panel.",
+   "piece_ids": [
+    "D31",
+    "D32",
+    "D33"
+   ],
+   "check_type": "size"
+  },
+  {
+   "id": "DF-04",
+   "title": "Net quantity",
+   "status": "in_force",
+   "text": "The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US units, written as \"NET WT 480 g (16.9 oz)\" with a space between each number and its unit.",
+   "quote": "The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US units, written as \"NET WT 480 g (16.9 oz)\" with a space between each number and its unit.",
+   "piece_ids": [
+    "D35",
+    "D36",
+    "D37"
+   ],
+   "check_type": "exact"
+  },
+  {
+   "id": "DF-05",
+   "title": "Name and place of business",
+   "status": "in_force",
+   "text": "The back panel must state the manufacturer, packer or distributor, introduced by \"Manufactured by\", \"Packed by\" or \"Distributed by\", followed by the street address, city, state and ZIP code.",
+   "quote": "The back panel must state the manufacturer, packer or distributor, introduced by \"Manufactured by\", \"Packed by\" or \"Distributed by\", followed by the street address, city, state and ZIP code.",
+   "piece_ids": [
+    "D40",
+    "D41",
+    "D42"
+   ],
+   "check_type": "present"
+  },
+  {
+   "id": "DF-06",
+   "title": "Consumer care line",
+   "status": "in_force",
+   "text": "Every pack must carry a consumer care line on the back or a side panel: a US phone number or a website address.",
+   "quote": "Every pack must carry a consumer care line on the back or a side panel: a US phone number or a website address.",
+   "piece_ids": [
+    "D44",
+    "D45",
+    "D46"
+   ],
+   "check_type": "present"
+  },
+  {
+   "id": "DF-07",
+   "title": "Storage instructions",
+   "status": "in_force",
+   "text": "Storage instructions must appear on the back panel.",
+   "quote": "Storage instructions must appear on the back panel.",
+   "piece_ids": [
+    "D48",
+    "D49",
+    "D50"
+   ],
+   "check_type": "present"
+  },
+  {
+   "id": "DF-08",
+   "title": "Date and lot code area",
+   "status": "in_force",
+   "text": "When the copy sends the shopper to the base of the pack for the best-before date, the base panel must keep a clear, unprinted area of at least 40 mm by 15 mm for the date and lot code.",
+   "quote": "When the copy sends the shopper to the base of the pack for the best-before date, the base panel must keep a clear, unprinted area of at least 40 mm by 15 mm for the date and lot code.",
+   "piece_ids": [
+    "D52",
+    "D53",
+    "D54"
+   ],
+   "check_type": "size"
+  },
+  {
+   "id": "DF-09",
+   "title": "Nutrition Facts panel",
+   "status": "in_force",
+   "text": "The Nutrition Facts panel must sit on the back or a side panel, carry the title \"Nutrition Facts\", and end with the % Daily Value footnote.",
+   "quote": "The Nutrition Facts panel must sit on the back or a side panel, carry the title \"Nutrition Facts\", and end with the % Daily Value footnote.",
+   "piece_ids": [
+    "D56",
+    "D57",
+    "D58"
+   ],
+   "check_type": "present"
+  },
+  {
+   "id": "DF-10",
+   "title": "Daily values and calories",
+   "status": "in_force",
+   "text": "Every % Daily Value must be calculated from the declared amount per serving and the FDA daily value for that nutrient, and calories must agree with the declared fat, carbohydrate and protein.",
+   "quote": "Every % Daily Value must be calculated from the declared amount per serving and the FDA daily value for that nutrient, and calories must agree with the declared fat, carbohydrate and protein.",
+   "piece_ids": [
+    "D60",
+    "D61",
+    "D62"
+   ],
+   "check_type": "unsupported"
+  },
+  {
+   "id": "DF-11",
+   "title": "US English and US formats",
+   "status": "in_force",
+   "text": "US packs use US English and US formats only: no EU nutrition tables, no kilojoule energy values, no Reference Intake icons and no UK spellings such as \"Fibre\" or \"Flavouring\".",
+   "quote": "US packs use US English and US formats only: no EU nutrition tables, no kilojoule energy values, no Reference Intake icons and no UK spellings such as \"Fibre\" or \"Flavouring\".",
+   "piece_ids": [
+    "D64",
+    "D65",
+    "D66"
+   ],
+   "check_type": "word_list"
+  },
+  {
+   "id": "DF-12",
+   "title": "Allergen statement",
+   "status": "in_force",
+   "text": "Major food allergens that are ingredients must be declared in a \"Contains:\" statement placed directly after the ingredient list. \"May contain\" wording is only for cross-contact and must never name an allergen that is an ingredient in the recipe.",
+   "quote": "Major food allergens that are ingredients must be declared in a \"Contains:\" statement placed directly after the ingredient list. \"May contain\" wording is only for cross-contact and must never name an allergen that is an ingredient in the recipe.",
+   "piece_ids": [
+    "D69",
+    "D70",
+    "D71"
+   ],
+   "check_type": "unsupported"
+  },
+  {
+   "id": "DF-13",
+   "title": "Sugar claims",
+   "status": "in_force",
+   "text": "\"No Added Sugar\", \"No Sugar Added\" and \"Without Added Sugar\" may only be used when no sugar or sugar-containing ingredient is added. Honey, coconut sugar, cane sugar, syrups and fruit juice concentrates all count as added sugars.",
+   "quote": "\"No Added Sugar\", \"No Sugar Added\" and \"Without Added Sugar\" may only be used when no sugar or sugar-containing ingredient is added. Honey, coconut sugar, cane sugar, syrups and fruit juice concentrates all count as added sugars.",
+   "piece_ids": [
+    "D74",
+    "D75",
+    "D76"
+   ],
+   "check_type": "word_list"
+  },
+  {
+   "id": "DF-14",
+   "title": "Vegan and vegetarian",
+   "status": "in_force",
+   "text": "\"Vegan\" may only be used when the recipe contains no animal-derived ingredient and the Certified Vegan certificate is on file. Honey is animal-derived. \"Vegetarian\" and \"vegan\" must never be used as if they mean the same thing.",
+   "quote": "\"Vegan\" may only be used when the recipe contains no animal-derived ingredient and the Certified Vegan certificate is on file. Honey is animal-derived. \"Vegetarian\" and \"vegan\" must never be used as if they mean the same thing.",
+   "piece_ids": [
+    "D78",
+    "D79",
+    "D80"
+   ],
+   "check_type": "evidence_on_file"
+  },
+  {
+   "id": "DF-15",
+   "title": "Organic claims",
+   "status": "in_force",
+   "text": "\"Organic\", \"certified organic\" and the USDA Organic seal may only be used when the current organic certificate for this recipe is on file with Regulatory.",
+   "quote": "\"Organic\", \"certified organic\" and the USDA Organic seal may only be used when the current organic certificate for this recipe is on file with Regulatory.",
+   "piece_ids": [
+    "D82",
+    "D83",
+    "D84"
+   ],
+   "check_type": "evidence_on_file"
+  },
+  {
+   "id": "DF-16",
+   "title": "GMO wording",
+   "status": "in_force",
+   "text": "The words \"GMO free\" are not used on any pack. The approved wording is \"Non-GMO Project Verified\", and only when the verification is on file.",
+   "quote": "The words \"GMO free\" are not used on any pack. The approved wording is \"Non-GMO Project Verified\", and only when the verification is on file.",
+   "piece_ids": [
+    "D86",
+    "D87",
+    "D88"
+   ],
+   "check_type": "absent"
+  },
+  {
+   "id": "DF-17",
+   "title": "Claims built on \"high\"",
+   "status": "in_force",
+   "text": "Claims built on the word \"high\", such as \"High Fiber\", \"High Protein\" or \"High-Grain\", must be approved by Regulatory before use.",
+   "quote": "Claims built on the word \"high\", such as \"High Fiber\", \"High Protein\" or \"High-Grain\", must be approved by Regulatory before use.",
+   "piece_ids": [
+    "D90",
+    "D91",
+    "D92"
+   ],
+   "check_type": "evidence_on_file"
+  },
+  {
+   "id": "DF-18",
+   "title": "Minimum text size",
+   "status": "in_force",
+   "text": "Mandatory text must be set at 6 pt or larger.",
+   "quote": "Mandatory text must be set at 6 pt or larger.",
+   "piece_ids": [
+    "D95",
+    "D96",
+    "D97"
+   ],
+   "check_type": "size"
+  },
+  {
+   "id": "DF-19",
+   "title": "No hidden content",
+   "status": "in_force",
+   "text": "Release files must not contain hidden text: no text covered by other artwork, on switched-off layers or outside the trim. Hidden copy must be deleted from the file, not covered.",
+   "quote": "Release files must not contain hidden text: no text covered by other artwork, on switched-off layers or outside the trim. Hidden copy must be deleted from the file, not covered.",
+   "piece_ids": [
+    "D99",
+    "D100",
+    "D101"
+   ],
+   "check_type": "absent"
+  },
+  {
+   "id": "DF-20",
+   "title": "Recycling label",
+   "status": "in_force",
+   "text": "The How2Recycle label must appear on the back panel or the base panel.",
+   "quote": "The How2Recycle label must appear on the back panel or the base panel.",
+   "piece_ids": [
+    "D103",
+    "D104",
+    "D105"
+   ],
+   "check_type": "present"
+  },
+  {
+   "id": "DF-21",
+   "title": "Front-of-pack nutrition box",
+   "status": "proposed",
+   "text": "When FDA finalises its January 2025 proposed rule on front-of-package nutrition information, the front panel will carry a Nutrition Info box showing saturated fat, sodium and added sugars as Low, Med or High.",
+   "quote": "When FDA finalises its January 2025 proposed rule on front-of-package nutrition information, the front panel will carry a Nutrition Info box showing saturated fat, sodium and added sugars as Low, Med or High.",
+   "piece_ids": [
+    "D108",
+    "D109",
+    "D110"
+   ],
+   "check_type": "present"
+  }
+ ]
+}

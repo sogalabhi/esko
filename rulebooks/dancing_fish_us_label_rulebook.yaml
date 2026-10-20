@@ -62,7 +62,10 @@ sections:
         status: In force
         rule: >-
           The common name of the food must appear on the front panel and must be the largest text on that panel.
-        why: Our reading of 21 CFR 101.3, which asks for the identity to be a principal feature of the front panel.
+        why: >-
+          Built on 21 CFR 101.3(a), which asks for the identity to be a principal feature of the front panel, and
+          101.3(d), which asks for bold type in a size reasonably related to the most prominent print. "Largest
+          text" is our stricter house test.
       - id: DF-04
         title: Net quantity
         status: In force
@@ -70,8 +73,9 @@ sections:
           The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US
           units, written as "NET WT 480 g (16.9 oz)" with a space between each number and its unit.
         why: >-
-          21 CFR 101.7 requires the net quantity on the principal display panel in both systems. The wording and
-          the spacing are our house style.
+          21 CFR 101.7(a) and (f) require the net quantity on the principal display panel, in the bottom 30% of it.
+          Metric as well as US units is required by the Fair Packaging and Labeling Act (15 U.S.C. 1453(a)(2)). The
+          exact wording and the spacing are our house style.
 
   - title: Back and side panels
     rules:
@@ -82,8 +86,8 @@ sections:
           The back panel must state the manufacturer, packer or distributor, introduced by "Manufactured by",
           "Packed by" or "Distributed by", followed by the street address, city, state and ZIP code.
         why: >-
-          21 CFR 101.5 allows the street address to be left out in some cases. We always print it, so customers
-          and inspectors can reach us.
+          21 CFR 101.5(d) allows the street address to be left out when it is in a current city directory. We
+          always print it, so customers and inspectors can reach us.
       - id: DF-06
         title: Consumer care line
         status: In force
@@ -117,8 +121,9 @@ sections:
           Every % Daily Value must be calculated from the declared amount per serving and the FDA daily value for
           that nutrient, and calories must agree with the declared fat, carbohydrate and protein.
         why: >-
-          21 CFR 101.9 sets the daily values and the rounding rules. A wrong percentage is a labelling error even
-          when the gram amount is right.
+          21 CFR 101.9(c)(8)(iv) and (c)(9) set the daily values, and 101.9(d)(7)(ii) sets the percent calculation,
+          rounded to the nearest whole percent. A wrong percentage is a labelling error even when the gram amount
+          is right.
       - id: DF-11
         title: US English and US formats
         status: In force
@@ -137,8 +142,10 @@ sections:
           after the ingredient list. "May contain" wording is only for cross-contact and must never name an
           allergen that is an ingredient in the recipe.
         why: >-
-          Section 403(w) of the FD&C Act (the Food Allergen Labeling and Consumer Protection Act), with sesame added
-          by the FASTER Act. A "may contain" warning for a real ingredient understates the risk.
+          Section 403(w) of the FD&C Act (21 U.S.C. 343(w), from the Food Allergen Labeling and Consumer Protection
+          Act), with sesame added by the FASTER Act from 1 January 2023. The law lets a pack name the allergen in the
+          ingredient list or in a "Contains" statement; requiring "Contains" is our house rule. A "may contain"
+          warning for a real ingredient understates the risk.
 
   - title: Claims
     rules:
@@ -149,7 +156,9 @@ sections:
           "No Added Sugar", "No Sugar Added" and "Without Added Sugar" may only be used when no sugar or
           sugar-containing ingredient is added. Honey, coconut sugar, cane sugar, syrups and fruit juice
           concentrates all count as added sugars.
-        why: Our reading of 21 CFR 101.60(c)(2).
+        why: >-
+          Our reading of 21 CFR 101.60(c)(2), which bars added sugars and ingredients that contain them, such as
+          concentrated fruit juice.
       - id: DF-14
         title: Vegan and vegetarian
         status: In force
@@ -164,7 +173,9 @@ sections:
         rule: >-
           "Organic", "certified organic" and the USDA Organic seal may only be used when the current organic
           certificate for this recipe is on file with Regulatory.
-        why: USDA National Organic Program, 7 CFR Part 205. The certificate is evidence the artwork cannot show.
+        why: >-
+          USDA National Organic Program, 7 CFR Part 205 (labelling in 205.300 and 205.301). The certificate is
+          evidence the artwork cannot show.
       - id: DF-16
         title: GMO wording
         status: In force
@@ -172,8 +183,9 @@ sections:
           The words "GMO free" are not used on any pack. The approved wording is "Non-GMO Project Verified", and
           only when the verification is on file.
         why: >-
-          FDA guidance discourages "free" wording for genetic engineering because it is hard to prove. Version 3.1
-          replaced it with verified wording.
+          FDA's voluntary labeling guidance (November 2015, revised March 2019, non-binding) recommends against
+          "free" wording for genetic engineering because it is hard to substantiate. Version 3.1 replaced it with
+          verified wording.
       - id: DF-17
         title: Claims built on "high"
         status: In force
@@ -181,8 +193,8 @@ sections:
           Claims built on the word "high", such as "High Fiber", "High Protein" or "High-Grain", must be approved
           by Regulatory before use.
         why: >-
-          "High" is a defined nutrient content claim for some nutrients (21 CFR 101.54(b)). With other words it can
-          still read as one, so a person decides.
+          "High" is a defined nutrient content claim: 21 CFR 101.54(b) allows it only when the food has 20 percent
+          or more of the daily value per reference amount customarily consumed. With other words it can still read as one, so a person decides.
 
   - title: Legibility and the artwork file
     rules:
@@ -191,8 +203,8 @@ sections:
         status: In force
         rule: Mandatory text must be set at 6 pt or larger.
         why: >-
-          House rule for readability. It does not replace the 1/16 inch lowercase height minimum in 21 CFR
-          101.2(c), which Regulatory checks on the printed proof.
+          House rule for readability. It does not replace the 1/16 inch minimum letter height in 21 CFR 101.2(c)
+          (measured on the lowercase "o", see 101.7(h)(2)), which Regulatory checks on the printed proof.
       - id: DF-19
         title: No hidden content
         status: In force
@@ -216,7 +228,9 @@ sections:
         rule: >-
           When FDA finalises its January 2025 proposed rule on front-of-package nutrition information, the front
           panel will carry a Nutrition Info box showing saturated fat, sodium and added sugars as Low, Med or High.
-        why: Planning only. Do not apply until Regulatory issues version 4 of this rulebook.
+        why: >-
+          Planning only (FDA proposed rule published 16 January 2025, Federal Register document 2025-00778; not yet
+          final when checked). Do not apply until Regulatory issues version 4 of this rulebook.
 
 change_log:
   - version: "3.2"

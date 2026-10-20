@@ -138,7 +138,8 @@ PAGE = pymupdf.paper_rect("a4")
 
 
 def _flat(text: str) -> str:
-    return " ".join(unicodedata.normalize("NFKC", text).split())
+    """No whitespace at all: a line wrap can add a space ("1453(a) (2)") that the source text doesn't have."""
+    return "".join(unicodedata.normalize("NFKC", text).split())
 
 
 def layout(rb: dict, breaks: frozenset[str]) -> pymupdf.Document:

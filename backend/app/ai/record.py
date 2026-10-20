@@ -2,7 +2,7 @@
 
 Runs the live pipeline once over the two sample files (facts, conflicts, question wording) and saves each task's raw answer to
 tests/fixtures/ai/<task>.json, which the fake adapter replays. Uses quota; never run in tests.
-Usage: uv run python -m app.ai.record [carton.pdf sheet.xlsx]
+Usage: uv run python -m app.ai.record [carton.pdf sheet.xlsx] | --inputs | --rulebook [rulebook file]
 """
 
 import sys
@@ -75,6 +75,23 @@ def main_inputs() -> int:
     return 0
 
 
+def main_rulebook(paths: list[Path] | None = None) -> int:
+    """Record the rulebook reading: extract_rulebook_<kind>.json (kind = the file's extension), replacing hand-made fixtures."""
+    from app.extraction.rulebook import read_rulebook
+
+    live = build_ai_client(get_settings())
+    for path in paths or [ROOT / "rulebooks" / "Dancing_Fish_US_Label_Rulebook.docx"]:
+        client = AIClient([Recorder(a, f"_{path.suffix.lstrip('.').lower()}") for a in live.adapters], AICache(None))
+        sf, ps = read_file(path, fingerprint(path.read_bytes()))
+        book = read_rulebook(client, sf, ps)
+        checked = sum(r.source.quote_checked for r in book.rules)
+        print(f"{path.name}: calls={client.calls_made} models={sorted(set(client.models_used))} rules={len(book.rules)} "
+              f"quote_checked={checked}")
+    return 0
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if args[:1] == ["--rulebook"]:
+        sys.exit(main_rulebook([Path(a) for a in args[1:]] or None))
     sys.exit(main_inputs() if args == ["--inputs"] else main([Path(a) for a in args] or SAMPLES))
