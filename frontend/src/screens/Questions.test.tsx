@@ -72,6 +72,15 @@ describe('Questions screen', () => {
     expect(item('q-vegan')).toHaveAttribute('data-status', 'answered')
   })
 
+  it('hides design and brand-basics questions: they belong to a new design, not to checking artwork', () => {
+    const p = structuredClone(mockProject)
+    p.questions.push({ ...structuredClone(p.questions[0]), id: 'q-in-target_buyer', kind: 'design', text: 'Who is this pack for?' })
+    renderWithProject(<Questions />, '/', p)
+    expect(item('q-in-target_buyer')).toBeNull()
+    expect(screen.queryByText('Who is this pack for?')).toBeNull()
+    expect(progress()).toHaveTextContent(`0 of ${total} answered`)
+  })
+
   it('"Skip for now" moves on and sends the card to the end', async () => {
     renderWithProject(<Questions />)
     await userEvent.click(within(item('q-vegan')).getByRole('button', { name: 'Skip for now' }))

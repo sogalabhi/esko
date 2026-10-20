@@ -68,45 +68,63 @@ The main session (Opus 5.5) is the lead: it plans each phase, writes the answer 
 
 ---
 
-## Finish line (18–22 Oct) · submission 22 Oct, submit by afternoon
+## Problem 2 pivot (20–22 Oct) · deadline 22 Oct, 11:59 PM IST
 
-This section replaces the dates in Phases 6A–10. **In:** Rules map, Claims and Trust (US only, each framed as feeding the brief). **Cut until after submission:** 6A (shopper lenses), the India switch, Time Machine, the 8 bake-off, all of 10. **Hard feature freeze at the end of 20 Oct**; 21 Oct is for the video only.
+On 20 Oct the project moved from Problem 1 (idea → design brief) to **Problem 2: "Is this packaging artwork ready to launch?"**: finished artwork + approved product information + a rulebook in, **Fail / Needs review / Pass** findings with evidence out. The engine (readers, quote check, rule engine, math, market packs, answer key) carries over unchanged; it was already a checker. This section replaces the old finish line. Phases 0–10 below it are Problem 1 history.
 
-**18 Oct — close Phase 5, hide loose ends**
-- Commit the brief writer, the brief and ask routes, `Pack.tsx` and their tests. Make the flaky frontend tests (5 s timeouts) reliable. Tag `phase-4`, `phase-5`, `milestone-e2e`.
-- Regenerate `backend/demo/snapshot.json` so "Load demo" reaches the brief (now `brief` and `trust` are null).
-- Hide unbuilt controls: the India toggle and the launch-date slider. Keep `markets/in/` as data. It's the answer to "how do you add a country?". The Rules map, Claims and Trust links stay; they get built on 19–20 Oct.
-- **Commit and tag before the day ends** (once the running agents report): review, full `npm test`, chunked commits, tags `phase-4`, `phase-5`, `milestone-e2e`.
-- Declutter the 3D pins and the 2D red pen: findings in one region become one mark with a count (in progress).
-- Pack screen: no fixture fallback (`SAMPLE_FINDINGS`, `SAMPLE_MISSING`) on a live project, which shows an empty state instead. Missing items go to their fit-engine slot, not one hard-coded spot.
-- Wording: "can't lie" and "zero hallucination" become "every claim traces to its source" (PLAN.md, PRODUCT_OVERVIEW.md, UI copy).
-- Lock the demo story (below).
+**Inputs for the demo:** Esko's carton PDF is the finished artwork; the content sheet is the approved product information; `rulebooks/Dancing_Fish_US_Label_Rulebook.docx` (our own company rulebook, 21 rules, built by `backend/scripts/build_rulebook.py`) is the user-supplied rulebook. Its expected verdicts are in `backend/tests/fixtures/rulebook_key.yaml` (12 fail, 3 pass, 5 review, 1 not applied).
 
-**19 Oct — Problem 1 fit**
-- Questions as planned in PLAN.md, Smart Questions: a window of 10, 3 slots for design, brand basics (target buyer, how the pack should feel, deadline, print method) from `markets/company/`, and waiting or unanswered questions sent to the brief. Tests: the Phase 3 list.
-- Every finding feeds the brief: each resolved finding becomes one line in Keep / Change / Add / Remove, and each open one becomes a line in Open questions. Test: no finding on the samples is missing from the brief.
-- Conflict answer options use the code template ("Keep: X. Remove: Y"), never a vague AI label like "Keep Certified Vegan claim".
-- New-product mode (PLAN.md, Smart Questions, "Two modes"). Tests: `test_project_mode` (sheet only gives new product; sheet + dieline gives redesign; a pack photo gives redesign); `test_question_source_wording` (no "Printed" for a value that is only on the sheet); integration `test_sheet_only` (the Excel alone with recorded AI gives facts, the math conflicts, brand-basics questions that ask for things, a brief with "Must include" and no "Keep" lines); frontend: with no dieline, Pack, 3D and the markup screen show the empty state and no sample pins.
-- UI: the 5 steps stay the main path. Rename Markup to "What to change on the old pack" and move it and the 3D view under "More tools". Each step ends with one next button ("Next: answer 3 questions").
-- Facts table: a small "read by AI · checked by code" line per fact, and "AI-suggested · quote not found" when the check failed.
-- **Claims** (UI.md 6.7, US only): each claim word in the pack copy and the sheet is underlined red (not allowed), amber (needs proof or a condition) or green (fine). Hover shows the rule, the reason and safer wording to discuss with legal. Verdicts come from `markets/us/claims.yaml` plus the rule engine (code). AI only judges meaning with a rule citation, and a verdict citing no rule is dropped. A person's keep or remove decision is logged and feeds the brief's "Allowed claims" section. Tests: No Added Sugar with honey is red; Certified Vegan with honey is red; GMO free is amber; USDA Organic is amber without a certificate on file; every verdict carries a rule ID; the brief's claims section matches the decisions.
-- **Rules map** (UI.md 6.6, React Flow, US only, no market fade): Product facts → Rules → Required pack items, built from `project.facts`, `project.rules` and `project.requirements`. Node colour plus an icon and a word for each state. Clicking a rule opens its text, source link, dates and why it applies here. Answering a question turns the affected nodes green. Tests: every requirement node links to at least one rule and one fact; states match the requirements; nodes have accessible names.
+**Gate:** as below, but tags are `p2-phase-N` so they never clash with the Problem 1 numbering.
 
-**20 Oct — prove it isn't hard-coded, then ship**
-- Trimmed Phase 8: changed copies of the samples (honey % changed, address removed, allergen deleted, net quantity changed, a "100%" claim added). Each run on recorded AI is caught. The result "caught X of Y" with every miss and its reason goes on a minimal Trust screen.
-- **Trust** (UI.md 6.8, PLAN.md section 9): cards for evidence coverage (% of facts with a checked quote), AI-suggested still open, conflicts resolved by a person, and the self-test score. A "Run self-test" button shows planted problems as Caught or Missed, with the reason for each miss. Below that, the change log and the rules used (clause, link, approved or not).
-- The Trust screen also has "AI was wrong, code caught it" (quotes downgraded, made-up fact IDs rejected, sentences the audit blocked) and "What we can't catch yet": a wrong sentence with no number, unit or claim word in it; a fact the AI never extracted; artwork text hidden in an image the vision model misread.
-- Show a clear UI message and a retry button when the AI provider is rate-limited (the client already retries and falls back between models).
-- Hand the files to someone non-technical and watch for 10 minutes without helping. Fix every place they get stuck, and remove jargon.
-- Phase 9 ship: README in a few steps, sample files included, repo under 50 MB, a hosted link, and a fresh-clone test.
+**Cut:** the brief writer and Brief screen (code kept, off the routes), design and brand-basics questions, new-product mode, the Claims screen (claims become findings), the React Flow Rules map (replaced by the Rules screen in P2 Phase 3), shopper lenses, Time Machine, the bake-off, scan and AR.
 
-**21 Oct — the video and the write-up**
-- Record the 4-minute story: the problem in Esko's own words (20 s) → drop the files, the hidden EU table caught (30 s) → honey 9% vs 1% with the source crop, and 480 g vs 16.9 oz *not* flagged (50 s) → ranked questions, answer one and watch the ripple, a logo question visible (50 s) → brief: type a wrong number, the violet underline locks Approve, fix it, approve (50 s) → export and checklist, 3D in under 15 s (25 s) → one-line close that names the limits (15 s).
-- Write the voiceover, cut out loading waits, zoom in on what matters. Simplify the architecture diagram for judges.
+### P2 Phase 0 — hide Problem 1 (20 Oct) · lead
+- Brief, Rules map, Claims and Trust off the routes and the rail; hidden URLs show "Page not found". Design and brand-basics questions filtered out of the Questions screen and the rail count. No mode chip; the health ring reads "Required items: X% met".
+- Tests: `App.test`, `TopBar.test`, `Questions.test` (design questions hidden); e2e unchanged and green.
+- Done when: no screen or label talks about a brief.
 
-**22 Oct — buffer.** Submit by afternoon.
+### P2 Phase 1 — verdicts (20 Oct) · `backend-engine`
+- `Finding` model: verdict (fail / review / pass), kind, title, why it matters, rule ID + clause + link, evidence (artwork page/panel/bbox in mm, sheet cell, rulebook quote), expected vs found, the code's proof ("15 g ÷ 78 g = 19.2%, printed 2.2%"), basis ("checked by code" / "AI judgement").
+- Triage is code, never AI. **Fail** = rule citation + code-checked evidence + a deterministic check (math, value mismatch, required item missing). **Needs review** = relies on AI meaning, an AI-suggested fact, a claim needing proof, or a rule marked for a person. **Pass** = required item present and matching, with where it was found.
+- Built from what exists: requirements, conflicts, math findings, rule findings, fact states. `GET /api/checks` returns counts + findings; also in the project payload. File roles: artwork / approved information / rulebook.
+- Stop generating design and brand-basics questions in checker mode (a pack setting, not an `if` in code).
+- Tests: each triage rule (unit); every answer-key item maps to exactly one finding with the expected verdict; `flag: false` items never produce a Fail; every Fail has a rule ID and code-checked evidence; no finding without evidence; market-leak check green.
 
-**Campus round prep (10 min demo + 5 min Q&A):** "What if the AI misses a fact?" · "How do you add a new country?" (show `markets/in/`) · "Does it work on other files?" (the changed copies) · "Why Gemini?" · sources for the 45% recall and 33% budget figures.
+### P2 Phase 2 — Checks screen and the new main path (20–21 Oct) · `ui-builder`
+- Rail: 1 Files → 2 What we read → 3 Checks → 4 Marked-up artwork → 5 Report; More tools: 3D pack.
+- Checks: grouped Fail / Needs review / Pass with counts (icon + word, never colour alone). Each card: why it matters, rule clause + link, evidence crops side by side, expected vs found, the code's proof, a link to the mark on the artwork.
+- Needs review queue replaces Questions: "It's fine" / "It's a problem" / "Ask someone", with a name; every decision is logged.
+- Top bar: "Not ready to print: N fail · M review" or "Ready to print".
+- Tests: card content, filters, a review decision moves and logs, accessible names; `Live.test` and e2e moved to the new flow.
+
+### P2 Phase 3 — rulebook upload (21 Oct) · `ai-pipeline`, `backend-engine`, `ui-builder`
+- Upload a rulebook (Word, PDF, text). AI reads it into rule records (existing schema) with a quote each; **code quote-checks every rule against the document**; an unverified rule is never applied as a Fail, it goes to Needs review. Proposed rules never produce findings.
+- Rule types: required statement present, item on a panel, claim conditions, banned wording, value format, minimum text size (font sizes are already read), hidden content.
+- Rules screen: each rule, its quote, verified or not, the checks that used it.
+- Known issue: the PDF reader splits long rules into line pieces (5 rules span more than two), so prefer the .docx in the demo or merge paragraphs in the reader.
+- Tests: recorded AI fixture; a made-up rule is never applied; the sample rulebook gives `rulebook_key.yaml`; no market logic in engine code.
+
+### P2 Phase 4 — "Not flagged, and why" plus X-ray (21 Oct)
+- Cleared list with the code's proof: 480 g = 16.93 oz, UPC check digit, guide text ignored. Hidden content becomes a finding (a Fail under rulebook DF-19), never a fact.
+- Tests: every `flag: false` answer-key item is in the cleared list with a proof.
+
+### P2 Phase 5 — report and Ask (21 Oct) · `ui-builder`
+- Print approval report: verdict line, every Fail and review item with rule and crop, the marked-up artwork (A3 poster), decisions log, rules used, sign-off line. Ask accepts a finding as context.
+- Tests: the report holds every Fail and review finding and nothing without evidence; e2e opens the print view.
+
+### P2 Phase 6 — India switch (stretch)
+- The same artwork against `markets/in` (FSSAI): different verdicts, zero code changes. Tests: only India rules cited; no market leak.
+
+### P2 Phase 7 — Trust and self-test (stretch, trimmed)
+- 3–5 changed copies of the artwork plus a clean one: "caught X of Y, 0 false alarms", every miss with its reason. Trust cards: evidence coverage, AI output rejected by code, decisions by a person, self-test score, what we can't catch yet.
+
+### P2 Phase 8 — harden and ship (22 Oct morning)
+- Demo snapshot with checks (zero AI calls); rate-limit message with retry; no "brief" wording anywhere; README for Problem 2 (including `npm install --prefix frontend`); fresh-clone test, repo under 50 MB, hosted link; a 10-minute test with a non-technical person; e2e on the final flow.
+
+### P2 Phase 9 — video and submit (22 Oct afternoon)
+- 4 minutes: problem (20 s) → drop artwork, sheet, rulebook (20 s) → "Not ready: X fail, Y review" (20 s) → a math Fail with proof (40 s) → not flagged and why (30 s) → hidden-table X-ray (20 s) → a rulebook rule quote-checked, a made-up one rejected (30 s) → a person decides a review item (20 s) → switch to India (20 s) → report (20 s) → limits (15 s).
+
+**Campus round prep:** "What if the AI misses something?" · "How do you add a country?" (`markets/in/`) · "Does it work on other files?" (the changed copies) · "How do you avoid false alarms?" (the cleared list) · "Why Gemini?"
 
 ---
 

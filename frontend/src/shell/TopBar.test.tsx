@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { mockProject } from '../state/project'
 import { renderWithProject } from '../test/render'
 import type { Project } from '../types/project'
-import { TopBar } from './TopBar'
+import { ModeChip, TopBar } from './TopBar'
 
 const project = (): Project => structuredClone(mockProject)
 
@@ -17,21 +17,28 @@ describe('TopBar', () => {
     expect(screen.queryByLabelText('Launch')).toBeNull()
   })
 
-  it('shows the mode the backend chose, with its reason as the tooltip', () => {
+  it('shows no mode chip and no brief wording: the checker always has finished artwork', () => {
+    renderWithProject(<TopBar />)
+    expect(screen.queryByLabelText(/^Mode:/)).toBeNull()
+    expect(screen.getByRole('img', { name: /^Required items: \d+% met, \d+ open$/ })).toBeInTheDocument()
+    expect(screen.queryByText(/brief/i)).toBeNull()
+  })
+
+  it('ModeChip (kept for later) shows the mode the backend chose, with its reason as the tooltip', () => {
     const p = project()
     p.mode = 'new_product'
     p.modeReason = 'Only a content sheet among the inputs'
-    renderWithProject(<TopBar />, '/', p)
+    renderWithProject(<ModeChip project={p} />, '/', p)
     const chip = screen.getByLabelText(/^Mode: New product/)
     expect(chip).toHaveTextContent('New product')
     expect(chip).toHaveAttribute('title', 'Only a content sheet among the inputs')
   })
 
-  it('derives the mode when the backend does not say: a dieline means redesign, none means new product', () => {
+  it('ModeChip derives the mode when the backend does not say: a dieline means redesign, none means new product', () => {
     const p = project()
     delete p.mode
     delete p.modeReason
-    const { unmount } = renderWithProject(<TopBar />, '/', p)
+    const { unmount } = renderWithProject(<ModeChip project={p} />, '/', p)
     expect(screen.getByLabelText(/^Mode: Redesign/)).toHaveAttribute('title', 'A pack file is among the inputs')
     unmount()
 
@@ -39,7 +46,7 @@ describe('TopBar', () => {
     delete sheetOnly.mode
     delete sheetOnly.modeReason
     sheetOnly.files = sheetOnly.files.filter((f) => f.type !== 'pdf')
-    renderWithProject(<TopBar />, '/', sheetOnly)
+    renderWithProject(<ModeChip project={sheetOnly} />, '/', sheetOnly)
     const chip = screen.getByLabelText(/^Mode: New product/)
     expect(chip).toHaveAttribute('title', 'No pack file among the inputs')
   })

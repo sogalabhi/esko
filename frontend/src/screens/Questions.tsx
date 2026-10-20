@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router'
 import { QuestionCard } from '../components/QuestionCard'
 import { Toast } from '../components/Toast'
-import { rankQuestions } from '../lib/questions'
+import { rankQuestions, reviewQuestions } from '../lib/questions'
 import { useProject } from '../state/project'
 import type { Owner, Question, QuestionStatus, Requirement } from '../types/project'
 
@@ -28,17 +28,18 @@ interface Undo {
 
 export function Questions() {
   const { project, answers, answerError, answerQuestion, skipQuestion, undoAnswer } = useProject()
-  const ordered = useMemo(() => rankQuestions(project.questions), [project.questions])
+  const questions = useMemo(() => reviewQuestions(project.questions), [project.questions])
+  const ordered = useMemo(() => rankQuestions(questions), [questions])
   const refs = useRef(new Map<string, HTMLElement>())
   const { hash } = useLocation()
   // A link like /questions#q-address (from the Rules map) lands on that card.
-  const linked = hash.length > 1 && project.questions.some((q) => q.id === hash.slice(1)) ? hash.slice(1) : null
+  const linked = hash.length > 1 && questions.some((q) => q.id === hash.slice(1)) ? hash.slice(1) : null
   const [current, setCurrent] = useState<string | null>(linked)
   const focusId = useRef<string | null>(linked)
   const [toast, setToast] = useState<Undo | null>(null)
 
   const pending = ordered.filter((q) => q.status !== 'answered')
-  const answered = project.questions.filter((q) => q.status === 'answered')
+  const answered = questions.filter((q) => q.status === 'answered')
   const unlocked = answered.reduce((n, q) => n + q.unlocks, 0)
   const active = pending.find((q) => q.id === current) ?? pending[0]
 
@@ -121,7 +122,7 @@ export function Questions() {
 
   const affected = useMemo(() => {
     const byReq = new Map<string, { req: Requirement; qs: Question[] }>()
-    for (const q of project.questions) {
+    for (const q of questions) {
       for (const r of linkedRequirements(q, project.requirements)) {
         const e = byReq.get(r.id) ?? { req: r, qs: [] }
         e.qs.push(q)
@@ -129,9 +130,9 @@ export function Questions() {
       }
     }
     return [...byReq.values()]
-  }, [project.questions, project.requirements])
+  }, [questions, project.requirements])
 
-  if (project.questions.length === 0) {
+  if (questions.length === 0) {
     return (
       <section className="mx-auto mt-16 max-w-md rounded-card border border-border bg-surface p-8 text-center">
         <CircleCheck size={24} aria-hidden="true" className="mx-auto text-ok" />
@@ -148,7 +149,7 @@ export function Questions() {
           Questions
         </h1>
         <p aria-live="polite" data-testid="questions-progress" className="mt-1 text-[14px] text-ink-2">
-          <span className="font-mono">{answered.length}</span> of <span className="font-mono">{project.questions.length}</span> answered ·{' '}
+          <span className="font-mono">{answered.length}</span> of <span className="font-mono">{questions.length}</span> answered ·{' '}
           <span className="font-mono">{unlocked}</span> requirement{unlocked === 1 ? '' : 's'} unlocked
         </p>
         <p className="mt-1 text-[12px] text-ink-2">

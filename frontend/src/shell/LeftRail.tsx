@@ -1,5 +1,6 @@
-import { Box, ChevronsLeft, ChevronsRight, FileText, FolderOpen, ListChecks, Network, PenLine, ShieldCheck, Tag, CircleQuestionMark, type LucideIcon } from 'lucide-react'
+import { Box, ChevronsLeft, ChevronsRight, FolderOpen, ListChecks, PenLine, CircleQuestionMark, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
+import { reviewQuestions } from '../lib/questions'
 import { usePersistedFlag } from '../lib/usePersistedFlag'
 import { useProject } from '../state/project'
 
@@ -59,7 +60,8 @@ export function LeftRail() {
   const { project } = useProject()
   const [collapsed, toggleCollapsed] = usePersistedFlag('bf.rail.collapsed')
   const openConflicts = project.conflicts.filter((c) => !c.resolution).length
-  const openQuestions = project.questions.filter((q) => q.status !== 'answered').length
+  const shownQuestions = reviewQuestions(project.questions)
+  const openQuestions = shownQuestions.filter((q) => q.status !== 'answered').length
   const filesDone = project.files.every((f) => f.status === 'done')
   const filesFailed = project.files.filter((f) => f.status === 'error').length
   const evidence: Pick<Item, 'dot' | 'word'> =
@@ -71,7 +73,7 @@ export function LeftRail() {
           ? { dot: 'ok', word: 'all files read' }
           : { dot: 'warn', word: 'reading' }
   const questions: Pick<Item, 'dot' | 'word'> =
-    project.questions.length === 0
+    shownQuestions.length === 0
       ? { dot: 'idle', word: 'no questions' }
       : openQuestions
         ? { dot: 'warn', word: 'to answer' }
@@ -82,14 +84,8 @@ export function LeftRail() {
     { to: '/facts', label: 'Facts', Icon: ListChecks, step: 2, count: project.facts.length, dot: openConflicts ? 'bad' : 'ok' },
     { to: '/questions', label: 'Questions', Icon: CircleQuestionMark, step: 3, count: openQuestions, ...questions },
     { to: '/pack', label: 'Pack', Icon: Box, step: 4, count: project.pack.panels.length || 5, dot: openConflicts ? 'warn' : 'ok' },
-    { to: '/brief', label: 'Brief', Icon: FileText, step: 5, dot: project.brief.approvedBy ? 'ok' : 'idle' },
   ]
-  const more: Item[] = [
-    { to: '/markup', label: 'Markup', Icon: PenLine },
-    { to: '/rules', label: 'Rules map', Icon: Network },
-    { to: '/claims', label: 'Claims', Icon: Tag },
-    { to: '/trust', label: 'Trust', Icon: ShieldCheck },
-  ]
+  const more: Item[] = [{ to: '/markup', label: 'Markup', Icon: PenLine }]
 
   return (
     <nav

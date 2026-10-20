@@ -41,24 +41,38 @@ describe('App', () => {
     healthy()
     renderAt('/')
     expect(screen.getByText('Granola — Berry Crunch · 480 g')).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'United States' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('img', { name: /Brief health: \d+% proven, \d+ open/ })).toBeInTheDocument()
+    expect(screen.getByLabelText('Market: United States')).toHaveTextContent('United States')
+    expect(screen.getByRole('img', { name: /Required items: \d+% met, \d+ open/ })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Facts', level: 1 })).toBeInTheDocument()
     const nav = screen.getByRole('navigation', { name: 'Steps' })
-    for (const l of ['Evidence', 'Facts', 'Questions', 'Pack', 'Brief', 'Rules map', 'Claims', 'Trust']) {
+    for (const l of ['Evidence', 'Facts', 'Questions', 'Pack', 'Markup']) {
       expect(within(nav).getAllByText(l).length).toBeGreaterThan(0)
     }
     await screen.findAllByText('Backend OK')
   })
 
-  it('shows an empty state on screens not built yet, and Reset demo restores state', async () => {
+  it('hides the Problem 1 brief and the unbuilt screens: not in the rail, and their links lead nowhere', async () => {
+    healthy()
+    renderAt('/facts')
+    const nav = screen.getByRole('navigation', { name: 'Steps' })
+    for (const l of [/Brief/, /Rules map/, /Claims/, /Trust/]) {
+      expect(within(nav).queryByRole('link', { name: l })).toBeNull()
+    }
+    for (const route of ['/brief', '/rules', '/claims', '/trust']) {
+      const { unmount } = renderAt(route)
+      expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument()
+      expect(screen.queryByText(/Built in Phase/)).toBeNull()
+      unmount()
+    }
+  })
+
+  it('Reset demo restores state, and the rail still reaches the 3D pack', async () => {
     healthy()
     renderAt('/facts')
     await userEvent.click(screen.getAllByRole('button', { name: 'Use left' })[0])
     expect(screen.getByText(/· 14 open/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
-    await userEvent.click(screen.getByRole('link', { name: /Rules map/ }))
-    expect(screen.getByText('Built in Phase 7.')).toBeInTheDocument()
+    expect(screen.queryByText(/· 14 open/)).toBeNull()
     await userEvent.click(screen.getByRole('link', { name: /Pack/ }))
     expect(screen.getByRole('heading', { level: 1, name: /Pack \(3D View\)/i })).toBeInTheDocument()
   })

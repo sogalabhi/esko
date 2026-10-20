@@ -48,7 +48,7 @@ export function HealthRing({ percent, open }: { percent: number; open: number })
   const r = 14
   const c = 2 * Math.PI * r
   return (
-    <span className="flex items-center gap-2 text-[13px]" aria-label={`Brief health: ${percent}% proven, ${open} open`} role="img">
+    <span className="flex items-center gap-2 text-[13px]" aria-label={`Required items: ${percent}% met, ${open} open`} role="img">
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
         <circle cx="17" cy="17" r={r} fill="none" stroke="var(--border)" strokeWidth="4" />
         <circle
@@ -63,7 +63,7 @@ export function HealthRing({ percent, open }: { percent: number; open: number })
         />
       </svg>
       <span className="whitespace-nowrap">
-        <span className="font-mono font-semibold">{percent}%</span> proven · <span className="font-mono">{open}</span> open
+        <span className="font-mono font-semibold">{percent}%</span> met · <span className="font-mono">{open}</span> open
       </span>
     </span>
   )
@@ -98,7 +98,7 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
     <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <p className="min-w-0 truncate text-[16px] font-semibold">{product}</p>
 
-      <ModeChip project={project} />
+      {/* No mode chip: the checker always has finished artwork (ModeChip stays for the brief, if it returns). */}
 
       {/* One market for now: the switch and the launch date return when the other market packs are finished. */}
       <span className="shrink-0 rounded-chip border border-border px-2.5 py-1 text-[13px] font-medium text-ink" aria-label={`Market: ${marketLabel}`}>
