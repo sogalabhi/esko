@@ -50,7 +50,9 @@ def test_unavailable_then_save_then_load(client, monkeypatch):
     r = client.post("/api/demo/load")
     assert r.status_code == 200
     body = r.json()
-    assert len(body["facts"]) > 50 and {f["type"] for f in body["files"]} == {"pdf", "sheet"}
+    assert len(body["facts"]) > 50
+    assert {f["role"] for f in body["files"]} == {"artwork", "approved_info", "rulebook"}  # the demo includes the rulebook
+    assert body["findings"] and body["cleared"] and len(body["rulebook"]["rules"]) == 21
     assert store.get_project().model_dump_json(by_alias=True) == before
     # uploads came back: previews work
     fid = body["files"][0]["id"]

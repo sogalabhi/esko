@@ -22,6 +22,8 @@ class FakeAdapter:
     def generate(self, request: AIRequest) -> str:
         self.calls.append(request)
         queue = self._responses.get(request.task)
+        if not queue:  # a fixture recorded per input type, e.g. extract_rulebook_docx for task extract_rulebook
+            queue = next((v for k, v in sorted(self._responses.items()) if k.startswith(f"{request.task}_")), None)
         if not queue:
             raise KeyError(f"No fake response for task {request.task!r}")
         i = self._index.get(request.task, 0)
