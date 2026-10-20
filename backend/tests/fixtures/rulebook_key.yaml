@@ -1,0 +1,149 @@
+# Expected verdicts for the demo company rulebook (rulebooks/Dancing_Fish_US_Label_Rulebook.*) on Esko's sample
+# carton and content sheet. Written before any rulebook code, like answer_key.yaml: it is the target for Phase 3.
+#
+# verdict:
+#   fail        the artwork breaks the rule, proven by code (quote check, math, geometry, text present/absent)
+#   pass        the artwork meets the rule; evidence says where
+#   review      the rule needs evidence the artwork cannot show, or an AI judgement; a person decides
+#   not_applied the rule is not in force (Proposed), so it never produces a finding
+# answer_key: ids in answer_key.yaml that the same evidence already proves (the rule adds the company's citation).
+# Quotes are as the readers return them (python -m app.readers.dump), font sizes in pt as read from the PDF.
+
+rulebook: DF-QA-LBL-003
+version: "3.2"
+expected_counts: {fail: 12, pass: 3, review: 5, not_applied: 1}
+
+rules:
+  - id: DF-01
+    verdict: review
+    reason: The content sheet status is "Draft / In Review", not Approved; Regulatory must confirm it
+    evidence:
+      - {file: sheet, cell: E3, quote: "Draft / In Review"}
+
+  - id: DF-02
+    verdict: fail
+    reason: Artwork copy differs from the content sheet (honey %, ingredient list, nutrition values)
+    answer_key: [honey-percent, ingredient-list-diff, sunflower-seeds-twice, total-carbohydrate, sodium]
+
+  - id: DF-03
+    verdict: pass
+    reason: '"GRANOLA" is on the front panel at 71.3 pt, the largest text there (next largest 18.7 pt)'
+    evidence:
+      - {file: carton, panel: Front, quote: "GRANOLA", font_pt: 71.3}
+
+  - id: DF-04
+    verdict: fail
+    reason: Net quantity is only "480g" on the back panel; not on the front, no oz, no space, no "NET WT"
+    answer_key: [net-quantity-format]
+
+  - id: DF-05
+    verdict: fail
+    reason: '"PRODUCED BY DANCING FISH GRANOLA CO." has no street, city, state or ZIP, and not the required wording'
+    answer_key: [maker-address-missing]
+
+  - id: DF-06
+    verdict: fail
+    reason: No phone number or website anywhere on the carton (proof of absence over all visible text)
+    evidence: []
+
+  - id: DF-07
+    verdict: pass
+    reason: Storage instructions are on the back panel
+    evidence:
+      - {file: carton, panel: Back, quote: "Store in a cool, dry place"}
+
+  - id: DF-08
+    verdict: review
+    reason: >-
+      The copy sends the shopper to the base of the pack; the base flaps carry no artwork text, but a clear
+      40 x 15 mm area cannot be proven from text alone (artwork images may sit there)
+    evidence:
+      - {file: carton, panel: Back, quote: "see base of pack"}
+
+  - id: DF-09
+    verdict: pass
+    reason: Nutrition Facts on the left side panel, titled, ending with the % Daily Value footnote
+    evidence:
+      - {file: carton, panel: Left, quote: "Nutrition Facts"}
+      - {file: carton, panel: Left, quote: "The % Daily Value (DV) tells you"}
+
+  - id: DF-10
+    verdict: fail
+    reason: Every printed %DV and the calories disagree with the declared amounts
+    answer_key: [dv-total-fat, dv-saturated-fat, dv-cholesterol, dv-sodium, dv-total-carbohydrate, dv-dietary-fiber,
+                 dv-vitamin-d, dv-calcium, dv-iron, dv-potassium, calories-math]
+
+  - id: DF-11
+    verdict: fail
+    reason: EU elements on a US pack (kJ energy, Reference Intake icons, EU allergen wording)
+    answer_key: [eu-reference-intake-icons, eu-gluten-wording]
+    evidence:
+      - {file: carton, panel: Back, quote: "197kJ 4%"}
+
+  - id: DF-12
+    verdict: fail
+    reason: Almonds, pecans and walnuts are ingredients but appear only as "May Contain"; no "Contains:" statement
+    answer_key: [tree-nut-may-contain]
+
+  - id: DF-13
+    verdict: fail
+    reason: '"NO ADDED SUGAR" while honey, coconut sugar and cane sugar are ingredients'
+    answer_key: [no-added-sugar-claim, added-sugars-zero]
+    evidence:
+      - {file: carton, panel: Top flap (Back), quote: "NO ADDED SUGAR"}
+
+  - id: DF-14
+    verdict: fail
+    reason: Vegan claim with honey in the recipe; "vegetarians (vegan)" uses the words as the same thing
+    answer_key: [vegan-meaning]
+    evidence:
+      - {file: carton, panel: Back, quote: "Suitable for Vegans"}
+      - {file: carton, panel: Back, quote: "suitable for vegetarians (vegan)"}
+
+  - id: DF-15
+    verdict: review
+    reason: Organic wording is used; the organic certificate is evidence a person must confirm is on file
+    evidence:
+      - {file: carton, panel: Back, quote: "Organic Wholegrain Oat Flakes (79%)"}
+      - {file: carton, panel: Back, quote: "certified organic"}
+
+  - id: DF-16
+    verdict: fail
+    reason: '"GMO free" is banned wording in this rulebook'
+    evidence:
+      - {file: carton, panel: Top flap (Back), quote: "GMO FREE"}
+      - {file: carton, panel: Back, quote: "GMO free"}
+
+  - id: DF-17
+    verdict: review
+    reason: '"HIGH-GRAIN" is a claim built on "high"; Regulatory must approve it'
+    evidence:
+      - {file: carton, panel: Top flap (Front), quote: "HIGH-GRAIN"}
+
+  - id: DF-18
+    verdict: fail
+    reason: The storage instructions are set at 5.8 pt; ingredients (6.0 pt) and allergen statement (6.0 pt) pass
+    evidence:
+      - {file: carton, panel: Back, quote: "Store in a cool, dry place", font_pt: 5.8}
+    passes:
+      - {file: carton, panel: Back, quote: "INGREDIENTS:", font_pt: 6.0}
+      - {file: carton, panel: Back, quote: "ALLERGEN INFORMATION:", font_pt: 6.0}
+
+  - id: DF-19
+    verdict: fail
+    reason: An EU nutrition table (10 lines) is covered by an opaque fill on the left panel instead of deleted
+    answer_key: [hidden-eu-table]
+    evidence:
+      - {file: carton, panel: Left, quote: "Typical Values per 100g", status: hidden}
+
+  - id: DF-20
+    verdict: review
+    reason: >-
+      The content sheet lists a How2Recycle mark; on the carton it can only be one of the 3 images, which are not
+      text, so the vision step or a person must confirm it
+    evidence:
+      - {file: sheet, cell: B29, quote: "How2Recycle"}
+
+  - id: DF-21
+    verdict: not_applied
+    reason: Status Proposed; must never produce a finding

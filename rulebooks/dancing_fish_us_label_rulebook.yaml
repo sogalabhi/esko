@@ -1,0 +1,230 @@
+# Source of the demo company rulebook. Not a market pack: this is a user-supplied document, the input
+# Problem 2 calls "an internal company document that explains how the company reads those regulations".
+# Edit here, then run `uv run --directory backend python scripts/build_rulebook.py` to rebuild the .docx and .pdf.
+# Expected verdicts on Esko's sample carton live in backend/tests/fixtures/rulebook_key.yaml (never in this file).
+
+title: US Label and Artwork Rulebook
+company: Dancing Fish Granola Co.
+document_no: DF-QA-LBL-003
+version: "3.2"
+effective: 1 September 2026
+owner: Regulatory and Quality
+approved_by: Head of Regulatory Affairs
+
+intro:
+  - >-
+    This rulebook explains how Dancing Fish reads the US labelling regulations for retail packs, and adds our own
+    house rules on top. Artwork must pass every rule marked In force before it is released to print. Where our
+    rule is stricter than the law, our rule applies.
+  - >-
+    Each rule has an ID, a status, the rule itself, and a short note on why it exists. A rule marked Proposed is
+    guidance only and must not block a release.
+
+definitions:
+  - term: Front panel
+    meaning: The principal display panel, the panel a shopper sees first on the shelf.
+  - term: Mandatory text
+    meaning: >-
+      The statement of identity, net quantity, ingredient list, allergen statement, name and place of business,
+      storage instructions and the Nutrition Facts panel.
+  - term: Content sheet
+    meaning: The approved product information for the SKU, kept by Regulatory. Artwork copy comes from it.
+  - term: Release blocker
+    meaning: A rule failure that stops the artwork going to print until it is fixed.
+  - term: Needs review
+    meaning: >-
+      A rule that needs evidence the artwork cannot show, such as a certificate or a test report. A named person
+      decides and the decision is recorded.
+
+sections:
+  - title: Approved information
+    rules:
+      - id: DF-01
+        title: Approved content sheet
+        status: In force
+        rule: >-
+          Artwork may only be signed off against a content sheet whose status is Approved. If the content sheet is
+          still Draft or In Review, Regulatory must confirm the sheet before the artwork can be released.
+        why: Copy checked against an unapproved sheet can be wrong in a way no check will catch.
+      - id: DF-02
+        title: Copy matches the content sheet
+        status: In force
+        rule: >-
+          All copy on the artwork must match the approved content sheet word for word, including ingredient order,
+          ingredient percentages, allergen wording, claims and every nutrition value. Any difference is a release
+          blocker until the artwork or the content sheet is corrected.
+        why: The content sheet is the single source of truth. A silent difference means one of the two is wrong.
+
+  - title: Front panel
+    rules:
+      - id: DF-03
+        title: Statement of identity
+        status: In force
+        rule: >-
+          The common name of the food must appear on the front panel and must be the largest text on that panel.
+        why: Our reading of 21 CFR 101.3, which asks for the identity to be a principal feature of the front panel.
+      - id: DF-04
+        title: Net quantity
+        status: In force
+        rule: >-
+          The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US
+          units, written as "NET WT 480 g (16.9 oz)" with a space between each number and its unit.
+        why: >-
+          21 CFR 101.7 requires the net quantity on the principal display panel in both systems. The wording and
+          the spacing are our house style.
+
+  - title: Back and side panels
+    rules:
+      - id: DF-05
+        title: Name and place of business
+        status: In force
+        rule: >-
+          The back panel must state the manufacturer, packer or distributor, introduced by "Manufactured by",
+          "Packed by" or "Distributed by", followed by the street address, city, state and ZIP code.
+        why: >-
+          21 CFR 101.5 allows the street address to be left out in some cases. We always print it, so customers
+          and inspectors can reach us.
+      - id: DF-06
+        title: Consumer care line
+        status: In force
+        rule: >-
+          Every pack must carry a consumer care line on the back or a side panel: a US phone number or a website
+          address.
+        why: House rule. Complaints and allergy questions must reach us directly.
+      - id: DF-07
+        title: Storage instructions
+        status: In force
+        rule: Storage instructions must appear on the back panel.
+        why: Granola goes stale and soft when it is not stored dry. The instruction protects quality claims.
+      - id: DF-08
+        title: Date and lot code area
+        status: In force
+        rule: >-
+          When the copy sends the shopper to the base of the pack for the best-before date, the base panel must
+          keep a clear, unprinted area of at least 40 mm by 15 mm for the date and lot code.
+        why: The date and lot code are printed on the line. Artwork under the coder makes them unreadable.
+      - id: DF-09
+        title: Nutrition Facts panel
+        status: In force
+        rule: >-
+          The Nutrition Facts panel must sit on the back or a side panel, carry the title "Nutrition Facts", and
+          end with the % Daily Value footnote.
+        why: Our reading of 21 CFR 101.9 for a carton of this size.
+      - id: DF-10
+        title: Daily values and calories
+        status: In force
+        rule: >-
+          Every % Daily Value must be calculated from the declared amount per serving and the FDA daily value for
+          that nutrient, and calories must agree with the declared fat, carbohydrate and protein.
+        why: >-
+          21 CFR 101.9 sets the daily values and the rounding rules. A wrong percentage is a labelling error even
+          when the gram amount is right.
+      - id: DF-11
+        title: US English and US formats
+        status: In force
+        rule: >-
+          US packs use US English and US formats only: no EU nutrition tables, no kilojoule energy values, no
+          Reference Intake icons and no UK spellings such as "Fibre" or "Flavouring".
+        why: Artwork adapted from a European pack often keeps European elements that confuse US shoppers.
+
+  - title: Ingredients and allergens
+    rules:
+      - id: DF-12
+        title: Allergen statement
+        status: In force
+        rule: >-
+          Major food allergens that are ingredients must be declared in a "Contains:" statement placed directly
+          after the ingredient list. "May contain" wording is only for cross-contact and must never name an
+          allergen that is an ingredient in the recipe.
+        why: >-
+          Section 403(w) of the FD&C Act (the Food Allergen Labeling and Consumer Protection Act), with sesame added
+          by the FASTER Act. A "may contain" warning for a real ingredient understates the risk.
+
+  - title: Claims
+    rules:
+      - id: DF-13
+        title: Sugar claims
+        status: In force
+        rule: >-
+          "No Added Sugar", "No Sugar Added" and "Without Added Sugar" may only be used when no sugar or
+          sugar-containing ingredient is added. Honey, coconut sugar, cane sugar, syrups and fruit juice
+          concentrates all count as added sugars.
+        why: Our reading of 21 CFR 101.60(c)(2).
+      - id: DF-14
+        title: Vegan and vegetarian
+        status: In force
+        rule: >-
+          "Vegan" may only be used when the recipe contains no animal-derived ingredient and the Certified Vegan
+          certificate is on file. Honey is animal-derived. "Vegetarian" and "vegan" must never be used as if they
+          mean the same thing.
+        why: No US regulation defines vegan, so we follow the Certified Vegan standard (vegan.org).
+      - id: DF-15
+        title: Organic claims
+        status: In force
+        rule: >-
+          "Organic", "certified organic" and the USDA Organic seal may only be used when the current organic
+          certificate for this recipe is on file with Regulatory.
+        why: USDA National Organic Program, 7 CFR Part 205. The certificate is evidence the artwork cannot show.
+      - id: DF-16
+        title: GMO wording
+        status: In force
+        rule: >-
+          The words "GMO free" are not used on any pack. The approved wording is "Non-GMO Project Verified", and
+          only when the verification is on file.
+        why: >-
+          FDA guidance discourages "free" wording for genetic engineering because it is hard to prove. Version 3.1
+          replaced it with verified wording.
+      - id: DF-17
+        title: Claims built on "high"
+        status: In force
+        rule: >-
+          Claims built on the word "high", such as "High Fiber", "High Protein" or "High-Grain", must be approved
+          by Regulatory before use.
+        why: >-
+          "High" is a defined nutrient content claim for some nutrients (21 CFR 101.54(b)). With other words it can
+          still read as one, so a person decides.
+
+  - title: Legibility and the artwork file
+    rules:
+      - id: DF-18
+        title: Minimum text size
+        status: In force
+        rule: Mandatory text must be set at 6 pt or larger.
+        why: >-
+          House rule for readability. It does not replace the 1/16 inch lowercase height minimum in 21 CFR
+          101.2(c), which Regulatory checks on the printed proof.
+      - id: DF-19
+        title: No hidden content
+        status: In force
+        rule: >-
+          Release files must not contain hidden text: no text covered by other artwork, on switched-off layers or
+          outside the trim. Hidden copy must be deleted from the file, not covered.
+        why: >-
+          Hidden copy can print if a layer or a fill moves at the printer. Added after the 2026 reprint of a carton
+          that printed an old nutrition table.
+      - id: DF-20
+        title: Recycling label
+        status: In force
+        rule: The How2Recycle label must appear on the back panel or the base panel.
+        why: Retailer requirement for paperboard cartons.
+
+  - title: Proposed rules
+    rules:
+      - id: DF-21
+        title: Front-of-pack nutrition box
+        status: Proposed
+        rule: >-
+          When FDA finalises its January 2025 proposed rule on front-of-package nutrition information, the front
+          panel will carry a Nutrition Info box showing saturated fat, sodium and added sugars as Low, Med or High.
+        why: Planning only. Do not apply until Regulatory issues version 4 of this rulebook.
+
+change_log:
+  - version: "3.2"
+    date: 1 September 2026
+    change: Added DF-19 (no hidden content) and DF-08 (date and lot code area).
+  - version: "3.1"
+    date: 3 March 2026
+    change: Replaced "GMO free" with verified wording (DF-16). Added DF-06 (consumer care line).
+  - version: "3.0"
+    date: 12 January 2026
+    change: First version for the US range.
