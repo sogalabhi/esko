@@ -1,11 +1,14 @@
 import { BadgeCheck, CircleAlert, CircleOff, RotateCcw, Search, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { api } from '../api/client'
+import { api, type FindingAskResult } from '../api/client'
+import { RuleChip } from '../components/RuleChip'
 import { SourceChip } from '../components/SourceChip'
 import { Skeleton } from '../components/LoadGate'
-import { mockAsk } from '../lib/askMock'
+import { mockAsk, mockAskFinding } from '../lib/askMock'
+import { resolveRule } from '../lib/checks'
+import { KIND_LABELS } from '../lib/findingKinds'
 import { useProject } from '../state/project'
-import type { AskResult } from '../types/project'
+import { VerdictBadge } from '../components/VerdictBadge'
 
 type Phase = 'idle' | 'asking' | 'confirming'
 
@@ -17,10 +20,12 @@ const btn =
  * Answers come from facts only, with source chips; "Confirm as fact" records the answer as a user-sourced fact.
  */
 export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { project, source, applyProject } = useProject()
+  const { project, source, applyProject, ask, openAsk } = useProject()
+  const finding = ask.findingId ? (project.findings.find((f) => f.id === ask.findingId) ?? null) : null
+  const findingId = finding?.id ?? null
   const [question, setQuestion] = useState('')
   const [asked, setAsked] = useState('')
-  const [result, setResult] = useState<AskResult | null>(null)
+  const [result, setResult] = useState<FindingAskResult | null>(null)
   const [phase, setPhase] = useState<Phase>('idle')
   const [error, setError] = useState<string | null>(null)
   const [confirmed, setConfirmed] = useState(false)
@@ -29,7 +34,17 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
 
   useEffect(() => {
     if (open) input.current?.focus()
-  }, [open])
+  }, [open, findingId])
+
+  // A different finding (or none) is a different conversation: start clean.
+  useEffect(() => {
+    setQuestion('')
+    setAsked('')
+    setResult(null)
+    setError(null)
+    setConfirmed(false)
+    setPhase('idle')
+  }, [findingId])
 
   useEffect(() => {
     if (!open) return
@@ -49,7 +64,7 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
     setConfirmed(false)
     setAsked(q)
     try {
-      const r = source === 'api' ? await api.ask(q) : mockAsk(q, project.facts)
+      const r = source === 'api' ? await api.ask(q, findingId ?? undefined) : finding ? mockAskFinding(q, finding, project) : mockAsk(q, project.facts)
       if (r) setResult(r)
       else setError('This backend cannot answer questions yet.')
     } catch (e) {
@@ -64,7 +79,7 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
   }
 
   const confirm = async () => {
-    if (!result || result.refused) return
+    if (!result || result.refused || finding) return
     setPhase('confirming')
     setError(null)
     try {
@@ -85,6 +100,15 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
   }
 
   const facts = result ? result.factIds.map((fid) => project.facts.find((f) => f.id === fid)).filter((f) => !!f) : []
+  const rules = (result?.ruleIds ?? []).map((id) => ({ id, ...resolveRule(id, project) }))
+  // `evidence` holds positions in the finding's own evidence list.
+  const quotes = finding
+    ? (result?.evidence ?? []).flatMap((i) => {
+        const src = finding.evidence[i]
+        return src ? [{ index: i, source: src }] : []
+      })
+    : []
+  const cited = facts.length + rules.length + quotes.length
 
   return (
     <aside
@@ -104,6 +128,19 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
       </header>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        {finding && (
+          <section aria-label="Finding in question" data-ask-finding={finding.id} className="rounded-card border border-border bg-bg p-3 text-[13px]">
+            <p className="text-[12px] text-ink-2">Asking about this finding</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <VerdictBadge verdict={finding.verdict} decision={finding.decision} />
+              <span className="text-[12px] text-ink-2">{KIND_LABELS[finding.kind]}</span>
+            </div>
+            <p className="mt-1 text-[14px] font-medium">{finding.title}</p>
+            <button type="button" onClick={() => openAsk()} className="mt-2 text-[12px] font-medium text-info hover:underline focus-visible:outline-2 focus-visible:outline-info">
+              Ask something general instead
+            </button>
+          </section>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -113,7 +150,9 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
           <label htmlFor={`${id}-q`} className="text-[13px] font-medium">
             Your question
           </label>
-          <p className="text-[12px] text-ink-2">Answers use only the facts, each with its source.</p>
+          <p className="text-[12px] text-ink-2">
+            {finding ? 'Answers use only this finding: its rules, facts and evidence quotes.' : 'Answers use only the facts, each with its source.'}
+          </p>
           <textarea
             id={`${id}-q`}
             ref={input}
@@ -164,7 +203,8 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
               <CircleOff size={16} aria-hidden="true" />
               Not answered
             </p>
-            <p className="mt-1">{result.answer}</p>
+            <p className="mt-1 text-[12px] text-ink-2">Reason</p>
+            <p>{result.answer}</p>
           </section>
         )}
 
@@ -174,9 +214,22 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
               You asked: <span className="text-ink">{asked}</span>
             </p>
             <p className="mt-2 text-[15px]">{result.answer}</p>
-            <div className="mt-3 space-y-1.5">
-              <h3 className="text-[12px] font-semibold uppercase text-ink-2">Sources</h3>
-              {facts.length === 0 && <p className="text-[12px] text-ink-2">No source file.</p>}
+            <div className="mt-3 space-y-1.5" data-citations>
+              <h3 className="text-[12px] font-semibold uppercase text-ink-2">{finding ? 'Cites' : 'Sources'}</h3>
+              {cited === 0 && <p className="text-[12px] text-ink-2">{finding ? 'Nothing cited.' : 'No source file.'}</p>}
+              {rules.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5" aria-label="Rules cited">
+                  {rules.map((r) => (
+                    <RuleChip key={r.id} rule={r.rule} title={r.title} statusText={r.statusText} warning={r.warning} />
+                  ))}
+                </div>
+              )}
+              {quotes.map((q) => (
+                <div key={q.index} className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[12px] text-ink-2">Evidence {q.index + 1}</span>
+                  <SourceChip source={q.source} />
+                </div>
+              ))}
               {facts.map((f) => (
                 <div key={f.id} className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[12px] text-ink-2">{f.field}</span>
@@ -188,6 +241,7 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
                 </div>
               ))}
             </div>
+            {!finding && (
             <div className="mt-3">
               {confirmed ? (
                 <p role="status" className="flex items-center gap-1.5 text-[13px] font-semibold text-ok">
@@ -201,6 +255,7 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
                 </button>
               )}
             </div>
+            )}
           </section>
         )}
       </div>

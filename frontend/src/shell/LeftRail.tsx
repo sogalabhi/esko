@@ -1,4 +1,4 @@
-import { Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, ListChecks, PenLine, type LucideIcon } from 'lucide-react'
+import { BookCheck, Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, ListChecks, PenLine, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
 import { printVerdict } from '../lib/checks'
 import { usePersistedFlag } from '../lib/usePersistedFlag'
@@ -79,12 +79,15 @@ export function LeftRail() {
         ? { dot: 'warn', word: 'needs review', count: verdict.review }
         : { dot: 'ok', word: 'all clear', count: 0 }
 
+  const rules: Pick<Item, 'dot' | 'word'> = project.rulebook ? { dot: 'ok', word: 'rulebook added' } : { dot: 'idle', word: 'market rules only' }
+
   const steps: Item[] = [
     { to: '/evidence', label: 'Files', Icon: FolderOpen, step: 1, count: project.files.length, ...evidence },
     { to: '/facts', label: 'What we read', Icon: ListChecks, step: 2, count: project.facts.length, dot: openConflicts ? 'bad' : 'ok' },
-    { to: '/checks', label: 'Checks', Icon: ClipboardCheck, step: 3, ...checks },
-    { to: '/markup', label: 'Marked-up artwork', Icon: PenLine, step: 4 },
-    { to: '/report', label: 'Report', Icon: FileText, step: 5 },
+    { to: '/rules', label: 'Rules', Icon: BookCheck, step: 3, count: project.rules.length + (project.rulebook?.rules.length ?? 0), ...rules },
+    { to: '/checks', label: 'Checks', Icon: ClipboardCheck, step: 4, ...checks },
+    { to: '/markup', label: 'Marked-up artwork', Icon: PenLine, step: 5 },
+    { to: '/report', label: 'Report', Icon: FileText, step: 6 },
   ]
   const more: Item[] = [{ to: '/pack', label: '3D pack', Icon: Box }]
 

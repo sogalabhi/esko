@@ -1,4 +1,4 @@
-import { ArrowRight, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
+import { ArrowRight, BookPlus, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
 import { ACCEPT_ATTR } from '../api/client'
@@ -292,6 +292,15 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
           }}
         />
       </label>
+      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-ink-2" data-rulebook-entry>
+        <BookPlus size={15} aria-hidden="true" />
+        <Link to="/rules" className="font-medium text-info underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info">
+          Add a rulebook
+        </Link>
+        <span>
+          {project.rulebook ? `Current rulebook: ${project.rulebook.name}.` : 'Optional: a company or regulator rulebook to check against. It is added on the Rules screen, apart from these files.'}
+        </span>
+      </p>
       {notice && (
         <p role="status" className="mt-2 text-[13px] text-ink-2">
           {notice}

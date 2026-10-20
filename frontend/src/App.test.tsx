@@ -47,13 +47,13 @@ describe('App', () => {
     await screen.findAllByText('Backend OK')
   })
 
-  it('rail: Files, What we read, Checks, Marked-up artwork, Report, then 3D pack under More tools; no Questions', async () => {
+  it('rail: Files, What we read, Rules, Checks, Marked-up artwork, Report, then 3D pack under More tools; no Questions', async () => {
     healthy()
     renderAt('/checks')
     const nav = screen.getByRole('navigation', { name: 'Steps' })
     const links = within(nav).getAllByRole('link')
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/evidence', '/facts', '/checks', '/markup', '/report', '/pack'])
-    const names = ['1 Files', '2 What we read', '3 Checks', '4 Marked-up artwork', '5 Report', '3D pack']
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/evidence', '/facts', '/rules', '/checks', '/markup', '/report', '/pack'])
+    const names = ['1 Files', '2 What we read', '3 Rules', '4 Checks', '5 Marked-up artwork', '6 Report', '3D pack']
     names.forEach((n, i) => expect(links[i]).toHaveTextContent(n.replace(/^\d /, '')))
     expect(within(nav).queryByRole('link', { name: /Questions/ })).toBeNull()
     expect(within(nav).getByRole('separator')).toBeInTheDocument()
@@ -80,7 +80,7 @@ describe('App', () => {
     for (const l of [/Brief/, /Rules map/, /Claims/, /Trust/]) {
       expect(within(nav).queryByRole('link', { name: l })).toBeNull()
     }
-    for (const route of ['/brief', '/rules', '/claims', '/trust']) {
+    for (const route of ['/brief', '/claims', '/trust']) {
       const { unmount } = renderAt(route)
       expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument()
       expect(screen.queryByText(/Built in Phase/)).toBeNull()

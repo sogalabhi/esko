@@ -68,6 +68,65 @@ describe('Checks groups and filter', () => {
   })
 })
 
+describe('Checked and fine', () => {
+  const cleared = () => document.querySelector<HTMLElement>('[data-group="cleared"]')!
+
+  it('sits below the Pass group, collapsed with a count, and opens to show each proof and its evidence chips', async () => {
+    renderWithProject(<Checks />)
+    const groups = [...document.querySelectorAll('[data-group]')].map((g) => g.getAttribute('data-group'))
+    expect(groups).toEqual(['fail', 'review', 'pass', 'cleared'])
+    expect(within(cleared()).getByRole('heading', { level: 2 })).toHaveTextContent('Checked and fine3')
+    const toggle = within(cleared()).getByRole('button', { name: /Show the proofs \(3\)/ })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(within(cleared()).queryAllByRole('article')).toHaveLength(0)
+
+    await userEvent.click(toggle)
+    const items = within(cleared()).getAllByRole('article')
+    expect(items).toHaveLength(3)
+    const upc = items.find((a) => a.getAttribute('data-cleared-id') === 'cl-upc')!
+    expect(within(upc).getByRole('heading', { name: 'UPC check digit is valid' })).toBeInTheDocument()
+    expect(upc).toHaveTextContent(/odd-position digits 4 × 3 = 12/)
+    expect(upc).toHaveTextContent('Checked by code')
+    expect(within(upc).getByRole('button', { name: /Sheet · E12/ })).toBeInTheDocument()
+    await userEvent.click(within(cleared()).getByRole('button', { name: 'Hide the proofs' }))
+    expect(within(cleared()).queryAllByRole('article')).toHaveLength(0)
+  })
+
+  it('the filter has a "Checked and fine" option that shows only the panel, open', async () => {
+    renderWithProject(<Checks />)
+    const filters = screen.getByRole('group', { name: 'Filter checks' })
+    await userEvent.click(within(filters).getByRole('button', { name: 'Checked and fine 3' }))
+    expect(within(filters).getByRole('button', { name: 'Checked and fine 3' })).toHaveAttribute('aria-pressed', 'true')
+    for (const v of ['fail', 'review', 'pass']) expect(document.querySelector(`[data-group="${v}"]`)).toBeNull()
+    expect(within(cleared()).getAllByRole('article')).toHaveLength(3)
+    // The other filters hide it.
+    await userEvent.click(within(filters).getByRole('button', { name: 'Fail 4' }))
+    expect(document.querySelector('[data-group="cleared"]')).toBeNull()
+  })
+
+  it('says so when nothing was set aside', () => {
+    renderWithProject(<Checks />, '/', { ...mockProject, cleared: [] })
+    expect(within(cleared()).getByText('Nothing was set aside as fine.')).toBeInTheDocument()
+  })
+})
+
+describe('Deep link to a finding', () => {
+  it('?finding=<id> scrolls to the card and focuses it', async () => {
+    const scroll = vi.fn()
+    Element.prototype.scrollIntoView = scroll
+    renderWithProject(<Checks />, '/checks?finding=f-pass-identity')
+    const card = document.querySelector<HTMLElement>('[data-finding-id="f-pass-identity"]')!
+    await waitFor(() => expect(card).toHaveFocus())
+    expect(scroll).toHaveBeenCalled()
+  })
+
+  it('an unknown id changes nothing', () => {
+    renderWithProject(<Checks />, '/checks?finding=nope')
+    expect(screen.getAllByRole('article')).toHaveLength(9)
+    expect(document.body).toHaveFocus()
+  })
+})
+
 describe('Needs review decisions (mock mode: applied locally)', () => {
   it('needs a name before it decides, and then logs the decision with the note', async () => {
     renderWithProject(<Checks />)

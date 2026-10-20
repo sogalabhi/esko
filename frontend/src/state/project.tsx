@@ -53,6 +53,8 @@ interface State {
   briefBusy: BriefBusy
   briefError: BriefError | null
   drawer: Source | null
+  /** The Ask panel: open or not, and the finding it is asking about (null = a general question). */
+  ask: { open: boolean; findingId: string | null }
   market: UiMarket
   launchDate: string
 }
@@ -65,6 +67,7 @@ type Action =
   | { type: 'undoAnswer'; id: string; prev: QuestionStatus }
   | { type: 'open'; source: Source }
   | { type: 'close' }
+  | { type: 'ask'; open: boolean; findingId?: string | null }
   | { type: 'market'; market: UiMarket }
   | { type: 'launch'; date: string }
   | { type: 'reset' }
@@ -98,6 +101,7 @@ function init([project, source]: Seed): State {
     briefBusy: 'idle',
     briefError: null,
     drawer: null,
+    ask: { open: false, findingId: null },
     market: 'US',
     launchDate: DEFAULT_LAUNCH,
   }
@@ -146,6 +150,8 @@ function reducer(seed: Seed) {
         return { ...s, drawer: a.source }
       case 'close':
         return { ...s, drawer: null }
+      case 'ask':
+        return { ...s, ask: { open: a.open, findingId: a.open ? (a.findingId ?? null) : null } }
       case 'market':
         return { ...s, market: a.market }
       case 'launch':
@@ -302,6 +308,10 @@ function useStore(initial: Project, source: DataSource) {
 
   const openSource = useCallback((src: Source) => dispatch({ type: 'open', source: src }), [])
   const closeDrawer = useCallback(() => dispatch({ type: 'close' }), [])
+  /** Open the Ask panel, about one finding or (no id) in general. */
+  const openAsk = useCallback((findingId?: string) => dispatch({ type: 'ask', open: true, findingId }), [])
+  const closeAsk = useCallback(() => dispatch({ type: 'ask', open: false }), [])
+  const toggleAsk = useCallback(() => dispatch({ type: 'ask', open: !latest.current.ask.open }), [])
   const setMarket = useCallback((market: UiMarket) => dispatch({ type: 'market', market }), [])
   const setLaunchDate = useCallback((date: string) => dispatch({ type: 'launch', date }), [])
   const reset = useCallback(() => {
@@ -513,11 +523,14 @@ function useStore(initial: Project, source: DataSource) {
       undoAnswer,
       openSource,
       closeDrawer,
+      openAsk,
+      closeAsk,
+      toggleAsk,
       setMarket,
       setLaunchDate,
       reset,
     }
-  }, [state, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, decideFinding, askAbout, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset])
+  }, [state, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, decideFinding, askAbout, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, openAsk, closeAsk, toggleAsk, setMarket, setLaunchDate, reset])
 }
 
 export type Store = ReturnType<typeof useStore>

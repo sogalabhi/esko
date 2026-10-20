@@ -11,6 +11,13 @@ const counter = () => screen.getByTestId('evidence-counter')
 afterEach(() => vi.useRealTimers())
 
 describe('Evidence screen', () => {
+  it('"Add a rulebook" goes to the Rules screen; the Files screen keeps its one product-file picker', () => {
+    renderWithProject(<Evidence readMs={0} />)
+    expect(screen.getByRole('link', { name: 'Add a rulebook' })).toHaveAttribute('href', '/rules')
+    expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1)
+    expect(screen.getByText(/Current rulebook: Dancing_Fish_US_Label_Rulebook.docx/)).toBeInTheDocument()
+  })
+
   it('shows both files with type, status, fact counts and the skipped list', () => {
     renderWithProject(<Evidence readMs={0} />)
     expect(screen.getByText('Drop your packaging files')).toBeInTheDocument()

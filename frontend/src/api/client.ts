@@ -16,6 +16,25 @@ export function isAccepted(name: string): boolean {
   return (ACCEPTED_EXTENSIONS as readonly string[]).includes(ext)
 }
 
+/** File types the backend reads as a rulebook (Rules screen drop zone and picker). */
+export const RULEBOOK_EXTENSIONS = ['docx', 'pdf', 'txt', 'md'] as const
+export const RULEBOOK_ACCEPT_ATTR = RULEBOOK_EXTENSIONS.map((e) => `.${e}`).join(',')
+
+export function isRulebookFile(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase() ?? ''
+  return (RULEBOOK_EXTENSIONS as readonly string[]).includes(ext)
+}
+
+/**
+ * POST /api/ask answer. When the request carried a `findingId` the answer also cites the finding's rules
+ * (`ruleIds`) and evidence quotes (`evidence`: 0-based positions in that finding's own `evidence` array).
+ * Kept here, not in types/project.ts.
+ */
+export interface FindingAskResult extends AskResult {
+  ruleIds?: string[]
+  evidence?: number[]
+}
+
 /** POST /api/files response: SourceFile plus the number of pieces read. */
 export interface UploadedFile {
   id: string
@@ -208,10 +227,14 @@ export const api = {
     return res.text()
   },
 
-  /** POST /api/ask. Null when the route does not exist. */
-  async ask(question: string): Promise<AskResult | null> {
+  /** POST /api/ask; with `findingId` the question is about that finding. Null when the route does not exist. */
+  async ask(question: string, findingId?: string): Promise<FindingAskResult | null> {
     try {
-      return await request<AskResult>('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) })
+      return await request<FindingAskResult>('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(findingId ? { question, findingId } : { question }),
+      })
     } catch (e) {
       if (isRouteMissing(e)) return null
       throw e
@@ -296,6 +319,18 @@ export const api = {
       if (isRouteMissing(e)) return null
       throw e
     }
+  },
+
+  /** POST /api/rulebook (multipart field "file"): the rulebook is read and applied; the recomputed project comes back. */
+  async uploadRulebook(file: File): Promise<Project> {
+    const body = new FormData()
+    body.append('file', file)
+    return normalizeProject(await request<Partial<Project>>('/api/rulebook', { method: 'POST', body }))
+  },
+
+  /** DELETE /api/rulebook: the checks go back to the market rules only; the recomputed project comes back. */
+  async removeRulebook(): Promise<Project> {
+    return normalizeProject(await request<Partial<Project>>('/api/rulebook', { method: 'DELETE' }))
   },
 
   /** URL of the original file (PDF.js reads it). The backend route may not exist yet. */

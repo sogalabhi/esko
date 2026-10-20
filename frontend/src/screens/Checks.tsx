@@ -1,15 +1,20 @@
-import { ClipboardCheck, CircleAlert, FileUp, Info } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { ChevronDown, ChevronUp, ClipboardCheck, CircleAlert, CircleCheck, FileUp, Info } from 'lucide-react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import { FindingCard } from '../components/FindingCard'
+import { ProofLine } from '../components/ProofLine'
+import { SourceChips } from '../components/SourceChip'
 import { VERDICT_LABEL, VERDICT_ORDER, VerdictBadge } from '../components/VerdictBadge'
 import { checkCounts, orderFindings, type FindingFilter } from '../lib/checks'
 import { useProject } from '../state/project'
-import type { Finding, Verdict } from '../types/project'
+import type { Cleared, Finding, Verdict } from '../types/project'
 
-const FILTERS: { id: FindingFilter; label: string }[] = [
+type ChecksFilter = FindingFilter | 'cleared'
+
+const FILTERS: { id: ChecksFilter; label: string }[] = [
   { id: 'all', label: 'All' },
   ...VERDICT_ORDER.map((v) => ({ id: v, label: VERDICT_LABEL[v] })),
+  { id: 'cleared', label: 'Checked and fine' },
 ]
 
 const GROUP_EMPTY: Record<Verdict, string> = {
@@ -37,14 +42,90 @@ export function EmptyChecks() {
   )
 }
 
+/** Items the checker looked at and deliberately did not flag, each with the code's proof. Collapsed until opened. */
+function ClearedPanel({ items, open, onToggle }: { items: Cleared[]; open: boolean; onToggle: () => void }) {
+  const bodyId = useId()
+  return (
+    <section aria-labelledby="cleared-title" data-group="cleared">
+      <h2 id="cleared-title" className="flex flex-wrap items-center gap-2 text-[16px] font-semibold">
+        <span className="inline-flex items-center gap-1 rounded-chip bg-ok/10 px-2 py-0.5 text-[12px] font-medium text-ok">
+          <CircleCheck size={14} aria-hidden="true" />
+          Checked and fine
+        </span>
+        <span className="font-mono">{items.length}</span>
+        <span className="text-[13px] font-normal text-ink-2">looked at and not flagged</span>
+      </h2>
+      {items.length === 0 ? (
+        <p className="mt-2 flex items-center gap-1.5 text-[14px] text-ink-2">
+          <ClipboardCheck size={15} aria-hidden="true" />
+          Nothing was set aside as fine.
+        </p>
+      ) : (
+        <>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={onToggle}
+            className="mt-2 inline-flex items-center gap-1 rounded-chip px-1.5 py-0.5 text-[13px] font-medium text-info hover:underline focus-visible:outline-2 focus-visible:outline-info"
+          >
+            {open ? <ChevronUp size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
+            {open ? 'Hide the proofs' : `Show the proofs (${items.length})`}
+          </button>
+          <div id={bodyId} hidden={!open}>
+            {open && (
+              <ul className="mt-2 space-y-3">
+                {items.map((c) => (
+                  <li key={c.id}>
+                    <article data-cleared-id={c.id} aria-labelledby={`cleared-${c.id}-title`} className="rounded-card border border-border bg-surface p-4">
+                      <h3 id={`cleared-${c.id}-title`} className="flex items-center gap-1.5 text-[15px] font-semibold">
+                        <CircleCheck size={16} aria-hidden="true" className="shrink-0 text-ok" />
+                        {c.title}
+                      </h3>
+                      <div className="mt-2">
+                        <ProofLine basis="code" proof={c.proof} />
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5" aria-label={`Evidence for ${c.title}`}>
+                        <SourceChips sources={c.evidence} />
+                      </div>
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
 /** Fail / Needs review / Pass groups, a filter, and the Needs review queue inside the review group. */
 export function Checks() {
   const { project, decisionError } = useProject()
-  const [filter, setFilter] = useState<FindingFilter>('all')
+  const [filter, setFilter] = useState<ChecksFilter>('all')
+  const [clearedOpen, setClearedOpen] = useState(false)
+  const [params] = useSearchParams()
+  const wanted = params.get('finding')
   const rootRef = useRef<HTMLElement>(null)
   const findings = project.findings
+  const cleared = project.cleared
   const counts = useMemo(() => checkCounts(findings), [findings])
   const total = findings.length
+
+  // /checks?finding=<id> (from the Rules screen) scrolls to that card and focuses it.
+  const known = wanted != null && findings.some((f) => f.id === wanted)
+  useEffect(() => {
+    if (!wanted || !known) return
+    setFilter('all')
+    const t = setTimeout(() => {
+      const card = [...(rootRef.current?.querySelectorAll<HTMLElement>('[data-finding-card]') ?? [])].find((c) => c.dataset.findingId === wanted)
+      if (!card) return
+      card.scrollIntoView?.({ block: 'center' })
+      card.focus()
+    }, 0)
+    return () => clearTimeout(t)
+  }, [wanted, known])
 
   // J / K move between cards (UI.md §8); 1 / 2 / 3 pick "It's fine" / "It's a problem" / "Ask someone" on a review card.
   useEffect(() => {
@@ -77,8 +158,9 @@ export function Checks() {
 
   if (total === 0) return <EmptyChecks />
 
-  const countOf = (id: FindingFilter) => (id === 'all' ? total : counts[id])
+  const countOf = (id: ChecksFilter) => (id === 'all' ? total : id === 'cleared' ? cleared.length : counts[id])
   const shown = VERDICT_ORDER.filter((v) => filter === 'all' || filter === v)
+  const showCleared = filter === 'all' || filter === 'cleared'
   const inGroup = (v: Verdict): Finding[] => orderFindings(findings.filter((f) => f.verdict === v))
 
   return (
@@ -99,7 +181,10 @@ export function Checks() {
               key={f.id}
               type="button"
               aria-pressed={filter === f.id}
-              onClick={() => setFilter(f.id)}
+              onClick={() => {
+                setFilter(f.id)
+                setClearedOpen(f.id === 'cleared')
+              }}
               className={`rounded-chip border px-2.5 py-1 text-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info ${
                 filter === f.id ? 'border-accent bg-accent text-white' : 'border-border bg-surface text-ink hover:border-ink-2'
               }`}
@@ -156,6 +241,7 @@ export function Checks() {
             </section>
           )
         })}
+        {showCleared && <ClearedPanel items={cleared} open={clearedOpen} onToggle={() => setClearedOpen((o) => !o)} />}
       </div>
     </section>
   )

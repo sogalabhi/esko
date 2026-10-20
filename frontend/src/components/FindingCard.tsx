@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, CircleAlert, CircleCheck, MapPin, Quote, UserRound } from 'lucide-react'
+import { ChevronDown, ChevronUp, CircleAlert, CircleCheck, MapPin, MessageCircleQuestion, Quote, UserRound } from 'lucide-react'
 import { forwardRef, useState } from 'react'
 import { Link } from 'react-router'
 import { resolveRule } from '../lib/checks'
@@ -67,7 +67,7 @@ function Decided({ finding }: { finding: Finding }) {
  * expected vs found, the proof, and a link to the mark on the artwork. Review items carry the decision controls.
  */
 export const FindingCard = forwardRef<HTMLElement, { finding: Finding; /** Hide "Show on artwork" (the card already sits beside the artwork). */ hideLocate?: boolean }>(function FindingCard({ finding: f, hideLocate }, ref) {
-  const { project } = useProject()
+  const { project, openAsk } = useProject()
   const [crops, setCrops] = useState(f.verdict !== 'pass')
   const titleId = `finding-${f.id}-title`
   const hasValues = f.expected != null || f.found != null
@@ -139,8 +139,8 @@ export const FindingCard = forwardRef<HTMLElement, { finding: Finding; /** Hide 
         </ul>
       </section>
 
-      {f.locations.length > 0 && !hideLocate && (
-        <p className="mt-3">
+      <div className="no-print mt-3 flex flex-wrap items-center gap-2">
+        {f.locations.length > 0 && !hideLocate && (
           <Link
             to={`/markup?finding=${encodeURIComponent(f.id)}`}
             className="inline-flex items-center gap-1.5 rounded-chip border border-border bg-surface px-2.5 py-1 text-[13px] font-medium hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info"
@@ -148,8 +148,17 @@ export const FindingCard = forwardRef<HTMLElement, { finding: Finding; /** Hide 
             <MapPin size={14} aria-hidden="true" />
             Show on artwork
           </Link>
-        </p>
-      )}
+        )}
+        <button
+          type="button"
+          onClick={() => openAsk(f.id)}
+          aria-label={`Ask about this finding: ${f.title}`}
+          className="inline-flex items-center gap-1.5 rounded-chip border border-border bg-surface px-2.5 py-1 text-[13px] font-medium hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info"
+        >
+          <MessageCircleQuestion size={14} aria-hidden="true" />
+          Ask about this finding
+        </button>
+      </div>
 
       {f.decision ? <Decided finding={f} /> : f.verdict === 'review' && <ReviewDecision finding={f} />}
     </article>

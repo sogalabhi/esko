@@ -7,6 +7,7 @@ import { Markup } from './screens/Markup'
 import { Pack } from './screens/Pack'
 import { Questions } from './screens/Questions'
 import { EmptyReport, Report } from './screens/Report'
+import { Rules } from './screens/Rules'
 import { AppShell, NotFound } from './shell/AppShell'
 import { ProjectProvider } from './state/project'
 
@@ -19,6 +20,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/checks" replace />} />
           <Route path="/evidence" element={<Evidence />} />
+          <Route path="/rules" element={<Rules />} />
           <Route path="/checks" element={<LoadGate empty={<EmptyChecks />}><Checks /></LoadGate>} />
           <Route path="/report" element={<LoadGate empty={<EmptyReport />}><Report /></LoadGate>} />
           <Route path="/facts" element={<LoadGate><Facts /></LoadGate>} />
