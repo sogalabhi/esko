@@ -7,7 +7,7 @@ const FILES = [
   path.join(SAMPLES, 'DancingFish_Granola_BerryCrunch_US_Content_Sheet.xlsx'),
 ]
 
-test('P2 demo flow: upload, what we read, source drawer, checks verdict', async ({ page }) => {
+test('demo flow: upload, what we read, source drawer, checks verdict', async ({ page }) => {
   // Evidence: upload both samples
   await page.goto('/evidence')
   await page.getByLabel(/Drop your packaging files/).setInputFiles(FILES)
