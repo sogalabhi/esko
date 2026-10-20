@@ -1,5 +1,7 @@
 # BriefForge — UI build spec
 
+> **History.** This describes the first version of the project, a design-brief tool (Esko Problem 1). The project became the packaging artwork checker (Problem 2) on 20 Oct 2026; see the README for the current product. The engine, evidence and market-pack sections still apply.
+
 ## 1. What you are building
 BriefForge is a web app for a brand manager at a food company. She uploads messy
 packaging files (an old carton dieline PDF, a content spreadsheet, notes). The app

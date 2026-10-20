@@ -1,5 +1,7 @@
 # BriefForge — Esko AIForge Build Plan
 
+> **History.** This describes the first version of the project, a design-brief tool (Esko Problem 1). The project became the packaging artwork checker (Problem 2) on 20 Oct 2026; see the README for the current product. The engine, evidence and market-pack sections still apply.
+
 Oct 14, 2026 · @Abhi
 
 ## The pitch

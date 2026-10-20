@@ -1,5 +1,7 @@
 # BriefForge — Product Overview & Feature Specification
 
+> **History.** This describes the first version of the project, a design-brief tool (Esko Problem 1). The project became the packaging artwork checker (Problem 2) on 20 Oct 2026; see the README for the current product. The engine, evidence and market-pack sections still apply.
+
 > **Audience:** Product Management, Design Leads, and Executive Stakeholders  
 > **Status:** Active Build · Esko AIForge Hackathon (Problem 1)  
 > **Core Promise:** *From messy packaging files to an airtight agency brief that cannot lie, backed by an acceptance checklist the final artwork must pass.*

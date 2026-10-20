@@ -75,7 +75,7 @@ markets/     market packs as data: us/ (FDA), in/ (FSSAI), company/
 rulebooks/   our demo company rulebook (YAML source; .docx and .pdf built by backend/scripts/build_rulebook.py)
 samples/     Esko's sample files
 e2e/         Playwright specs
-docs/        plan, phases and the parallel build plan
+docs/        plan, phases and the parallel build plan (docs/archive: the earlier design-brief version)
 ```
 
 ## Limits
