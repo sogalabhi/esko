@@ -1,9 +1,12 @@
+import hashlib
+import mimetypes
+import re
 from pathlib import Path
 
-import mimetypes
+import pymupdf
 
 from fastapi import APIRouter, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 from app import store
 from app.models.pieces import SourceFile, SourcePiece
@@ -71,3 +74,47 @@ def raw(file_id: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="file not found")
     media = _MEDIA_TYPES.get(path.suffix.lower()) or mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     return FileResponse(path, media_type=media, filename=path.name, content_disposition_type="inline")
+
+
+PAGE_PX_PER_MM = 6  # sharp on screen, about 150 dpi for an A3 print
+_GUIDE_NOTE = re.compile(r"guide layer '([^']+)'")
+
+
+def _guide_layers(f: SourceFile | None) -> set[str]:
+    """Layers the reader skipped as guides (dimension text and the like), named in its skipped notes."""
+    return {m for note in (f.skipped if f else []) for m in _GUIDE_NOTE.findall(note)}
+
+
+def render_page(path: Path, hide: set[str]) -> tuple[bytes, float, float]:
+    """Page 1 as a JPEG with the given layers switched off, plus the page size in mm."""
+    doc = pymupdf.open(path)
+    off = [xref for xref, ocg in doc.get_ocgs().items() if ocg["name"] in hide]
+    if off:  # MuPDF reads the layer state when a document opens, so set it and reopen
+        doc.set_layer(-1, off=off)
+        doc = pymupdf.open("pdf", doc.tobytes())
+    page = doc[0]
+    zoom = PAGE_PX_PER_MM * 25.4 / 72
+    image = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom)).tobytes("jpg", jpg_quality=85)
+    return image, page.rect.width * 25.4 / 72, page.rect.height * 25.4 / 72
+
+
+@router.get("/{file_id}/page.jpg")
+def page_image(file_id: str) -> Response:
+    """Page 1 of a PDF drawn once by the backend (guide layers off) and cached next to the upload, so the
+    screens show one image instead of each parsing the whole PDF. Size in mm in X-Page-Width-Mm / -Height-Mm."""
+    path = store.get_path(file_id)
+    if path is None or not path.is_file():
+        raise HTTPException(status_code=404, detail="file not found")
+    if path.suffix.lower() != ".pdf":
+        raise HTTPException(status_code=415, detail="only a PDF has pages to draw")
+    hide = _guide_layers(store.get_file(file_id))
+    key = hashlib.sha256("|".join(sorted(hide)).encode()).hexdigest()[:8]
+    cached, size_file = path.parent / f"page-{key}.jpg", path.parent / f"page-{key}.size"
+    if cached.is_file() and size_file.is_file():
+        image, (w, h) = cached.read_bytes(), map(float, size_file.read_text().split())
+    else:
+        image, w, h = render_page(path, hide)
+        cached.write_bytes(image)
+        size_file.write_text(f"{w} {h}")
+    headers = {"X-Page-Width-Mm": f"{w:.2f}", "X-Page-Height-Mm": f"{h:.2f}", "Cache-Control": "max-age=3600"}
+    return Response(content=image, media_type="image/jpeg", headers=headers)
