@@ -44,8 +44,8 @@
    "id": "DF-04",
    "title": "Net quantity",
    "status": "in_force",
-   "text": "The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US units, written as \"NET WT 480 g (16.9 oz)\" with a space between each number and its unit.",
-   "quote": "The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US units, written as \"NET WT 480 g (16.9 oz)\" with a space between each number and its unit.",
+   "text": "The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US units, written as \"NET WT 16.9 OZ (1 LB 0.9 OZ) 480 g\" with a space between each number and its unit.",
+   "quote": "The net quantity must appear on the front panel, in the bottom 30% of the panel, in both metric and US units, written as \"NET WT 16.9 OZ (1 LB 0.9 OZ) 480 g\" with a space between each number and its unit.",
    "piece_ids": [
     "D35",
     "D36",
