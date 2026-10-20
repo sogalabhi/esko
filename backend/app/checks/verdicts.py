@@ -12,10 +12,11 @@ comes from the pack's own rule summaries and format markers.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
-from app.checks.barcode import check_digit_valid
+from app.extraction.facts import source_for, union_bbox_xywh
 from app.markets.schema import Condition, MarketPack
+from app.models.pieces import SourcePiece
 from app.models.project import (
     Conflict, ConflictLocation, ConflictSide, Fact, Finding, Project, Requirement, Source, Verdict,
 )
@@ -328,21 +329,33 @@ def _pass_findings(ctx: _Ctx) -> list[Finding]:
     return out
 
 
-def _barcode_pass(ctx: _Ctx) -> list[Finding]:
-    out = []
-    for f in ctx.live:
-        if f.state != "pass" or not f.sources or (ctx.keys.get(f.id) or [""])[0] != KEYS.barcode:
-            continue
-        res = check_digit_valid(str(f.value))
-        if not res.ok:
-            continue
-        digits = "".join(str(f.value).split())
-        out.append(Finding(
-            id=f"f-pass-{KEYS.barcode}-{f.id}", verdict="pass", kind="rule", basis="code",
-            title=f"The {f.field.lower()} check digit is valid",
-            why_it_matters="A wrong check digit makes the barcode unscannable at the till.",
-            proof=f"Digits {digits[:-1]} give check digit {res.computed}; printed {res.printed}.",
-            evidence=checked_only(f.sources)[:3] or f.sources, locations=_locations(f.sources), fact_ids=[f.id]))
+def _hidden_findings(project: Project, pieces: Mapping[str, Sequence[SourcePiece]]) -> list[Finding]:
+    """Text that is in the file but covered, on a switched-off layer or off the page: one finding per file and panel,
+    with the covered text as evidence. It is never read as a fact. Review until a loaded rule bans hidden content
+    (the rulebook step turns it into a fail)."""
+    out: list[Finding] = []
+    names = {f.id: f.name for f in project.files}
+    for file_id, ps in pieces.items():
+        groups: dict[str | None, list[SourcePiece]] = {}
+        for p in ps:
+            if p.status == "hidden" and p.text.strip():
+                groups.setdefault(p.location.panel, []).append(p)
+        for panel, hidden in groups.items():
+            reason = next((p.reason for p in hidden if p.reason), None) or "hidden in the file"
+            where = f"the {panel} panel" if panel else names.get(file_id, "the file")
+            evidence = [source_for(file_id, p.text.strip(), True, [p], None) for p in hidden][:MAX_EVIDENCE]
+            box = union_bbox_xywh(hidden)
+            locations = ([ConflictLocation(file_id=file_id, panel=panel, x=box[0], y=box[1], w=box[2], h=box[3])]
+                         if box and panel else [])
+            examples = "; ".join(repr(p.text.strip()) for p in hidden[:3])
+            slug = re.sub(r"[^a-z0-9]+", "-", (panel or file_id).lower()).strip("-")
+            out.append(Finding(
+                id=f"f-hidden-{slug}", verdict="review", kind="hidden", basis="code",
+                title=f"{len(hidden)} lines of hidden text on {where} ({reason})",
+                why_it_matters="Hidden copy can print if a layer or a fill moves at the printer; it should be deleted from the file.",
+                found=_sentence(examples, 160), expected="No text under other artwork",
+                proof=f"{len(hidden)} text pieces are in the file but {reason}; they are not read as facts.",
+                evidence=evidence, locations=locations))
     return out
 
 
@@ -370,8 +383,10 @@ def _fold(into: Finding, c: Conflict) -> None:
     into.fact_ids = list(dict.fromkeys([*into.fact_ids, *c.fact_ids]))
 
 
-def build_findings(project: Project, pack: MarketPack) -> list[Finding]:
-    """Every finding for the project as it stands, fail first. A conflict a person settled gives no finding."""
+def build_findings(project: Project, pack: MarketPack, pieces: Mapping[str, Sequence[SourcePiece]] | None = None
+                   ) -> list[Finding]:
+    """Every finding for the project as it stands, fail first. A conflict a person settled gives no finding.
+    `pieces` (file id -> what the readers found) adds the hidden-text findings."""
     ctx = _Ctx(project, pack)
     missing, claims = _requirement_findings(ctx)
     out: list[Finding] = list(missing)
@@ -392,7 +407,7 @@ def build_findings(project: Project, pack: MarketPack) -> list[Finding]:
             out.append(f)
         else:
             host.requirement_ids = list(dict.fromkeys([*host.requirement_ids, *f.requirement_ids]))
-    out += _pass_findings(ctx) + _barcode_pass(ctx)
+    out += _pass_findings(ctx) + _hidden_findings(project, pieces or {})
     out += _ai_suggested(ctx, {i for f in out for i in f.fact_ids})
 
     seen: dict[str, int] = {}
@@ -412,4 +427,9 @@ def keep_decisions(findings: list[Finding], before: Sequence[Finding]) -> list[F
     return findings
 
 
-__all__ = ["COPY_MATCH_RULE", "build_findings", "guard", "keep_decisions", "triage"]
+locations_of = _locations
+unique_sources = _unique
+sentence = _sentence
+
+__all__ = ["COPY_MATCH_RULE", "MAX_EVIDENCE", "RANK", "build_findings", "checked_only", "guard", "keep_decisions",
+           "locations_of", "sentence", "triage", "unique_sources"]

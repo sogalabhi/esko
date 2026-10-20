@@ -234,10 +234,14 @@ def test_an_ai_suggested_fact_already_in_a_finding_is_not_listed_twice():
     assert [f.id for f in build_findings(project([claim, against], [c]), mini_pack())] == ["f-mismatch-c-1"]
 
 
-def test_a_barcode_that_passed_its_check_digit_is_a_pass_with_the_working():
+def test_a_valid_barcode_is_not_a_finding_it_is_cleared():
+    from app.checks.cleared import build_cleared
+
     code = fact("f-4", "identity", "Barcode", "1 20000 00003 6", state="pass")
-    f = next(f for f in build_findings(project([code]), mini_pack_with_barcode()) if f.verdict == "pass")
-    assert f.proof == "Digits 12000000003 give check digit 6; printed 6." and f.evidence
+    pack = mini_pack_with_barcode()
+    assert not [f for f in build_findings(project([code]), pack) if f.verdict == "pass"]
+    (c,) = build_cleared(project([code]), pack)
+    assert c.proof == "Digits 12000000003 give check digit 6; printed 6." and c.evidence
 
 
 def mini_pack_with_barcode() -> MarketPack:

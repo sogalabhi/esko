@@ -13,7 +13,7 @@ from pathlib import Path
 
 from app import store
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import LogEntry, Project
+from app.models.project import LogEntry, Project, Rulebook
 from app.pack import service as pack_service
 
 DEMO_DIR = Path(__file__).resolve().parents[1] / "demo"
@@ -58,11 +58,23 @@ def save_snapshot(directory: Path | None = None) -> dict:
         (directory / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, directory / rel)
         entries.append({"file": _dump(f), "upload": rel, "pieces": [_dump(p) for p in store.get_pieces(f.id) or []]})
+    book, book_file = store.get_rulebook(), store.get_rulebook_file()
+    rulebook_entry = None
+    if book is not None and book_file is not None:
+        src = store.get_path(book_file.id)
+        if src is None or not Path(src).is_file():
+            raise SnapshotError(f"The stored upload for {book_file.name} is missing, so the snapshot would be incomplete.")
+        rel = f"files/{book_file.id}/{Path(src).name}"
+        (directory / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, directory / rel)
+        rulebook_entry = {"file": _dump(book_file), "upload": rel, "rulebook": _dump(book),
+                          "pieces": [_dump(p) for p in store.get_pieces(book_file.id) or []]}
     saved_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     snapshot = {
         "version": VERSION,
         "savedAt": saved_at,
         "files": entries,
+        "rulebook": rulebook_entry,
         "base": _dump(base),
         "project": _dump(project),
         "log": [json.loads(e.model_dump_json()) for e in store.get_log()],
@@ -96,6 +108,18 @@ def load_snapshot(directory: Path | None = None, upload_dir: Path | None = None)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dest)
         restored.append((file, pieces, dest))
+    book = data.get("rulebook")
+    restored_book = None
+    if book:
+        book_file = SourceFile.model_validate(book["file"])
+        src = directory / book["upload"]
+        if not src.is_file():
+            raise SnapshotError(f"The snapshot is missing {book['upload']}.")
+        dest = upload_dir / book_file.id / src.name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        restored_book = (book_file, [SourcePiece.model_validate(p) for p in book["pieces"]], dest,
+                         Rulebook.model_validate(book["rulebook"]))
     project = Project.model_validate(data["project"])
     base = Project.model_validate(data["base"])
     log = [LogEntry.model_validate(x) for x in data["log"]]
@@ -103,6 +127,8 @@ def load_snapshot(directory: Path | None = None, upload_dir: Path | None = None)
     pack_service.clear()
     for file, pieces, dest in restored:
         store.put(file, pieces, dest)
+    if restored_book is not None:
+        store.put_rulebook(*restored_book)
     store.set_project(base)  # base, empty log ...
     store.commit(project, log)  # ... then the project with every decision applied
     pack_service._applied[:] = data.get("pack", {}).get("applied", [])

@@ -50,12 +50,12 @@ EXPECTED = {
     "net-quantity-format": ("f-missing-net_quantity_ounces", "fail"),
     "maker-address-missing": ("f-missing-manufacturer_address_city_state_zip", "fail"),
     "sugars-exceed-carbs": ("f-math-sugars_vs_carbohydrate", "review"),
-    "upc-check-digit": ("f-pass-barcode-f-4", "pass"),
     "ai-label-id": ("f-approval-f-1", "review"),
     "ai-bpn": ("f-approval-f-3", "review"),
 }
-# flag: false items with no finding in Phase 1: hidden text is a finding in Phase 4; guide text is never one.
-NO_FINDING = {"hidden-eu-table", "guide-text-ignored"}
+# flag: false items that are not findings in this run: the valid check digit is a cleared item, guide text is never
+# a finding, and hidden text becomes a finding only when the readers' pieces are known (the API run, see below).
+NO_FINDING = {"hidden-eu-table", "guide-text-ignored", "upc-check-digit"}
 
 
 @pytest.fixture(scope="module")
@@ -123,7 +123,7 @@ def test_every_flagged_answer_key_item_maps_to_exactly_one_finding_with_the_expe
 
 
 def test_the_verdict_counts_on_the_samples(project):
-    assert Counter(f.verdict for f in project.findings) == {"fail": 23, "review": 9, "pass": 5}
+    assert Counter(f.verdict for f in project.findings) == {"fail": 23, "review": 9, "pass": 4}
 
 
 def test_flag_false_items_never_produce_a_fail(project):
@@ -195,8 +195,8 @@ def test_get_checks_returns_the_summary_findings_and_cleared(client):
         client.post("/api/files", files={"file": (p.name, p.read_bytes())})
     run = client.post("/api/project/run").json()
     body = client.get("/api/checks").json()
-    assert body["summary"] == {"fail": 23, "review": 9, "pass": 5, "cleared": 0}
-    assert body["cleared"] == [] and body["findings"] == run["findings"]
+    assert body["summary"] == {"fail": 23, "review": 10, "pass": 4, "cleared": 2}  # review: the hidden table
+    assert body["cleared"] == run["cleared"] and len(body["cleared"]) == 2 and body["findings"] == run["findings"]
     first = body["findings"][0]
     assert {"id", "verdict", "kind", "title", "whyItMatters", "ruleIds", "evidence", "basis"} <= set(first)
     assert re.fullmatch(r"f-[a-z]+-.+", first["id"])

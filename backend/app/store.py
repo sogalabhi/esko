@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import Brief, Fact, LogEntry, Project
+from app.models.project import Brief, Fact, LogEntry, Project, ProjectFile, Rulebook, to_project_file
 
 ASK_PREFIX = "ask-"  # ids of facts a person confirmed from an answer in the Ask panel
 
@@ -13,6 +13,10 @@ _paths: dict[str, Path] = {}
 _project: Project | None = None  # the last run with every decision applied
 _base: Project | None = None  # the last run as it came out, before any decision
 _log: list[LogEntry] = []  # the decisions, in order; project = replay(base, log)
+# The uploaded rulebook is kept apart from the files: it is never read as product facts, so it is not listed with
+# the files the analysis reads. Its pieces and upload stay reachable by file id (previews, source crops).
+_rulebook_file: SourceFile | None = None
+_rulebook: Rulebook | None = None
 
 
 def put(file: SourceFile, pieces: list[SourcePiece], path: Path | None = None) -> None:
@@ -23,6 +27,32 @@ def put(file: SourceFile, pieces: list[SourcePiece], path: Path | None = None) -
         _paths[file.id] = Path(path)
     _project = _base = None  # the file set changed: the last run is stale
     _log.clear()
+
+
+def put_rulebook(file: SourceFile, pieces: list[SourcePiece], path: Path | None, rulebook: Rulebook) -> None:
+    """Keep an uploaded rulebook (file, pieces, upload, the rules read from it). Does not touch the run or the decisions."""
+    global _rulebook_file, _rulebook
+    drop_rulebook()
+    _rulebook_file, _rulebook = file, rulebook
+    _pieces[file.id] = pieces
+    if path is not None:
+        _paths[file.id] = Path(path)
+
+
+def drop_rulebook() -> None:
+    global _rulebook_file, _rulebook
+    if _rulebook_file is not None and _rulebook_file.id not in _files:
+        _pieces.pop(_rulebook_file.id, None)
+        _paths.pop(_rulebook_file.id, None)
+    _rulebook_file = _rulebook = None
+
+
+def get_rulebook() -> Rulebook | None:
+    return _rulebook
+
+
+def get_rulebook_file() -> SourceFile | None:
+    return _rulebook_file
 
 
 def get_path(file_id: str) -> Path | None:
@@ -36,8 +66,34 @@ def get_project() -> Project | None:
 def set_project(project: Project) -> None:
     """A fresh run: it becomes the base and earlier decisions are dropped."""
     global _project, _base
+    entry = _rulebook_entry(project)
+    if entry is not None:
+        project.files.append(entry)  # in place: the caller returns this same project
     _project = _base = project
     _log.clear()
+
+
+def _rulebook_entry(project: Project) -> ProjectFile | None:
+    rb = project.rulebook
+    if rb is None or any(f.id == rb.file_id for f in project.files):
+        return None
+    if _rulebook_file is None or _rulebook_file.id != rb.file_id:
+        return None
+    return to_project_file(_rulebook_file, _pieces.get(_rulebook_file.id)).model_copy(update={"role": "rulebook"})
+
+
+def with_rulebook_file(project: Project) -> Project:
+    """The project lists the rulebook file (role "rulebook") whenever it carries a rulebook."""
+    entry = _rulebook_entry(project)
+    return project if entry is None else project.model_copy(update={"files": [*project.files, entry]})
+
+
+def replace_run(base: Project, project: Project, log: list[LogEntry]) -> None:
+    """A new base (the run recomputed, e.g. with a rulebook added or removed) and the project replayed on it. The
+    brief and the facts confirmed through Ask are carried over, as after any decision."""
+    global _base
+    _base = base
+    commit(project, log)
 
 
 def get_base() -> Project | None:
@@ -83,6 +139,8 @@ def set_project_facts(facts: list[Fact]) -> Project | None:
 
 
 def get_file(file_id: str) -> SourceFile | None:
+    if _rulebook_file is not None and _rulebook_file.id == file_id:
+        return _rulebook_file
     return _files.get(file_id)
 
 
@@ -95,7 +153,8 @@ def get_pieces(file_id: str) -> list[SourcePiece] | None:
 
 
 def clear() -> None:
-    global _project, _base
+    global _project, _base, _rulebook_file, _rulebook
+    _rulebook_file = _rulebook = None
     _project = _base = None
     _log.clear()
     _paths.clear()

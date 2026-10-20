@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .routers import answers, ask, brief, checks, conflicts, demo, files, pack, project, questions
+from .routers import answers, ask, brief, checks, conflicts, demo, files, pack, project, questions, rulebook
 from .settings import get_settings
 
 app = FastAPI(title="BriefForge")
@@ -14,6 +14,7 @@ app.include_router(brief.router)
 app.include_router(ask.router)
 app.include_router(demo.router)
 app.include_router(checks.router)
+app.include_router(rulebook.router)
 
 
 @app.get("/api/health")

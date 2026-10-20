@@ -10,10 +10,14 @@ from datetime import date
 from functools import lru_cache
 
 from app.ai.client import AIClient
+from app import store
+from app.checks.cleared import build_cleared
+from app.checks.rulebook_apply import apply_rulebook
 from app.checks.verdicts import build_findings, keep_decisions
 from app.markets import layer_packs, load_pack, packs_root
 from app.markets.loader import active_rules
 from app.markets.schema import MarketPack
+from app.models.pieces import SourcePiece
 from app.models.project import PACK_FILE_TYPES, Conflict, Fact, Project, Requirement, Rule, project_mode
 from app.questions.build import (
     MISSING_PREFIX,
@@ -96,7 +100,8 @@ def build_requirements(pack: MarketPack, facts: list[Fact], contested: set[str],
 
 
 def analyze(project: Project, pack: MarketPack | None = None, *, market: str | None = None,
-            client: AIClient | None = None, on_date: date | None = None) -> Project:
+            client: AIClient | None = None, on_date: date | None = None,
+            pieces: dict[str, list[SourcePiece]] | None = None) -> Project:
     pack = pack or load_market(market)
     out = project.model_copy(deep=True)
     facts = [f for f in out.facts if not f.id.startswith(MISSING_PREFIX)]
@@ -156,7 +161,19 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
     out.questions = closed + [c.to_question() for c in chosen]
     out.waiting_questions = [c.to_question() for c in waiting]
     out.questions_waiting = len(waiting)
-    out.findings = keep_decisions(build_findings(out, pack), project.findings)  # a person's decisions are kept
+
+    rulebook = out.rulebook or store.get_rulebook()
+    out.rulebook = rulebook
+    book_file = rulebook.file_id if rulebook else None
+    out.files = [f for f in out.files if f.role != "rulebook" or f.id == book_file]
+    if pieces is None:  # what the readers found, by file; the rulebook's own text is never checked as artwork
+        pieces = {f.id: store.get_pieces(f.id) or [] for f in out.files if f.role != "rulebook"}
+    findings = build_findings(out, pack, pieces)
+    if rulebook is not None:
+        findings, out.rulebook = apply_rulebook(out, pack, findings, rulebook, pieces, store.get_pieces(rulebook.file_id) or [])
+        out = store.with_rulebook_file(out)
+    out.findings = keep_decisions(findings, project.findings)  # a person's decisions are kept
+    out.cleared = build_cleared(out, pack, pieces)
     return out
 
 
