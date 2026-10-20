@@ -167,6 +167,13 @@ def test_math_findings_carry_the_codes_working(project):
     assert by["f-math-dv-total_fat"].locations  # the artwork mark comes from the conflict's locations
 
 
+def test_expected_is_what_the_pack_should_say_and_found_is_what_it_says(project):
+    dup = next(f for f in project.findings if "more than once" in f.title)
+    assert dup.expected.endswith("listed once") and dup.found.endswith("listed twice")
+    honey = next(f for f in project.findings if f.expected == "9%" or f.found == "1%")
+    assert (honey.expected, honey.found) == ("9%", "1%")  # approved sheet, then the artwork
+
+
 def test_the_checker_asks_no_design_or_brand_basics_questions(project):
     assert project.questions and all(q.kind != "design" for q in [*project.questions, *project.waiting_questions])
     assert not [q for q in [*project.questions, *project.waiting_questions] if q.subject.startswith("input:")]

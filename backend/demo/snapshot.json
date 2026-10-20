@@ -1,6 +1,6 @@
 {
  "version": 1,
- "savedAt": "2026-10-20T17:46:15+00:00",
+ "savedAt": "2026-10-20T18:46:35+00:00",
  "files": [
   {
    "file": {
@@ -16041,8 +16041,8 @@
     "title": "Sunflower Seeds appears more than once in the same ingredient list",
     "whyItMatters": "An ingredient named twice is a copy error in the list. No loaded rule covers it, so a person decides.",
     "ruleIds": [],
-    "expected": "Sunflower Seeds listed twice",
-    "found": "Sunflower Seeds listed once",
+    "expected": "Sunflower Seeds listed once",
+    "found": "Sunflower Seeds listed twice",
     "proof": "Sunflower Seeds appears more than once in the same ingredient list.",
     "basis": "code",
     "evidence": [
@@ -24809,8 +24809,8 @@
     "title": "Sunflower Seeds appears more than once in the same ingredient list",
     "whyItMatters": "An ingredient named twice is a copy error in the list. No loaded rule covers it, so a person decides.",
     "ruleIds": [],
-    "expected": "Sunflower Seeds listed twice",
-    "found": "Sunflower Seeds listed once",
+    "expected": "Sunflower Seeds listed once",
+    "found": "Sunflower Seeds listed twice",
     "proof": "Sunflower Seeds appears more than once in the same ingredient list.",
     "basis": "code",
     "evidence": [

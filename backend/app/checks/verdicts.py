@@ -212,7 +212,9 @@ def _conflict_finding(ctx: _Ctx, c: Conflict) -> Finding | None:
             title = ("The ingredient lists differ between the files" if None in names or names[0] == names[1]
                      else f"The ingredient lists differ between {names[0]} and {names[1]}")
             rule_ids = [COPY_MATCH_RULE, *rule_ids]
-        expected, found = c.left.value, c.right.value
+        # Across files the left side is the approved information; a name repeated inside one list puts what the
+        # list says on the left ("listed twice") and what it should say on the right ("listed once").
+        expected, found = (c.left.value, c.right.value) if cross else (c.right.value, c.left.value)
         proof = c.explanation
         why = ("An ingredient list that does not match the approved recipe is a labelling error and can hide an allergen."
                if cross else "An ingredient named twice is a copy error in the list.")
