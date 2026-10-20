@@ -29,18 +29,18 @@ The build order from `PLAN.md`, broken into tasks, tests and a checkpoint for ea
 
 ## Who builds what (agents in `.claude/agents/`)
 
-The main session (Opus 5.5) is the lead: it plans each phase, writes the answer key, owns the shared contracts (Pydantic models and `UI.md` §9), hands out work, integrates it and runs the gate. Each subagent starts with no memory of the conversation, so every hand-off is a precise brief: the phase, the files, the tests to make green.
+The main session (Opus 5.5) is the lead, and the only Opus seat in P2: it plans each phase, writes the answer key, owns the shared contracts (Pydantic models and `UI.md` §9), hands out work, integrates it and runs the gate. Each subagent starts with no memory of the conversation, so every hand-off is a precise brief: the phase, the files, the tests to make green.
 
 | Agent | Model · effort | Owns | Why this level |
 | --- | --- | --- | --- |
-| `ui-builder` | Opus · high | Everything in `frontend/`: shell, components, screens, Pack Canvas (Konva), Rules map (React Flow) | The UI is half the demo score; polish and judgement matter most here |
-| `pdf-geometry` | Opus · high | PDF reader (Phase 1) and pack geometry (Phase 6) | Hidden text, guide text, curved text and panel packing are the hardest algorithmic problems; wrong output poisons every later phase |
-| `backend-engine` | Sonnet · high | FastAPI, models, Excel reader, units, conflicts, rule engine, nutrition math, barcode, questions, audit, storage | Well-specified logic with tests to hit; needs care, not invention |
-| `ai-pipeline` | Sonnet · high | AI client, adapters, cache, prompts, schemas, fixture recording, bake-off | Prompt and schema design is fiddly but well bounded |
-| `rules-author` | Sonnet · high, web access, no shell | `markets/us`, `markets/in`, `markets/company` YAML | Accuracy over speed; every record cites the official text and starts as "proposed" |
+| `ui-builder` | Sonnet · high | Everything in `frontend/`: Checks, Needs review queue, Marked-up artwork, Rules screen, Report | The P2 screens are well specified; the lead does the final polish |
+| `pdf-geometry` | Sonnet · medium | PDF reader upkeep: merge plain-PDF lines into paragraphs for rulebooks (P2 Phase 3) | The hard geometry is built and tested; what's left is small |
+| `backend-engine` | Sonnet · high | FastAPI, models, units, conflicts, rule engine, nutrition math, barcode, findings and verdicts, applying rulebook rules, storage | Well-specified logic with tests to hit (answer key, rulebook key); needs care, not invention |
+| `ai-pipeline` | Sonnet · high | AI client, adapters, cache, prompts, schemas, fixture recording, rulebook extraction | Prompt and schema design is fiddly but well bounded |
+| `rules-author` | Sonnet · medium, web access, no shell | `markets/` YAML and the citations in `rulebooks/` | Accuracy over speed; every record cites the official text and starts as "proposed" |
 | `e2e-tester` | Sonnet · medium | Playwright specs in `e2e/` | Routine once the UI exists |
 | `test-runner` | Haiku · low, read-only | Runs suites, summarises failures | Mechanical; cheapest model is enough |
-| `gate-reviewer` | Opus · high, read-only | PASS/FAIL review at every checkpoint | An independent, careful second look before each commit |
+| `gate-reviewer` | Sonnet · high, read-only | PASS/FAIL review at every P2 checkpoint | An independent second look before each commit; a checklist review, so Sonnet is enough |
 
 **Parallel tracks.** Folders don't overlap, so these run side by side once the contracts exist:
 
