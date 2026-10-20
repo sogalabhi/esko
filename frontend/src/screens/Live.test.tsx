@@ -125,13 +125,13 @@ describe('Evidence upload flow', () => {
     stubFetch(
       noProject,
       post('/api/files', (init) => uploaded(nameOf(init))),
-      post('/api/project/run', () => (ok ? json(project) : json({ detail: 'AI step failed: quota' }, 502))),
+      post('/api/project/run', () => (ok ? json(project) : json({ detail: 'AI step failed: the model returned an empty answer' }, 502))),
     )
     renderLive(<Evidence />)
     await screen.findByText(/drop your packaging files above/)
     await userEvent.upload(input(), [pdf()])
     expect(await screen.findByText('The analysis did not finish')).toBeInTheDocument()
-    expect(screen.getByText('AI step failed: quota')).toBeInTheDocument()
+    expect(screen.getByText('AI step failed: the model returned an empty answer')).toBeInTheDocument()
     ok = true
     await userEvent.click(screen.getByRole('button', { name: 'Retry analysis' }))
     expect(await screen.findByText('Analysis finished')).toBeInTheDocument()

@@ -1,6 +1,7 @@
 import { BadgeCheck, CircleAlert, CircleOff, RotateCcw, Search, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { api, type FindingAskResult } from '../api/client'
+import { api, isAiBusy, type FindingAskResult } from '../api/client'
+import { AiBusyNotice } from '../components/AiBusyNotice'
 import { RuleChip } from '../components/RuleChip'
 import { SourceChip } from '../components/SourceChip'
 import { Skeleton } from '../components/LoadGate'
@@ -28,6 +29,7 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
   const [result, setResult] = useState<FindingAskResult | null>(null)
   const [phase, setPhase] = useState<Phase>('idle')
   const [error, setError] = useState<string | null>(null)
+  const [aiBusy, setAiBusy] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const id = useId()
   const input = useRef<HTMLTextAreaElement>(null)
@@ -60,6 +62,7 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
   const run = async (q: string) => {
     setPhase('asking')
     setError(null)
+    setAiBusy(false)
     setResult(null)
     setConfirmed(false)
     setAsked(q)
@@ -68,7 +71,8 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
       if (r) setResult(r)
       else setError('This backend cannot answer questions yet.')
     } catch (e) {
-      setError(`The question could not be answered: ${e instanceof Error ? e.message : 'something went wrong.'}`)
+      setAiBusy(isAiBusy(e))
+      setError(isAiBusy(e) ? (e as Error).message : `The question could not be answered: ${e instanceof Error ? e.message : 'something went wrong.'}`)
     }
     setPhase('idle')
   }
@@ -182,7 +186,8 @@ export function AskPanel({ open, onClose }: { open: boolean; onClose: () => void
           </div>
         )}
 
-        {error && (
+        {error && aiBusy && <AiBusyNotice message={error} onRetry={asked && phase === 'idle' && !result ? () => void run(asked) : undefined} />}
+        {error && !aiBusy && (
           <div role="alert" className="flex items-start gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
             <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
             <div className="min-w-0 flex-1">

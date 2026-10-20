@@ -1,7 +1,8 @@
 import { BookCheck, CircleAlert, CircleCheck, ExternalLink, FilePen, LoaderCircle, Quote, RotateCcw, ShieldCheck, TriangleAlert, Trash2, Upload } from 'lucide-react'
 import { useId, useRef, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
-import { api, isRulebookFile, RULEBOOK_ACCEPT_ATTR } from '../api/client'
+import { api, isAiBusy, isRulebookFile, RULEBOOK_ACCEPT_ATTR } from '../api/client'
+import { AiBusyNotice } from '../components/AiBusyNotice'
 import { LoadError, LoadingSkeleton, Skeleton } from '../components/LoadGate'
 import { SourceChip } from '../components/SourceChip'
 import { VerdictBadge } from '../components/VerdictBadge'
@@ -138,6 +139,7 @@ function RulebookUpload() {
   const live = source === 'api'
   const [busy, setBusy] = useState<'adding' | 'removing' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [aiBusy, setAiBusy] = useState(false)
   const [done, setDone] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const last = useRef<File | null>(null)
@@ -147,6 +149,7 @@ function RulebookUpload() {
   const send = async (file: File) => {
     last.current = file
     setError(null)
+    setAiBusy(false)
     setDone(null)
     if (!isRulebookFile(file.name)) {
       setError(`${file.name} cannot be used as a rulebook. Use a DOCX, PDF, TXT or MD file.`)
@@ -159,13 +162,15 @@ function RulebookUpload() {
       last.current = null
       setDone(updated.rulebook ? `Rulebook added: ${updated.rulebook.name}, ${updated.rulebook.rules.length} rules read.` : 'The rulebook was sent, but no rules came back.')
     } catch (e) {
-      setError(`The rulebook was not added: ${e instanceof Error ? e.message : 'something went wrong.'}`)
+      if (isAiBusy(e)) setAiBusy(true)
+      setError(isAiBusy(e) ? (e as Error).message : `The rulebook was not added: ${e instanceof Error ? e.message : 'something went wrong.'}`)
     }
     setBusy(null)
   }
 
   const remove = async () => {
     setError(null)
+    setAiBusy(false)
     setDone(null)
     setBusy('removing')
     try {
@@ -247,7 +252,10 @@ function RulebookUpload() {
           </div>
         </div>
       )}
-      {error && (
+      {error && aiBusy && !busy && (
+        <AiBusyNotice message={error} onRetry={last.current ? () => void send(last.current!) : undefined} className="mt-3" />
+      )}
+      {error && !aiBusy && (
         <div role="alert" className="mt-3 flex items-start gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
           <CircleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
           <div className="min-w-0 flex-1">

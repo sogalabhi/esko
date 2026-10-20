@@ -1,7 +1,8 @@
 import { ArrowRight, BookPlus, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type DragEvent } from 'react'
 import { Link } from 'react-router'
-import { ACCEPT_ATTR } from '../api/client'
+import { ACCEPT_ATTR, AI_BUSY_REASON } from '../api/client'
+import { AiBusyNotice } from '../components/AiBusyNotice'
 import { LoadDemoButton } from '../components/LoadDemoButton'
 import { LoadError, LoadingSkeleton, Skeleton } from '../components/LoadGate'
 import { FILE_META, fileUnits } from '../lib/labels'
@@ -233,6 +234,7 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
   }
 
   const failed = project.files.filter((f) => f.status === 'error')
+  const others = run.fileErrors.filter((f) => !f.busy)
 
   const receive = (files: File[]) => {
     if (files.length === 0) return
@@ -308,14 +310,17 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
       )}
 
       {live && busy && <RunSteps run={run} />}
-      {live && !busy && run.fileErrors.length > 0 && (
+      {live && !busy && run.fileErrors.some((f) => f.busy) && (
+        <AiBusyNotice message={AI_BUSY_REASON} onRetry={() => void retryFailed()} suggestDemo className="mt-3" />
+      )}
+      {live && !busy && run.fileErrors.some((f) => !f.busy) && (
         <div role="alert" className="mt-3 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
           <p className="flex items-center gap-2 font-medium">
             <CircleAlert size={18} aria-hidden="true" className="shrink-0 text-bad" />
-            {run.fileErrors.length === 1 ? '1 file was not uploaded' : `${run.fileErrors.length} files were not uploaded`}
+            {others.length === 1 ? '1 file was not uploaded' : `${others.length} files were not uploaded`}
           </p>
           <ul className="mt-1 space-y-0.5 pl-6">
-            {run.fileErrors.map((f) => (
+            {others.map((f) => (
               <li key={f.name}>
                 <span className="font-medium">{f.name}</span> — {f.reason}
               </li>
@@ -327,7 +332,10 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
           </button>
         </div>
       )}
-      {live && run.phase === 'error' && run.reason && (
+      {live && run.phase === 'error' && run.reason && run.busy && (
+        <AiBusyNotice message={run.reason} onRetry={project.files.length > 0 || run.uploaded > 0 ? () => void runAnalysis() : undefined} suggestDemo className="mt-3" />
+      )}
+      {live && run.phase === 'error' && run.reason && !run.busy && !run.fileErrors.some((f) => f.busy) && (
         <div role="alert" className="mt-3 flex items-start gap-2 rounded-card border border-bad/30 bg-bad/10 p-3 text-[14px]">
           <CircleAlert size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
           <div>

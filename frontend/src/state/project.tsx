@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
-import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, type BriefReply, type DataSource } from '../api/client'
+import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, isAiBusy, type BriefReply, type DataSource } from '../api/client'
 import { auditSentence } from '../lib/briefAudit'
 import mock from '../mocks/project.json'
 import type { Brief, FindingDecision, Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
@@ -16,6 +16,8 @@ export type LoadState = { status: 'loading' | 'ready' | 'empty' } | { status: 'e
 export interface FileProblem {
   name: string
   reason: string
+  /** The AI service was busy: sending the same file again is worth a try. */
+  busy?: boolean
 }
 
 /** Progress of an upload-and-analyse run. 'running' covers the single POST /api/project/run call. */
@@ -25,6 +27,8 @@ export interface RunState {
   uploaded: number
   fileErrors: FileProblem[]
   reason?: string
+  /** The run failed because the AI service is busy (rate limit, quota, overload). */
+  busy?: boolean
 }
 
 export type BriefBusy = 'idle' | 'drafting' | 'saving' | 'approving'
@@ -350,7 +354,7 @@ function useStore(initial: Project, source: DataSource) {
       } catch {
         /* keep what is shown */
       }
-      dispatch({ type: 'run', run: { phase: 'error', total, uploaded, fileErrors, reason: message(e) } })
+      dispatch({ type: 'run', run: { phase: 'error', total, uploaded, fileErrors, reason: message(e), busy: isAiBusy(e) } })
     }
   }, [])
 
@@ -362,8 +366,8 @@ function useStore(initial: Project, source: DataSource) {
       const failed: File[] = []
       let uploaded = 0
       const progress = () => dispatch({ type: 'run', run: { phase: 'uploading', total: files.length, uploaded, fileErrors: [...fileErrors] } })
-      const fail = (f: File, reason: string) => {
-        fileErrors.push({ name: f.name, reason })
+      const fail = (f: File, reason: string, busy = false) => {
+        fileErrors.push({ name: f.name, reason, ...(busy ? { busy } : {}) })
         failed.push(f)
       }
       progress()
@@ -376,7 +380,7 @@ function useStore(initial: Project, source: DataSource) {
             if (up.status === 'read') uploaded++
             else fail(f, up.error || 'The reader could not use this file.')
           } catch (e) {
-            fail(f, message(e))
+            fail(f, message(e), isAiBusy(e))
           }
         }
         progress()

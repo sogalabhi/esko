@@ -38,10 +38,10 @@ describe('api client', () => {
   })
 
   it('surfaces the backend detail as the error message', async () => {
-    stub(() => json({ detail: 'AI step failed: quota' }, 502))
+    stub(() => json({ detail: 'AI step failed: the model returned an empty answer' }, 502))
     const err = await api.runProject().catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiError)
-    expect(err).toMatchObject({ status: 502, message: 'AI step failed: quota' })
+    expect(err).toMatchObject({ status: 502, message: 'AI step failed: the model returned an empty answer' })
   })
 
   it('uploadFile posts multipart form data to /api/files', async () => {

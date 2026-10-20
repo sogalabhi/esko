@@ -96,11 +96,29 @@ export interface PackOutResponse {
 /** An API failure with a plain reason a person can read. */
 export class ApiError extends Error {
   readonly status: number
-  constructor(status: number, reason: string) {
+  /** True when the AI service is rate-limited, over quota or overloaded: the same request is worth sending again in a minute. */
+  readonly busy: boolean
+  constructor(status: number, reason: string, busy = false) {
     super(reason)
     this.name = 'ApiError'
     this.status = status
+    this.busy = busy
   }
+}
+
+/** What a person sees when the AI service says "slow down" or "try later". */
+export const AI_BUSY_REASON = 'The AI service is busy right now. Your files are safe — try again in a minute.'
+
+const BUSY_WORDS = /rate[\s_-]*limit|quota|overload|busy|resource[\s_-]*exhausted|too many requests/i
+
+/** A 429, or a 502/503 whose detail names a rate limit, quota, overload or busy service. The backend sends `AI step failed: <provider message>`. */
+export function isAiBusyReply(status: number, detail: string): boolean {
+  return status === 429 || ((status === 502 || status === 503) && BUSY_WORDS.test(detail))
+}
+
+/** True when the failure is the AI service being busy (see {@link AI_BUSY_REASON}). */
+export function isAiBusy(e: unknown): boolean {
+  return e instanceof ApiError && e.busy
 }
 
 const UNREACHABLE = 'The backend is not reachable. Check that it is running, then retry.'
@@ -132,6 +150,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!res.ok) {
     const detail = await detailOf(res)
+    if (isAiBusyReply(res.status, detail)) throw new ApiError(res.status, AI_BUSY_REASON, true)
     throw new ApiError(res.status, detail || REASONS[res.status] || `The backend answered ${res.status}.`)
   }
   return (await res.json()) as T
