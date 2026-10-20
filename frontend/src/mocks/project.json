@@ -1,5 +1,5 @@
 {
-  "_note": "Mock for UI development (docs/UI.md §9). Fact values and quotes come from Esko's Dancing Fish sample files; panel coordinates (mm) are approximate. Rules are ILLUSTRATIVE summaries, not legal text.",
+  "_note": "Mock for UI development (docs/UI.md §9). Fact values and quotes come from Esko's Dancing Fish sample files; panel coordinates (mm) are approximate. Rules are ILLUSTRATIVE summaries, not legal text. P2: findings, cleared and rulebook follow docs/PARALLEL_PLAN.md Step 0; DF-06 is deliberately unverified (quote not in the document) to show that state.",
   "mode": "redesign",
   "modeReason": "Dieline PDF among the inputs: DancingFish_Granola_Berry_US_Carton.pdf",
   "questionsWaiting": 0,
@@ -24,7 +24,8 @@
           "item": "Hidden EU 'Typical Values per 100g' table",
           "reason": "Covered by the US Nutrition Facts panel; not visible in print"
         }
-      ]
+      ],
+      "role": "artwork"
     },
     {
       "id": "f-sheet",
@@ -37,7 +38,17 @@
           "item": "Columns D–G, rows 46–61 (per-pack formulas)",
           "reason": "Derived values, not source facts"
         }
-      ]
+      ],
+      "role": "approved_info"
+    },
+    {
+      "id": "f-rulebook",
+      "name": "Dancing_Fish_US_Label_Rulebook.docx",
+      "type": "docx",
+      "pages": 96,
+      "status": "done",
+      "skipped": [],
+      "role": "rulebook"
     }
   ],
   "facts": [
@@ -3207,5 +3218,746 @@
       "total": 0,
       "rows": []
     }
+  },
+  "findings": [
+    {
+      "id": "f-mismatch-honey",
+      "verdict": "fail",
+      "kind": "mismatch",
+      "title": "Honey percentage differs from the content sheet",
+      "whyItMatters": "Ingredient percentages on pack must match the approved recipe; a wrong one misleads shoppers.",
+      "ruleIds": [
+        "r-us-101-4",
+        "DF-02"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B26"
+          },
+          "quote": "Honey (9%)",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              77,
+              227.5,
+              8,
+              4.4
+            ]
+          },
+          "quote": "Honey (1%)",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 77,
+          "y": 227.5,
+          "w": 8,
+          "h": 4.4
+        }
+      ],
+      "factIds": [
+        "f-honey-pct",
+        "f-ingredients"
+      ],
+      "conflictIds": [
+        "c-honey"
+      ],
+      "requirementIds": [],
+      "expected": "9%",
+      "found": "1%"
+    },
+    {
+      "id": "f-math-dv-total-fat",
+      "verdict": "fail",
+      "kind": "math",
+      "title": "Total Fat % Daily Value is wrong",
+      "whyItMatters": "A wrong % Daily Value is a labelling error even when the gram amount is right.",
+      "ruleIds": [
+        "r-us-101-9",
+        "DF-10"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              430.5,
+              202.2,
+              8,
+              4.4
+            ]
+          },
+          "quote": "Total Fat 15g 2.2%",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 430.5,
+          "y": 202.2,
+          "w": 8,
+          "h": 4.4
+        }
+      ],
+      "factIds": [
+        "f-fat",
+        "f-fat-dv"
+      ],
+      "conflictIds": [
+        "c-dv-fat"
+      ],
+      "requirementIds": [],
+      "expected": "19%",
+      "found": "2.2%",
+      "proof": "15 g ÷ 78 g daily value = 19.2%, rounds to 19%; printed 2.2%"
+    },
+    {
+      "id": "f-missing-address",
+      "verdict": "fail",
+      "kind": "missing",
+      "title": "Manufacturer address is missing",
+      "whyItMatters": "The pack must say where the maker can be reached: street, city, state and ZIP.",
+      "ruleIds": [
+        "r-us-101-5",
+        "DF-05"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              114.5,
+              287,
+              33,
+              7
+            ]
+          },
+          "quote": "PRODUCED BY DANCING FISH GRANOLA CO.",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 114.5,
+          "y": 287,
+          "w": 33,
+          "h": 7
+        }
+      ],
+      "factIds": [
+        "f-producer",
+        "f-address"
+      ],
+      "conflictIds": [
+        "c-address"
+      ],
+      "requirementIds": [
+        "req-address"
+      ],
+      "expected": "Name with street, city, state and ZIP",
+      "found": "PRODUCED BY DANCING FISH GRANOLA CO."
+    },
+    {
+      "id": "f-hidden-eu-table",
+      "verdict": "fail",
+      "kind": "hidden",
+      "title": "An old EU nutrition table is hidden under the US panel",
+      "whyItMatters": "Hidden copy can print if a layer or a fill moves at the printer. It must be deleted, not covered.",
+      "ruleIds": [
+        "DF-19"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              391.8,
+              180,
+              40,
+              4
+            ]
+          },
+          "quote": "Typical Values per 100g",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Left",
+          "x": 388,
+          "y": 172,
+          "w": 48,
+          "h": 60
+        }
+      ],
+      "factIds": [],
+      "conflictIds": [],
+      "requirementIds": [],
+      "proof": "10 lines on the Left panel sit under an opaque fill drawn later in the file"
+    },
+    {
+      "id": "f-claim-vegan",
+      "verdict": "review",
+      "kind": "claim",
+      "title": "Vegan claim with honey in the recipe",
+      "whyItMatters": "Honey is animal-derived; a vegan claim needs a person to decide and the certificate on file.",
+      "ruleIds": [
+        "r-co-vegan",
+        "DF-14"
+      ],
+      "basis": "ai",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Front",
+            "page": 1,
+            "bbox": [
+              344,
+              110,
+              25,
+              26
+            ]
+          },
+          "quote": "Certified Vegan",
+          "quoteChecked": false
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              46,
+              256.5,
+              46,
+              4.4
+            ]
+          },
+          "quote": "DIETARY INFORMATION: Suitable for Vegans.",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              77,
+              227.5,
+              8,
+              4.4
+            ]
+          },
+          "quote": "Honey (1%)",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              391.5,
+              214,
+              47.5,
+              4.4
+            ]
+          },
+          "quote": "Cholesterol 45mg",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Front",
+          "x": 344,
+          "y": 110,
+          "w": 25,
+          "h": 26
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 46,
+          "y": 256.5,
+          "w": 46,
+          "h": 4.4
+        },
+        {
+          "fileId": "f-carton",
+          "panel": "Back",
+          "x": 77,
+          "y": 227.5,
+          "w": 8,
+          "h": 4.4
+        }
+      ],
+      "factIds": [
+        "f-mark-vegan",
+        "f-dietary-vegan",
+        "f-ingredients",
+        "f-chol"
+      ],
+      "conflictIds": [
+        "c-vegan"
+      ],
+      "requirementIds": [
+        "req-vegan"
+      ]
+    },
+    {
+      "id": "f-claim-high-grain",
+      "verdict": "review",
+      "kind": "claim",
+      "title": "\"HIGH-GRAIN\" needs Regulatory approval",
+      "whyItMatters": "\"High\" is a defined nutrient claim for some nutrients; with other words a person decides.",
+      "ruleIds": [
+        "DF-17"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Top flap (Front)",
+            "page": 1,
+            "bbox": [
+              317.6,
+              62,
+              30,
+              6
+            ]
+          },
+          "quote": "HIGH-GRAIN",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [
+        {
+          "fileId": "f-carton",
+          "panel": "Top flap (Front)",
+          "x": 315,
+          "y": 60,
+          "w": 36,
+          "h": 9
+        }
+      ],
+      "factIds": [],
+      "conflictIds": [],
+      "requirementIds": []
+    },
+    {
+      "id": "f-approval-sheet-draft",
+      "verdict": "review",
+      "kind": "approval",
+      "title": "The content sheet is still a draft",
+      "whyItMatters": "Copy checked against an unapproved sheet can be wrong in a way no check will catch.",
+      "ruleIds": [
+        "DF-01"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E3"
+          },
+          "quote": "Draft / In Review",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [],
+      "factIds": [],
+      "conflictIds": [],
+      "requirementIds": [],
+      "expected": "Approved",
+      "found": "Draft / In Review",
+      "decision": {
+        "verdict": "pass",
+        "by": "Sam Lee (Regulatory)",
+        "at": "2026-10-20T15:40:00+05:30",
+        "note": "Sheet v4 approved by email; status cell not updated."
+      }
+    },
+    {
+      "id": "f-pass-identity",
+      "verdict": "pass",
+      "kind": "rule",
+      "title": "Product name is the largest text on the front",
+      "whyItMatters": "Shoppers must see what the food is first.",
+      "ruleIds": [
+        "r-us-101-3",
+        "DF-03"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Front",
+            "page": 1,
+            "bbox": [
+              242.4,
+              130,
+              90,
+              20
+            ]
+          },
+          "quote": "GRANOLA",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [],
+      "factIds": [],
+      "conflictIds": [],
+      "requirementIds": [
+        "req-identity"
+      ],
+      "proof": "\"GRANOLA\" 71.3 pt; next largest on the front 18.7 pt"
+    },
+    {
+      "id": "f-pass-nutrition-panel",
+      "verdict": "pass",
+      "kind": "rule",
+      "title": "Nutrition Facts panel is on a side panel with its footnote",
+      "whyItMatters": "The panel's place and footnote are fixed by the rules.",
+      "ruleIds": [
+        "r-us-101-9",
+        "DF-09"
+      ],
+      "basis": "code",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              391.8,
+              170,
+              30,
+              5
+            ]
+          },
+          "quote": "Nutrition Facts",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Left",
+            "page": 1,
+            "bbox": [
+              391.8,
+              260,
+              50,
+              3
+            ]
+          },
+          "quote": "The % Daily Value (DV) tells you",
+          "quoteChecked": true
+        }
+      ],
+      "locations": [],
+      "factIds": [],
+      "conflictIds": [],
+      "requirementIds": [
+        "req-nutrition"
+      ]
+    }
+  ],
+  "cleared": [
+    {
+      "id": "cl-upc",
+      "title": "UPC check digit is valid",
+      "proof": "1 20000 00003: odd-position digits 4 × 3 = 12, plus even-position digits 2 = 14; 10 − 4 = 6 = printed check digit",
+      "evidence": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "E12"
+          },
+          "quote": "1 20000 00003 6",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "cl-guide-text",
+      "title": "Dieline guide text ignored",
+      "proof": "33 pieces on the 'Dimensions and text' layer (\"Art orientation\", \"Copy free\"…) are cutter guides, not copy",
+      "evidence": [
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1
+          },
+          "quote": "Art orientation",
+          "quoteChecked": true
+        }
+      ]
+    },
+    {
+      "id": "cl-net-quantity",
+      "title": "Net quantity matches the content sheet",
+      "proof": "carton 480 g = sheet 480 g",
+      "evidence": [
+        {
+          "fileId": "f-sheet",
+          "where": {
+            "sheet": "Content Sheet - US",
+            "cell": "B3"
+          },
+          "quote": "480g",
+          "quoteChecked": true
+        },
+        {
+          "fileId": "f-carton",
+          "where": {
+            "panel": "Back",
+            "page": 1,
+            "bbox": [
+              63.4,
+              274,
+              12,
+              5
+            ]
+          },
+          "quote": "480g",
+          "quoteChecked": true
+        }
+      ]
+    }
+  ],
+  "rulebook": {
+    "fileId": "f-rulebook",
+    "name": "Dancing_Fish_US_Label_Rulebook.docx",
+    "rules": [
+      {
+        "id": "DF-01",
+        "title": "Approved content sheet",
+        "status": "in_force",
+        "text": "Artwork may only be signed off against a content sheet whose status is Approved.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 14
+          },
+          "quote": "Artwork may only be signed off against a content sheet whose status is Approved.",
+          "quoteChecked": true
+        },
+        "checkType": "exact",
+        "findingIds": [
+          "f-approval-sheet-draft"
+        ]
+      },
+      {
+        "id": "DF-02",
+        "title": "Copy matches the content sheet",
+        "status": "in_force",
+        "text": "All copy on the artwork must match the approved content sheet word for word, including ingredient order, ingredient percentages, allergen wording, claims and every nutrition value. Any difference is a release blocker until the artwork or the content sheet is corrected.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 18
+          },
+          "quote": "All copy on the artwork must match the approved content sheet word for word, including ingredient order, ingredient percentages, allergen wording, claims and every nutrition value. Any difference is a release blocker until the artwork or the content sheet is corrected.",
+          "quoteChecked": true
+        },
+        "checkType": "exact",
+        "findingIds": [
+          "f-mismatch-honey"
+        ]
+      },
+      {
+        "id": "DF-03",
+        "title": "Statement of identity",
+        "status": "in_force",
+        "text": "The common name of the food must appear on the front panel and must be the largest text on that panel.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 22
+          },
+          "quote": "The common name of the food must appear on the front panel and must be the largest text on that panel.",
+          "quoteChecked": true
+        },
+        "checkType": "size",
+        "findingIds": [
+          "f-pass-identity"
+        ]
+      },
+      {
+        "id": "DF-05",
+        "title": "Name and place of business",
+        "status": "in_force",
+        "text": "The back panel must state the manufacturer, packer or distributor, introduced by \"Manufactured by\", \"Packed by\" or \"Distributed by\", followed by the street address, city, state and ZIP code.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 30
+          },
+          "quote": "The back panel must state the manufacturer, packer or distributor, introduced by \"Manufactured by\", \"Packed by\" or \"Distributed by\", followed by the street address, city, state and ZIP code.",
+          "quoteChecked": true
+        },
+        "checkType": "present",
+        "findingIds": [
+          "f-missing-address"
+        ]
+      },
+      {
+        "id": "DF-06",
+        "title": "Consumer care line",
+        "status": "in_force",
+        "text": "Every pack must carry a consumer care line on the back or a side panel.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 34
+          },
+          "quote": "Every pack must carry a customer hotline on the back.",
+          "quoteChecked": false
+        },
+        "checkType": "present",
+        "findingIds": []
+      },
+      {
+        "id": "DF-09",
+        "title": "Nutrition Facts panel",
+        "status": "in_force",
+        "text": "The Nutrition Facts panel must sit on the back or a side panel, carry the title \"Nutrition Facts\", and end with the % Daily Value footnote.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 46
+          },
+          "quote": "The Nutrition Facts panel must sit on the back or a side panel, carry the title \"Nutrition Facts\", and end with the % Daily Value footnote.",
+          "quoteChecked": true
+        },
+        "checkType": "present",
+        "findingIds": [
+          "f-pass-nutrition-panel"
+        ]
+      },
+      {
+        "id": "DF-10",
+        "title": "Daily values and calories",
+        "status": "in_force",
+        "text": "Every % Daily Value must be calculated from the declared amount per serving and the FDA daily value for that nutrient, and calories must agree with the declared fat, carbohydrate and protein.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 50
+          },
+          "quote": "Every % Daily Value must be calculated from the declared amount per serving and the FDA daily value for that nutrient, and calories must agree with the declared fat, carbohydrate and protein.",
+          "quoteChecked": true
+        },
+        "checkType": "exact",
+        "findingIds": [
+          "f-math-dv-total-fat"
+        ]
+      },
+      {
+        "id": "DF-14",
+        "title": "Vegan and vegetarian",
+        "status": "in_force",
+        "text": "\"Vegan\" may only be used when the recipe contains no animal-derived ingredient and the Certified Vegan certificate is on file. Honey is animal-derived. \"Vegetarian\" and \"vegan\" must never be used as if they mean the same thing.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 62
+          },
+          "quote": "\"Vegan\" may only be used when the recipe contains no animal-derived ingredient and the Certified Vegan certificate is on file. Honey is animal-derived. \"Vegetarian\" and \"vegan\" must never be used as if they mean the same thing.",
+          "quoteChecked": true
+        },
+        "checkType": "evidence_on_file",
+        "findingIds": [
+          "f-claim-vegan"
+        ]
+      },
+      {
+        "id": "DF-17",
+        "title": "Claims built on \"high\"",
+        "status": "in_force",
+        "text": "Claims built on the word \"high\" must be approved by Regulatory before use.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 70
+          },
+          "quote": "Claims built on the word \"high\", such as \"High Fiber\", \"High Protein\" or \"High-Grain\", must be approved by Regulatory before use.",
+          "quoteChecked": true
+        },
+        "checkType": "evidence_on_file",
+        "findingIds": [
+          "f-claim-high-grain"
+        ]
+      },
+      {
+        "id": "DF-19",
+        "title": "No hidden content",
+        "status": "in_force",
+        "text": "Release files must not contain hidden text.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 80
+          },
+          "quote": "Release files must not contain hidden text",
+          "quoteChecked": true
+        },
+        "checkType": "absent",
+        "findingIds": [
+          "f-hidden-eu-table"
+        ]
+      },
+      {
+        "id": "DF-21",
+        "title": "Front-of-pack nutrition box",
+        "status": "proposed",
+        "text": "The front panel will carry a Nutrition Info box.",
+        "source": {
+          "fileId": "f-rulebook",
+          "where": {
+            "paragraph": 92
+          },
+          "quote": "the front panel will carry a Nutrition Info box",
+          "quoteChecked": true
+        },
+        "checkType": "present",
+        "findingIds": []
+      }
+    ]
   }
 }

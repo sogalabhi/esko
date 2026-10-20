@@ -47,7 +47,7 @@ describe('mocks/project.json (UI.md §9 shape)', () => {
   })
 
   it('enum fields hold allowed values', () => {
-    p.files.forEach((f) => expect(oneOf(f.type, ['pdf', 'sheet'])).toBe(true))
+    p.files.forEach((f) => expect(oneOf(f.type, ['pdf', 'sheet', 'docx'])).toBe(true))
     p.facts.forEach((f) => {
       expect(oneOf(f.state, ['confirmed', 'ai_suggested', 'missing', 'pass'])).toBe(true)
       expect(oneOf(f.group, ['identity', 'ingredients', 'allergens', 'nutrition', 'quantity', 'claims', 'company', 'packaging'])).toBe(true)
@@ -70,5 +70,37 @@ describe('mocks/project.json (UI.md §9 shape)', () => {
     }
     expect(p.facts.find((f) => f.field === 'UPC')?.state).toBe('pass')
     expect(p.questions).toHaveLength(6)
+  })
+})
+
+describe('mocks/project.json P2 checker data (docs/PARALLEL_PLAN.md Step 0)', () => {
+  it('findings, cleared and rulebook only point at things that exist', () => {
+    const files = new Set(p.files.map((f) => f.id))
+    const facts = new Set(p.facts.map((f) => f.id))
+    const conflicts = new Set(p.conflicts.map((c) => c.id))
+    const reqs = new Set(p.requirements.map((r) => r.id))
+    const rules = new Set([...p.rules.map((r) => r.id), ...(p.rulebook?.rules ?? []).map((r) => r.id)])
+    const findings = new Set(p.findings.map((f) => f.id))
+    expect(findings.size).toBe(p.findings.length)
+    for (const f of p.findings) {
+      f.factIds.forEach((id) => expect(facts.has(id)).toBe(true))
+      f.conflictIds.forEach((id) => expect(conflicts.has(id)).toBe(true))
+      f.requirementIds.forEach((id) => expect(reqs.has(id)).toBe(true))
+      f.ruleIds.forEach((id) => expect(rules.has(id)).toBe(true))
+      f.evidence.forEach((s) => expect(files.has(s.fileId)).toBe(true))
+    }
+    p.cleared.forEach((c) => c.evidence.forEach((s) => expect(files.has(s.fileId)).toBe(true)))
+    expect(files.has(p.rulebook!.fileId)).toBe(true)
+    p.rulebook!.rules.forEach((r) => r.findingIds.forEach((id) => expect(findings.has(id)).toBe(true)))
+  })
+
+  it('shows every state the screens must handle', () => {
+    expect(new Set(p.findings.map((f) => f.verdict))).toEqual(new Set(['fail', 'review', 'pass']))
+    expect(p.findings.some((f) => f.decision)).toBe(true)
+    expect(p.findings.some((f) => f.basis === 'ai' && f.verdict === 'review')).toBe(true)
+    expect(p.findings.some((f) => f.proof)).toBe(true)
+    expect(p.rulebook!.rules.some((r) => !r.source.quoteChecked)).toBe(true)
+    expect(p.rulebook!.rules.some((r) => r.status === 'proposed')).toBe(true)
+    expect(p.files.map((f) => f.role)).toEqual(['artwork', 'approved_info', 'rulebook'])
   })
 })

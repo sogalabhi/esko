@@ -130,6 +130,9 @@ export const EMPTY_PROJECT: Project = {
   pack: { panels: [], blocks: [] },
   brief: { version: 0, sections: [] },
   trust: { coverage: 0, aiOpen: 0, resolved: 0, selfTest: { caught: 0, total: 0, rows: [] } },
+  findings: [],
+  cleared: [],
+  rulebook: null,
 }
 
 /** Fill any part the backend has not built yet, so screens never meet undefined. */

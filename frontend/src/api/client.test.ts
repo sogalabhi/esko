@@ -22,7 +22,7 @@ describe('api client', () => {
   it('getProject returns the project and fills parts the backend has not built', async () => {
     stub(() => json({ files: (mock as unknown as Project).files }))
     const p = await api.getProject()
-    expect(p?.files).toHaveLength(2)
+    expect(p?.files).toHaveLength(3) // carton, content sheet, rulebook
     expect(p?.facts).toEqual([])
     expect(p?.pack).toEqual({ panels: [], blocks: [] })
   })

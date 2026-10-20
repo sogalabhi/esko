@@ -53,7 +53,7 @@ describe('loading, empty and error states', () => {
     p.files[1] = { ...p.files[1], status: 'error', error: 'Password protected' }
     stubFetch(get('/api/project', () => json(p)))
     renderLive(<Facts />, { gate: true })
-    expect(await screen.findByText(/Partial result: 1 of 2 files read/)).toBeInTheDocument()
+    expect(await screen.findByText(/Partial result: 2 of 3 files read/)).toBeInTheDocument()
   })
 
   it('partial: files uploaded but not analysed yet points to Evidence', async () => {

@@ -56,7 +56,7 @@ describe('Evidence screen', () => {
     const p: Project = structuredClone(mockProject)
     p.files[1].status = 'error'
     renderWithProject(<Evidence readMs={0} />, '/', p)
-    expect(screen.getByRole('alert')).toHaveTextContent(/1 of 2 files read/)
+    expect(screen.getByRole('alert')).toHaveTextContent(/2 of 3 files read/)
     const sheet = card('f-sheet')
     expect(within(sheet).getByTestId('file-status')).toHaveTextContent('Could not read')
     expect(within(sheet).getByRole('button', { name: 'Retry' })).toBeInTheDocument()

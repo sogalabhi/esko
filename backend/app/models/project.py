@@ -41,9 +41,14 @@ class SkippedItem(CamelModel):
     reason: str
 
 
+# What a file is to the checker (P2): the artwork under review, the approved product information it must match,
+# the rulebook it is checked against, or anything else (notes, extra specs).
+FileRole = Literal["artwork", "approved_info", "rulebook", "other"]
+
+
 class ProjectFile(OmitNone):
     """pages = the unit count for the type: pages (pdf, document), sheets (sheet), paragraphs (docx), lines (text),
-    1 (image). error = plain reason when status is error."""
+    1 (image). error = plain reason when status is error. role = what the file is to the checker."""
 
     omit_none = ("error",)
     id: str
@@ -53,6 +58,7 @@ class ProjectFile(OmitNone):
     status: FileStatus
     skipped: list[SkippedItem] = []
     error: str | None = None
+    role: FileRole = "other"
 
 
 def project_file_type(f: SourceFile, pieces: list[SourcePiece]) -> FileType:
@@ -61,6 +67,16 @@ def project_file_type(f: SourceFile, pieces: list[SourcePiece]) -> FileType:
     if f.type == "pdf":  # the dieline reader tags text with a panel or layer; the document reader does not
         return "pdf" if not pieces or any(p.location.panel or p.location.layer for p in pieces) else "document"
     return f.type
+
+
+def file_role(file_type: FileType) -> FileRole:
+    """Default role from the file type: a dieline or pack image is the artwork, a sheet is the approved product
+    information. A rulebook is only ever a rulebook because it was uploaded as one (POST /api/rulebook)."""
+    if file_type in ("pdf", "image"):
+        return "artwork"
+    if file_type == "sheet":
+        return "approved_info"
+    return "other"
 
 
 # File types that are a current pack (a dieline PDF or a pack image). Their values are "printed"; any other
@@ -98,8 +114,10 @@ def to_project_file(f: SourceFile, pieces: list[SourcePiece] | None = None) -> P
         item, _, reason = note.partition(": ")
         skipped.append(SkippedItem(item=item, reason=reason or "Not read as a fact"))
     ok = f.status == "read"
-    return ProjectFile(id=f.id, name=f.name, type=project_file_type(f, pieces), pages=project_file_units(f, pieces),
-                       status="done" if ok else "error", skipped=skipped, error=None if ok else f.error)
+    ftype = project_file_type(f, pieces)
+    return ProjectFile(id=f.id, name=f.name, type=ftype, pages=project_file_units(f, pieces),
+                       status="done" if ok else "error", skipped=skipped, error=None if ok else f.error,
+                       role=file_role(ftype))
 
 
 class SourceWhere(OmitNone):
@@ -308,11 +326,83 @@ class Trust(CamelModel):
     self_test: SelfTest = SelfTest()
 
 
+# --- P2 checker: findings, the cleared list and an uploaded rulebook (docs/PARALLEL_PLAN.md, Step 0) ---------
+
+Verdict = Literal["fail", "review", "pass"]
+FindingKind = Literal["missing", "mismatch", "math", "rule", "claim", "format", "hidden", "text_size", "approval"]
+
+
+class FindingDecision(OmitNone):
+    """A person's call on a review item: "It's fine" (pass) or "It's a problem" (fail). Logged."""
+
+    omit_none = ("note",)
+    verdict: Literal["pass", "fail"]
+    by: str
+    at: str
+    note: str | None = None
+
+
+class Finding(OmitNone):
+    """One check result. Decided by code: fail needs a rule id, code-checked evidence and a deterministic check;
+    basis "ai" (AI meaning) is never fail. A decided review item keeps verdict "review" and gains `decision`."""
+
+    omit_none = ("expected", "found", "proof", "decision")
+    id: str  # stable: "f-<check>-<subject>"
+    verdict: Verdict
+    kind: FindingKind
+    title: str
+    why_it_matters: str
+    rule_ids: list[str] = []  # market rule ids or rulebook ids ("DF-04")
+    expected: str | None = None
+    found: str | None = None
+    proof: str | None = None  # the code's working, e.g. "15 g / 78 g = 19.2%, printed 2.2%"
+    basis: Literal["code", "ai"] = "code"
+    evidence: list[Source] = []
+    locations: list[ConflictLocation] = []
+    fact_ids: list[str] = []
+    conflict_ids: list[str] = []
+    requirement_ids: list[str] = []
+    decision: FindingDecision | None = None
+
+
+class Cleared(CamelModel):
+    """Checked and fine, deliberately not flagged (a unit equivalence, a valid check digit), with the code's proof."""
+
+    id: str
+    title: str
+    proof: str
+    evidence: list[Source] = []
+
+
+RuleCheckType = Literal["present", "absent", "exact", "size", "word_list", "evidence_on_file", "unsupported"]
+
+
+class RulebookRule(CamelModel):
+    """One rule read from an uploaded rulebook. source.quote_checked is decided by code; an unchecked rule is never
+    applied as a fail. A proposed rule never produces a finding."""
+
+    id: str  # as printed, e.g. "DF-04"
+    title: str
+    status: Literal["in_force", "proposed"]
+    text: str
+    source: Source
+    check_type: RuleCheckType = "unsupported"
+    finding_ids: list[str] = []
+
+
+class Rulebook(CamelModel):
+    file_id: str
+    name: str
+    rules: list[RulebookRule] = []
+
+
 class LogEntry(BaseModel):
     """One person's decision, kept so the project can be recomputed from the run without it (undo)."""
 
-    kind: Literal["answer", "skip", "resolve"]
-    target: str  # question id (answer, skip) or conflict id (resolve)
+    kind: Literal["answer", "skip", "resolve", "decide"]
+    target: str  # question id (answer, skip), conflict id (resolve) or finding id (decide)
+    verdict: Literal["pass", "fail"] | None = None  # decide
+    note: str | None = None  # decide
     answer: str | None = None
     choice: Literal["intended", "left", "right", "custom"] | None = None
     text: str | None = None
@@ -340,3 +430,7 @@ class Project(OmitNone):
     pack: Pack = Pack()
     brief: Brief = Brief()
     trust: Trust = Trust()
+    # P2 checker
+    findings: list[Finding] = []
+    cleared: list[Cleared] = []
+    rulebook: Rulebook | None = None

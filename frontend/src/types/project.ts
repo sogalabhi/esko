@@ -20,7 +20,12 @@ export interface ProjectFile {
   skipped: SkippedItem[]
   /** Plain reason when status is 'error'. */
   error?: string
+  /** What the file is to the checker (P2). */
+  role?: FileRole
 }
+
+/** artwork = under review, approved_info = what it must match, rulebook = what it is checked against. */
+export type FileRole = 'artwork' | 'approved_info' | 'rulebook' | 'other'
 
 /** x, y, w, h in mm on the page (same frame as pack panels and conflict locations). */
 export type BBox = [number, number, number, number]
@@ -232,7 +237,82 @@ export interface Trust {
   selfTest: { caught: number; total: number; rows: SelfTestRow[] }
 }
 
+// --- P2 checker: findings, the cleared list and an uploaded rulebook (docs/PARALLEL_PLAN.md, Step 0) ---
+
+export type Verdict = 'fail' | 'review' | 'pass'
+export type FindingKind = 'missing' | 'mismatch' | 'math' | 'rule' | 'claim' | 'format' | 'hidden' | 'text_size' | 'approval'
+
+/** A person's call on a review item: "It's fine" (pass) or "It's a problem" (fail). */
+export interface FindingDecision {
+  verdict: 'pass' | 'fail'
+  by: string
+  at: string
+  note?: string
+}
+
+/** One check result, decided by code. basis 'ai' is never verdict 'fail'. A decided review item keeps
+ *  verdict 'review' and gains `decision`. */
+export interface Finding {
+  id: string
+  verdict: Verdict
+  kind: FindingKind
+  title: string
+  whyItMatters: string
+  /** Market rule ids or rulebook ids ('DF-04'). */
+  ruleIds: string[]
+  expected?: string
+  found?: string
+  /** The code's working, e.g. "15 g / 78 g = 19.2%, printed 2.2%". */
+  proof?: string
+  basis: 'code' | 'ai'
+  evidence: Source[]
+  locations: ConflictLocation[]
+  factIds: string[]
+  conflictIds: string[]
+  requirementIds: string[]
+  decision?: FindingDecision
+}
+
+/** Checked and fine, deliberately not flagged, with the code's proof. */
+export interface Cleared {
+  id: string
+  title: string
+  proof: string
+  evidence: Source[]
+}
+
+export type RuleCheckType = 'present' | 'absent' | 'exact' | 'size' | 'word_list' | 'evidence_on_file' | 'unsupported'
+
+/** A rule read from an uploaded rulebook. source.quoteChecked is decided by code; an unchecked rule never
+ *  produces a fail, a proposed rule never produces a finding. */
+export interface RulebookRule {
+  id: string
+  title: string
+  status: 'in_force' | 'proposed'
+  text: string
+  source: Source
+  checkType: RuleCheckType
+  findingIds: string[]
+}
+
+export interface Rulebook {
+  fileId: string
+  name: string
+  rules: RulebookRule[]
+}
+
+/** GET /api/checks */
+export interface ChecksResult {
+  summary: { fail: number; review: number; pass: number; cleared: number }
+  findings: Finding[]
+  cleared: Cleared[]
+}
+
 export interface Project {
+  /** P2 checker results. */
+  findings: Finding[]
+  cleared: Cleared[]
+  rulebook: Rulebook | null
   /** Market pack id the backend analysed with, e.g. 'us'. */
   market?: string | null
   /** True while unapproved rules are in use. */
