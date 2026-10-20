@@ -252,7 +252,7 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
   return (
     <div className="mx-auto max-w-[960px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[20px] font-semibold">Evidence</h1>
+        <h1 className="text-[20px] font-semibold">Files</h1>
         <div className="flex flex-wrap items-start gap-2">
           <LoadDemoButton label="Load demo" />
           <Link

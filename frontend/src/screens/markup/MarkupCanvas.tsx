@@ -20,12 +20,14 @@ import {
   type PassTick,
   type Spot,
 } from '../../lib/markup'
-import type { BBox, PackPanel } from '../../types/project'
+import type { BBox, PackPanel, Verdict } from '../../types/project'
 
 /** All sizes in mm: the SVG uses the page's own mm frame (origin top-left), the same as conflict locations. */
 const NOTE_W = 78
 const MARGIN = NOTE_W + 6
-const PEN = 'var(--pen)'
+/** Pen colour by verdict: red Fail, amber Needs review, green Pass. Words always sit beside it (notes, names, legend). */
+const PEN_BY: Record<Verdict, string> = { fail: 'var(--pen)', review: 'var(--warn)', pass: 'var(--ok)' }
+const penOf = (v: Verdict) => PEN_BY[v]
 const NOTE_FONT = 7.6
 const NOTE_LINE = 7.4
 const FIX_FONT = 6.6
@@ -128,6 +130,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
   /** Strike-throughs and the corrected value: drawn the same inside a cluster box as on a single mark. */
   const inline = (m: Mark, s: Spot, d0: number) => {
     if (s.quiet) return null
+    const PEN = penOf(m.verdict)
     const { cx, cy } = geometry(s)
     const seed = hashSeed(`${m.conflict.id}#${s.index}`)
     const r = rng(seed)
@@ -187,6 +190,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
   }
 
   const markSpot = ({ m, s }: { m: Mark; s: Spot }) => {
+    const PEN = penOf(m.verdict)
     const { cx, cy, rx, ry } = geometry(s)
     const seed = hashSeed(`${m.conflict.id}#${s.index}`)
     const d0 = (order.get(m.conflict.id) ?? 0) + s.index * 120
@@ -199,7 +203,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
     // A quiet spot is only its number: the hit area is the number.
     const hit = s.quiet ? { x: nx - 3.5, y: ny - 4, w: 7, h: 7.5 } : { x: cx - rx - 1, y: cy - ry - 1, w: rx * 2 + 2, h: ry * 2 + 2 }
     return (
-      <g key={`${m.conflict.id}-${s.index}`} data-mark={m.conflict.id} data-n={m.n}>
+      <g key={`${m.conflict.id}-${s.index}`} data-mark={m.conflict.id} data-n={m.n} data-verdict={m.verdict}>
         {button(
           name,
           () => onSelect?.(m, s),
@@ -247,7 +251,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
     }
     const [shaft, head] = wobblyArrow(from, [ax, ay], hashSeed(`${t.cluster ? t.cluster.key : t.id}>note`))
     const d0 = (order.get(t.id) ?? 0) + 450
-    const stroke = sticky ? 'var(--ink-2)' : PEN
+    const stroke = sticky ? 'var(--ink-2)' : penOf(t.cluster ? t.cluster.verdict : t.mark!.verdict)
     const w = sticky ? 0.55 : 0.8
     return (
       <g key={`a-${t.id}`} aria-hidden="true">
@@ -263,6 +267,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
     const d0 = (order.get(id) ?? 0) + 650
     const open = () => (t.cluster ? onCluster?.(t.cluster) : onSelect?.(t.mark!, t.mark!.spots[0]))
     const left = b.side === 'left'
+    const PEN = penOf(t.cluster ? t.cluster.verdict : t.mark!.verdict)
     const attrs = { 'data-note': id, 'data-note-kind': t.cluster ? 'cluster' : 'mark' }
     if (sticky) {
       const tilt = (rng(hashSeed(`${t.cluster ? t.cluster.key : id}~sticky`))() - 0.5) * 2.4
@@ -310,6 +315,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
    * selected member ringed. The box is one button; its members are listed beside the canvas.
    */
   const clusterMark = (c: MarkCluster) => {
+    const PEN = penOf(c.verdict)
     const box = padBox(c.bbox)
     const d0 = order.get(c.id) ?? 0
     const onLeft = c.bbox.x + c.bbox.w / 2 < page.w / 2
@@ -318,7 +324,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
     const expanded = expandedId === c.id
     const focus = c.marks.find((m) => m.conflict.id === selectedId)
     return (
-      <g key={`c-${c.key}`} data-cluster={c.id} data-n={c.n} data-count={c.marks.length}>
+      <g key={`c-${c.key}`} data-cluster={c.id} data-n={c.n} data-count={c.marks.length} data-verdict={c.verdict}>
         {button(
           `${c.name}. ${expanded ? 'Listed below the carton' : 'Show the list'}`,
           () => onCluster?.(c),
@@ -362,10 +368,11 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
         {focus?.spots[0] &&
           (() => {
             const s = focus.spots[0]
+            const FOCUS_PEN = penOf(focus.verdict)
             const { cx, cy, rx, ry } = geometry({ ...s, ring: 0 })
             return (
               <g aria-hidden="true" data-focus={focus.conflict.id} pointerEvents="none">
-                <path d={wobblyEllipse(cx, cy, rx + 0.6, ry + 0.6, hashSeed(`${focus.conflict.id}#focus`))} fill="none" stroke={PEN} strokeWidth={1.1} strokeLinecap="round" />
+                <path d={wobblyEllipse(cx, cy, rx + 0.6, ry + 0.6, hashSeed(`${focus.conflict.id}#focus`))} fill="none" stroke={FOCUS_PEN} strokeWidth={1.1} strokeLinecap="round" />
                 <text
                   className="hand"
                   x={s.x - 3}
@@ -373,7 +380,7 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
                   textAnchor="middle"
                   fontSize={5.5}
                   fontWeight={700}
-                  fill={PEN}
+                  fill={FOCUS_PEN}
                   stroke="#fff"
                   strokeWidth={1.2}
                   paintOrder="stroke"

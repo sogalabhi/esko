@@ -1,9 +1,18 @@
 import { createPortal } from 'react-dom'
 import { formatValue, OWNER_LABEL, resolutionText, titleCase } from '../../lib/labels'
-import type { MarkGroups, MarkSet } from '../../lib/markup'
-import type { BBox, PackPanel, Project } from '../../types/project'
+import { VERDICT_LABEL } from '../../components/VerdictBadge'
+import { effectiveVerdict, type MarkGroups, type MarkSet } from '../../lib/markup'
+import type { BBox, Finding, PackPanel, Project, Verdict } from '../../types/project'
 import { MarkupCanvas, type Page } from './MarkupCanvas'
 import { POSTER_CSS } from './posterCss'
+
+const findingBasis = (f: Finding) => (f.basis === 'ai' ? 'AI judgement' : 'checked by code')
+
+/** The verdict of an unplaced item: its finding's, or Fail for a conflict with no finding. */
+function verdictOfOff(c: Project['conflicts'][number], project: Project): Verdict {
+  const f = project.findings.find((x) => x.id === c.id || x.conflictIds.includes(c.id))
+  return f ? effectiveVerdict(f) : 'fail'
+}
 
 interface Props {
   project: Project
@@ -77,7 +86,9 @@ export function Poster({ project, set, groups, page, image, panels, hints, stick
         <section>
           <h2 className="text-[11pt] font-semibold">Legend</h2>
           <ul className="mt-[1mm] space-y-[0.8mm]">
-            <li>Red circle: a problem at this spot (number = the finding below)</li>
+            <li>Red circle: Fail at this spot (number = the finding listed beside)</li>
+            <li>Amber circle: Needs review, a person decides</li>
+            <li>Green circle: Pass (only when pass marks are shown)</li>
             {clusters.length > 0 && <li>Red box: several problems in one place (listed under the carton)</li>}
             <li>Struck through: a claim to take off or a wrong printed value</li>
             <li>Written above: the value code computed</li>
@@ -93,33 +104,42 @@ export function Poster({ project, set, groups, page, image, panels, hints, stick
             )}
           </ul>
         </section>
-        <section>
-          <h2 className="text-[11pt] font-semibold">Open findings ({set.marks.length + set.offPack.length})</h2>
-          <ol className="mt-[1mm] space-y-[0.8mm]">
-            {rows.map(({ n, m, c }) => (
-              <li key={m ? m.conflict.id : c!.id} className="flex gap-[1.5mm]">
-                <span className="w-[5mm] shrink-0 text-right font-mono">{n}.</span>
-                {m ? (
-                  <span>
-                    {m.conflict.explanation} <span className="text-ink-2">· {OWNER_LABEL[m.owner]}</span>
-                  </span>
-                ) : (
-                  <span>
-                    {c!.note} <span className="text-ink-2">· see the table under the carton</span>
-                  </span>
-                )}
-              </li>
-            ))}
-            {set.offPack.map((c) => (
-              <li key={c.id} className="flex gap-[1.5mm]">
-                <span className="w-[5mm] shrink-0 text-right font-mono">–</span>
-                <span>
-                  {c.explanation} <span className="text-ink-2">· {OWNER_LABEL[c.owner]} · not on the carton</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
+        {(['fail', 'review', 'pass'] as const).map((v) => {
+          const list = rows.filter((r) => (r.m ? r.m.verdict : r.c!.verdict) === v)
+          const off = v === 'pass' ? [] : set.offPack.filter((c) => verdictOfOff(c, project) === v)
+          if (list.length + off.length === 0) return null
+          return (
+            <section key={v} data-poster-group={v}>
+              <h2 className="text-[11pt] font-semibold">
+                {VERDICT_LABEL[v]} ({list.length + off.length})
+              </h2>
+              <ol className="mt-[1mm] space-y-[0.8mm]">
+                {list.map(({ n, m, c }) => (
+                  <li key={m ? m.conflict.id : c!.id} className="flex gap-[1.5mm]">
+                    <span className="w-[5mm] shrink-0 text-right font-mono">{n}.</span>
+                    {m ? (
+                      <span>
+                        {m.conflict.explanation} <span className="text-ink-2">· {m.finding ? findingBasis(m.finding) : OWNER_LABEL[m.owner]}</span>
+                      </span>
+                    ) : (
+                      <span>
+                        {c!.note} <span className="text-ink-2">· see the table under the carton</span>
+                      </span>
+                    )}
+                  </li>
+                ))}
+                {off.map((c) => (
+                  <li key={c.id} className="flex gap-[1.5mm]">
+                    <span className="w-[5mm] shrink-0 text-right font-mono">–</span>
+                    <span>
+                      {c.explanation} <span className="text-ink-2">· {OWNER_LABEL[c.owner]} · not on the carton</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )
+        })}
         <section>
           <h2 className="text-[11pt] font-semibold">Decisions ({settled.length + answered.length})</h2>
           {settled.length + answered.length === 0 ? (

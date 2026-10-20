@@ -1,0 +1,31 @@
+/* Print approval report: A4 portrait, no app chrome (the rail, top bar, drawer and Ask panel carry .no-print). */
+@media print {
+  @page report {
+    size: A4 portrait;
+    margin: 14mm;
+  }
+  .report-doc {
+    page: report;
+    max-width: none !important;
+    font-size: 10pt;
+    color: #000;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .report-doc .report-break {
+    break-before: page;
+  }
+  .report-doc [data-report-finding],
+  .report-doc [data-report-row],
+  .report-doc figure,
+  .report-doc [data-signoff] {
+    break-inside: avoid;
+  }
+  .report-doc h2 {
+    break-after: avoid;
+  }
+  .report-doc [data-crop] canvas,
+  .report-doc [data-crop] svg {
+    max-height: 45mm;
+  }
+}

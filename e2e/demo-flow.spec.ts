@@ -7,7 +7,7 @@ const FILES = [
   path.join(SAMPLES, 'DancingFish_Granola_BerryCrunch_US_Content_Sheet.xlsx'),
 ]
 
-test('Phase 4 demo flow: upload, conflicts, source drawer, answer a question', async ({ page }) => {
+test('P2 demo flow: upload, what we read, source drawer, checks verdict', async ({ page }) => {
   // Evidence: upload both samples
   await page.goto('/evidence')
   await page.getByLabel(/Drop your packaging files/).setInputFiles(FILES)
@@ -16,9 +16,10 @@ test('Phase 4 demo flow: upload, conflicts, source drawer, answer a question', a
   await expect(counter).toContainText(/[1-9]\d* conflicts?/)
   await expect(counter).toContainText(/[1-9]\d* facts?/)
 
-  // Facts: honey conflict
-  await page.getByRole('link', { name: 'Facts' }).first().click()
-  await expect(page.getByRole('heading', { name: 'Facts', level: 1 })).toBeVisible()
+  // What we read: honey conflict
+  const nav = page.getByRole('navigation', { name: 'Steps' })
+  await nav.getByRole('link', { name: /What we read/ }).click()
+  await expect(page.getByRole('heading', { name: 'What we read', level: 1 })).toBeVisible()
 
   // The honey conflict: 9% on the content sheet vs 1% on the carton
   const sheetRow = page.getByRole('row', { name: /^Honey % 9%/ })
@@ -39,21 +40,15 @@ test('Phase 4 demo flow: upload, conflicts, source drawer, answer a question', a
   await drawer.getByRole('button', { name: 'Close source' }).click()
   await expect(drawer).toBeHidden()
 
-  // Questions: answer the top one
-  const nav = page.getByRole('navigation', { name: 'Steps' })
-  const openBefore = Number(/Questions\s*(\d+)/.exec((await nav.getByRole('link', { name: /Questions/ }).innerText()) ?? '')?.[1])
-  expect(openBefore).toBeGreaterThan(0)
-  await nav.getByRole('link', { name: /Questions/ }).click()
-  await expect(page.getByRole('heading', { name: 'Questions', level: 1 })).toBeVisible()
-  const top = page.getByRole('article').first()
-  const topTitle = (await top.getByRole('heading', { level: 3 }).innerText()).trim()
-  await top.getByRole('listitem').first().getByRole('button').click()
+  // Checks: the artwork is not ready, and the honey mismatch is a Fail with its rule and both sources
+  await nav.getByRole('link', { name: /Checks/ }).click()
+  await expect(page.getByRole('heading', { name: 'Checks', level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Print verdict: not ready to print/ })).toBeVisible()
+  const honey = page.getByRole('article').filter({ hasText: /honey/i }).first()
+  await expect(honey).toContainText(/fail/i)
+  await expect(honey).toContainText('Quote checked by code')
 
-  // The answered question leaves the open list, and the step counter drops
-  await expect(page.getByRole('heading', { level: 3, name: topTitle, exact: true })).toHaveCount(0)
-  await expect(nav.getByRole('link', { name: /Questions/ })).not.toContainText(new RegExp(String.raw`Questions\s*${openBefore}`))
-
-  // Facts reflect the new state and still load
-  await nav.getByRole('link', { name: /Facts/ }).click()
-  await expect(page.getByRole('heading', { name: 'Facts', level: 1 })).toBeVisible()
+  // What we read still loads
+  await nav.getByRole('link', { name: /What we read/ }).click()
+  await expect(page.getByRole('heading', { name: 'What we read', level: 1 })).toBeVisible()
 })

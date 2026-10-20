@@ -40,6 +40,14 @@ export function readApprover(): string {
   }
 }
 
+export function saveApprover(name: string) {
+  try {
+    storage()?.setItem(APPROVER_KEY, name)
+  } catch {
+    /* storage unavailable: the name is kept for this visit only */
+  }
+}
+
 export function defaultLetterhead(): Letterhead {
   return {
     company: '',

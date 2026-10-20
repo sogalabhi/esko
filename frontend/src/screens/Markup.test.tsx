@@ -22,6 +22,8 @@ const canvas = () => screen.getByRole('group', { name: /Carton markup/ })
 const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 /** The single-spot findings printed in the mock carton's nutrition table. */
 const NUTRITION = ['c-carbs', 'c-dv-fat', 'c-dv-vitd', 'c-dv-calcium', 'c-calories', 'c-serving', 'c-sodium']
+/** Findings with no conflict of their own: they draw their own mark (hidden EU table: Fail, HIGH-GRAIN claim: Needs review). */
+const STANDALONE = ['f-hidden-eu-table', 'f-claim-high-grain']
 const clusterButton = () => within(canvas()).getByRole('button', { name: /^Nutrition: 7 problems/ })
 
 beforeEach(() => {
@@ -36,10 +38,12 @@ describe('Markup: red pen', () => {
     renderWithProject(<Markup />, '/markup', p)
     const singles = onCarton(p).filter((c) => !NUTRITION.includes(c.id))
     const spots = singles.flatMap((c) => c.locations.filter((l) => l.fileId === 'f-carton'))
-    expect(document.querySelectorAll('[data-mark] > [role="button"]')).toHaveLength(spots.length)
+    expect(document.querySelectorAll('[data-mark] > [role="button"]')).toHaveLength(spots.length + STANDALONE.length)
     for (const c of singles) {
       const n = c.locations.filter((l) => l.fileId === 'f-carton').length
-      const name = n > 1 ? `${c.explanation} (spot 1 of ${n})` : c.explanation
+      // A conflict behind a Needs review finding names its verdict; the others keep the plain text.
+      const text = p.findings.some((f) => f.verdict === 'review' && f.conflictIds.includes(c.id)) ? `Needs review: ${c.explanation}` : c.explanation
+      const name = n > 1 ? `${text} (spot 1 of ${n})` : text
       expect(within(canvas()).getByRole('button', { name })).toBeInTheDocument()
     }
     // The table's findings have no mark of their own: one box with the count stands for them.
@@ -229,7 +233,7 @@ describe('Markup: toggles', () => {
     expect(honey).toHaveTextContent('R&D · #1')
     expect(document.querySelector('[data-note="c-added-sugar"]')).toHaveTextContent(/^LEGAL/)
     // One sticky per single finding and one for the nutrition box, in its main owner's colour.
-    expect(canvas().querySelectorAll('[data-note]')).toHaveLength(onCarton(p).length - NUTRITION.length + 1)
+    expect(canvas().querySelectorAll('[data-note]')).toHaveLength(onCarton(p).length + STANDALONE.length - NUTRITION.length + 1)
     const box = canvas().querySelector('[data-note-kind="cluster"]')!
     expect(box.getAttribute('data-owner')).toBe('legal')
     expect(box).toHaveTextContent(/^LEGAL · #\d+7 problems in Nutrition/)
@@ -300,7 +304,7 @@ describe('Markup: A3 poster', () => {
     expect(poster).toHaveAttribute('aria-hidden', 'true')
     expect(poster.querySelectorAll('button, [role="button"], input')).toHaveLength(0)
     const drawn = new Set([...poster.querySelectorAll('[data-mark], svg [data-member]')].map((e) => e.getAttribute('data-mark') ?? e.getAttribute('data-member')))
-    expect(drawn.size).toBe(onCarton(p).length - 1)
+    expect(drawn.size).toBe(onCarton(p).length + STANDALONE.length - 1)
     // Same collapsed view as on screen, plus a footnote table of what each box holds.
     expect(poster.querySelectorAll('[data-cluster]')).toHaveLength(1)
     const table = within(poster).getByTestId('poster-clusters')
@@ -349,5 +353,152 @@ describe('guideLayers', () => {
   it('reads the guide layers the backend skipped, so the render can switch them off', () => {
     expect(guideLayers([{ item: "Ignored 33 guide pieces (guide layer 'Dimensions and text')", reason: "'Orientation' ×11" }])).toEqual(['Dimensions and text'])
     expect(guideLayers([{ item: 'Hidden EU table', reason: 'Covered by the US panel' }])).toEqual([])
+  })
+})
+
+describe('Markup: opened from a check ("Show on artwork")', () => {
+  it('has the renamed heading and selects the mark of the finding it was opened for', () => {
+    renderWithProject(<Markup />, '/markup?finding=f-mismatch-honey', project())
+    expect(screen.getByRole('heading', { name: 'Marked-up artwork', level: 1 })).toBeInTheDocument()
+    const focus = screen.getByRole('region', { name: 'Check on the artwork' })
+    expect(focus).toHaveTextContent('Honey percentage differs from the content sheet')
+    expect(within(focus).getByText('Fail')).toBeInTheDocument()
+    expect(within(focus).getByRole('link', { name: 'Back to Checks' })).toHaveAttribute('href', '/checks')
+    expect(screen.getByRole('heading', { name: /^Finding/ })).toBeInTheDocument()
+  })
+
+  it('a check with a spot but no conflict has its own mark, selected and focused, with the card beside it', () => {
+    renderWithProject(<Markup />, '/markup?finding=f-hidden-eu-table', project())
+    const focus = screen.getByRole('region', { name: 'Check on the artwork' })
+    expect(focus).toHaveTextContent('Its mark is selected below')
+    const mark = within(canvas()).getByRole('button', { name: /^Fail: An old EU nutrition table is hidden/ })
+    expect(mark).toHaveAttribute('data-selected')
+    expect(document.activeElement).toBe(mark)
+    const card = screen.getByRole('region', { name: /^Check \d+ on the carton/ })
+    expect(within(card).getByRole('heading', { name: 'An old EU nutrition table is hidden under the US panel' })).toBeInTheDocument()
+    expect(within(card).queryByRole('link', { name: 'Show on artwork' })).toBeNull()
+  })
+
+  it('a check with no spot at all says so instead of showing nothing', () => {
+    renderWithProject(<Markup />, '/markup?finding=f-approval-sheet-draft', project())
+    const focus = screen.getByRole('region', { name: 'Check on the artwork' })
+    expect(focus).toHaveTextContent('no spot on the carton')
+  })
+
+  it('focuses the box that holds the mark of a nutrition check and opens its list', () => {
+    renderWithProject(<Markup />, '/markup?finding=f-math-dv-total-fat', project())
+    expect(clusterButton()).toHaveAttribute('aria-expanded', 'true')
+    expect(document.activeElement).toBe(clusterButton())
+    expect(screen.getByRole('region', { name: /^Check \d+ on the carton/ })).toBeInTheDocument()
+  })
+
+  it('shows no check banner when opened from the rail', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    expect(screen.queryByRole('region', { name: 'Check on the artwork' })).toBeNull()
+  })
+})
+
+describe('Markup: a mark for every check with a spot', () => {
+  it('draws the hidden table (Fail) and the HIGH-GRAIN claim (Needs review) with names that say the verdict', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    const hidden = within(canvas()).getByRole('button', { name: 'Fail: An old EU nutrition table is hidden under the US panel' })
+    expect(hidden.closest('[data-mark]')).toHaveAttribute('data-verdict', 'fail')
+    const grain = within(canvas()).getByRole('button', { name: /^Needs review: .*HIGH-GRAIN/i })
+    expect(grain.closest('[data-mark]')).toHaveAttribute('data-verdict', 'review')
+    // Text beside the drawing: the number, and a margin note in words.
+    expect(grain.textContent).toMatch(/\d/)
+    expect(document.querySelector('[data-note="f-claim-high-grain"]')).toHaveTextContent(/^\d+\. Review: /)
+    expect(document.querySelector('[data-note="f-hidden-eu-table"]')).toHaveTextContent(/hidden/i)
+  })
+
+  it('clicking the mark selects it, opens its evidence in the drawer and shows the card', async () => {
+    const user = userEvent.setup()
+    renderWithProject(<Markup />, '/markup', project())
+    await user.click(within(canvas()).getByRole('button', { name: /^Needs review: .*HIGH-GRAIN/i }))
+    expect(screen.getByRole('dialog', { name: 'Source' })).toBeInTheDocument()
+    const card = screen.getByRole('region', { name: /^Check \d+ on the carton/ })
+    expect(within(card).getByText('Needs review')).toBeInTheDocument()
+    expect(within(card).getByRole('group', { name: /^Decide:/ })).toBeInTheDocument()
+  })
+
+  it('a finding that links a conflict is that conflict\'s mark, not a second one', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    expect(canvas().querySelectorAll('[data-mark="c-honey"]')).toHaveLength(1)
+    expect(canvas().querySelector('[data-mark="f-mismatch-honey"]')).toBeNull()
+    // The vegan conflict is behind a Needs review finding, so its pen reads as review.
+    expect(canvas().querySelector('[data-mark="c-vegan"]')).toHaveAttribute('data-verdict', 'review')
+    expect(canvas().querySelector('[data-mark="c-honey"]')).toHaveAttribute('data-verdict', 'fail')
+  })
+
+  it('a conflict mark keeps its plain name', () => {
+    const p = project()
+    renderWithProject(<Markup />, '/markup', p)
+    const honey = p.conflicts.find((c) => c.id === 'c-honey')!
+    expect(within(canvas()).getByRole('button', { name: honey.explanation })).toBeInTheDocument()
+  })
+
+  it('Pass marks are off until toggled, and a toggle never renumbers the problems', async () => {
+    const user = userEvent.setup()
+    const p = project()
+    const pass = p.findings.find((f) => f.id === 'f-pass-identity')!
+    pass.locations = [{ fileId: 'f-carton', panel: 'Front', x: 250, y: 150, w: 60, h: 12 }]
+    renderWithProject(<Markup />, '/markup', p)
+    const toggle = screen.getByRole('button', { name: /^Pass marks/ })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(toggle).toHaveTextContent('1')
+    expect(document.querySelector('[data-mark="f-pass-identity"]')).toBeNull()
+    const numbers = () => [...document.querySelectorAll('[data-mark]')].map((e) => e.getAttribute('data-n')).sort()
+    const before = numbers()
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    const mark = within(canvas()).getByRole('button', { name: /^Pass: / })
+    expect(mark.closest('[data-mark]')).toHaveAttribute('data-verdict', 'pass')
+    expect(before.every((n) => numbers().includes(n!))).toBe(true)
+    expect(canvas().getAttribute('aria-label')).toMatch(/1 passed check marked/)
+    // Pass marks are not counted as open findings.
+    expect(screen.getByRole('status', { name: '' })).toHaveTextContent(/^\s*\d+ open findings/)
+    await user.click(toggle)
+    expect(document.querySelector('[data-mark="f-pass-identity"]')).toBeNull()
+  })
+
+  it('the Pass toggle is disabled, with a reason, when no passed check has a spot', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    const toggle = screen.getByRole('button', { name: /^Pass marks/ })
+    expect(toggle).toBeDisabled()
+    expect(toggle).toHaveAttribute('title', expect.stringMatching(/No passed check/))
+  })
+
+  it('opened for a passed check, the pass marks are on and its mark is selected', () => {
+    const p = project()
+    p.findings.find((f) => f.id === 'f-pass-identity')!.locations = [{ fileId: 'f-carton', panel: 'Front', x: 250, y: 150, w: 60, h: 12 }]
+    renderWithProject(<Markup />, '/markup?finding=f-pass-identity', p)
+    expect(screen.getByRole('button', { name: /^Pass marks/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(canvas()).getByRole('button', { name: /^Pass: / })).toHaveAttribute('data-selected')
+  })
+
+  it('a decided review item reads as what the person decided: "it is a problem" draws as Fail', () => {
+    const p = project()
+    p.findings.find((f) => f.id === 'f-claim-high-grain')!.decision = { verdict: 'fail', by: 'Sam', at: '2026-10-20T10:00:00Z' }
+    renderWithProject(<Markup />, '/markup', p)
+    expect(within(canvas()).getByRole('button', { name: /^Fail: .*HIGH-GRAIN/i })).toBeInTheDocument()
+  })
+
+  it('an open check with no spot on the carton is listed instead of dropped', () => {
+    const p = project()
+    p.findings.find((f) => f.id === 'f-hidden-eu-table')!.locations = []
+    renderWithProject(<Markup />, '/markup', p)
+    const sec = screen.getByRole('region', { name: 'Open findings with no spot on the carton' })
+    expect(within(sec).getByRole('button', { name: /hidden under the US panel/ })).toBeInTheDocument()
+  })
+
+  it('the poster lists the findings by verdict', () => {
+    renderWithProject(<Markup />, '/markup', project())
+    const poster = screen.getByTestId('poster')
+    const fail = poster.querySelector('[data-poster-group="fail"]')!
+    const review = poster.querySelector('[data-poster-group="review"]')!
+    expect(fail).toHaveTextContent(/^Fail \(\d+\)/)
+    expect(fail).toHaveTextContent('An old EU nutrition table is hidden')
+    expect(review).toHaveTextContent(/^Needs review \(\d+\)/)
+    expect(poster).not.toHaveTextContent('Open findings')
   })
 })

@@ -21,7 +21,7 @@ describe('loading, empty and error states', () => {
     renderLive(<Facts />, { gate: true })
     expect(screen.getByRole('status', { name: 'Loading project' })).toBeInTheDocument()
     release()
-    expect(await screen.findByRole('heading', { name: 'Facts', level: 1 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'What we read', level: 1 })).toBeInTheDocument()
     expect(screen.queryByRole('status', { name: 'Loading project' })).toBeNull()
   })
 
@@ -252,7 +252,7 @@ describe('Skip, undo and resolve routes', () => {
     returned.conflicts.find((x) => x.id === 'c-honey')!.resolution = { choice: 'left', by: 'Abhijith', at: '2026-10-16T10:00:00Z' }
     const f = stubFetch(get('/api/project', () => json(project)), post('/api/conflicts/c-honey/resolve', () => json(returned)))
     renderLive(<Facts />, { gate: true })
-    await screen.findByRole('heading', { name: 'Facts', level: 1 })
+    await screen.findByRole('heading', { name: 'What we read', level: 1 })
     await userEvent.click(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' }))
     await waitFor(() => expect(calls(f)).toContain('POST /api/conflicts/c-honey/resolve'))
     expect(bodyOf(f, '/api/conflicts/c-honey/resolve')).toEqual({ choice: 'left', by: 'Abhijith' })
@@ -265,7 +265,7 @@ describe('Skip, undo and resolve routes', () => {
       post('/api/conflicts/c-honey/resolve', () => json({ detail: 'already resolved' }, 409)),
     )
     renderLive(<Facts />, { gate: true })
-    await screen.findByRole('heading', { name: 'Facts', level: 1 })
+    await screen.findByRole('heading', { name: 'What we read', level: 1 })
     await userEvent.click(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' }))
     expect(await screen.findByText(/The decision was not saved: already resolved/)).toBeInTheDocument()
     expect(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' })).toBeInTheDocument()
@@ -275,7 +275,7 @@ describe('Skip, undo and resolve routes', () => {
   it('resolve keeps the local resolution when the route is missing', async () => {
     stubFetch(get('/api/project', () => json(project)), post('/api/conflicts/c-honey/resolve', () => json({ detail: 'Not Found' }, 404)))
     renderLive(<Facts />, { gate: true })
-    await screen.findByRole('heading', { name: 'Facts', level: 1 })
+    await screen.findByRole('heading', { name: 'What we read', level: 1 })
     await userEvent.click(within(conflictCard('c-honey')).getByRole('button', { name: 'Use left' }))
     expect(await screen.findAllByText(/Resolved by Abhijith/)).not.toHaveLength(0)
     expect(screen.queryByText(/was not saved/)).toBeNull()

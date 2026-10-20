@@ -16,7 +16,12 @@ describe('buildMarks', () => {
     const p = project()
     const { marks, offPack } = buildMarks(p, 'f-carton', true)
     const open = p.conflicts.filter((c) => !c.resolution)
-    expect(marks.map((m) => m.conflict.id)).toEqual(open.filter((c) => c.locations.some((l) => l.fileId === 'f-carton')).map((c) => c.id))
+    // Conflicts first, then the findings that link no conflict but have a spot on the carton.
+    expect(marks.map((m) => m.conflict.id)).toEqual([
+      ...open.filter((c) => c.locations.some((l) => l.fileId === 'f-carton')).map((c) => c.id),
+      'f-hidden-eu-table',
+      'f-claim-high-grain',
+    ])
     expect(offPack).toHaveLength(0)
     for (const m of marks) {
       const locs = m.conflict.locations.filter((l) => l.fileId === 'f-carton')

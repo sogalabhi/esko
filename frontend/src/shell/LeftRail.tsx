@@ -1,6 +1,6 @@
-import { Box, ChevronsLeft, ChevronsRight, FolderOpen, ListChecks, PenLine, CircleQuestionMark, type LucideIcon } from 'lucide-react'
+import { Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, ListChecks, PenLine, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
-import { reviewQuestions } from '../lib/questions'
+import { printVerdict } from '../lib/checks'
 import { usePersistedFlag } from '../lib/usePersistedFlag'
 import { useProject } from '../state/project'
 
@@ -60,8 +60,6 @@ export function LeftRail() {
   const { project } = useProject()
   const [collapsed, toggleCollapsed] = usePersistedFlag('bf.rail.collapsed')
   const openConflicts = project.conflicts.filter((c) => !c.resolution).length
-  const shownQuestions = reviewQuestions(project.questions)
-  const openQuestions = shownQuestions.filter((q) => q.status !== 'answered').length
   const filesDone = project.files.every((f) => f.status === 'done')
   const filesFailed = project.files.filter((f) => f.status === 'error').length
   const evidence: Pick<Item, 'dot' | 'word'> =
@@ -72,20 +70,23 @@ export function LeftRail() {
         : filesDone
           ? { dot: 'ok', word: 'all files read' }
           : { dot: 'warn', word: 'reading' }
-  const questions: Pick<Item, 'dot' | 'word'> =
-    shownQuestions.length === 0
-      ? { dot: 'idle', word: 'no questions' }
-      : openQuestions
-        ? { dot: 'warn', word: 'to answer' }
-        : { dot: 'ok', word: 'all answered' }
+  const verdict = printVerdict(project.findings)
+  const checks: Pick<Item, 'dot' | 'word' | 'count'> = !verdict.checked
+    ? { dot: 'idle', word: 'no checks yet' }
+    : verdict.fail
+      ? { dot: 'bad', word: 'has fails', count: verdict.fail + verdict.review }
+      : verdict.review
+        ? { dot: 'warn', word: 'needs review', count: verdict.review }
+        : { dot: 'ok', word: 'all clear', count: 0 }
 
   const steps: Item[] = [
-    { to: '/evidence', label: 'Evidence', Icon: FolderOpen, step: 1, count: project.files.length, ...evidence },
-    { to: '/facts', label: 'Facts', Icon: ListChecks, step: 2, count: project.facts.length, dot: openConflicts ? 'bad' : 'ok' },
-    { to: '/questions', label: 'Questions', Icon: CircleQuestionMark, step: 3, count: openQuestions, ...questions },
-    { to: '/pack', label: 'Pack', Icon: Box, step: 4, count: project.pack.panels.length || 5, dot: openConflicts ? 'warn' : 'ok' },
+    { to: '/evidence', label: 'Files', Icon: FolderOpen, step: 1, count: project.files.length, ...evidence },
+    { to: '/facts', label: 'What we read', Icon: ListChecks, step: 2, count: project.facts.length, dot: openConflicts ? 'bad' : 'ok' },
+    { to: '/checks', label: 'Checks', Icon: ClipboardCheck, step: 3, ...checks },
+    { to: '/markup', label: 'Marked-up artwork', Icon: PenLine, step: 4 },
+    { to: '/report', label: 'Report', Icon: FileText, step: 5 },
   ]
-  const more: Item[] = [{ to: '/markup', label: 'Markup', Icon: PenLine }]
+  const more: Item[] = [{ to: '/pack', label: '3D pack', Icon: Box }]
 
   return (
     <nav

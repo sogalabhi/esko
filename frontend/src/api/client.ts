@@ -1,4 +1,4 @@
-import type { AskResult, Brief, BriefSentence, Project, ResolutionChoice } from '../types/project'
+import type { AskResult, Brief, BriefSentence, ChecksResult, Project, ResolutionChoice } from '../types/project'
 
 /** Where the app gets its project: the real backend, or the bundled mock (VITE_USE_MOCK=1, and in tests). */
 export type DataSource = 'api' | 'mock'
@@ -281,6 +281,21 @@ export const api = {
   /** POST /api/conflicts/{id}/resolve. Null when the route does not exist; a second resolve is a 409. */
   resolveConflict(conflictId: string, choice: ResolutionChoice, by: string, text?: string): Promise<Project | null> {
     return postDecision(`/api/conflicts/${encodeURIComponent(conflictId)}/resolve`, text ? { choice, text, by } : { choice, by })
+  },
+
+  /** POST /api/findings/{id}/decision: a person decides a review item ("It's fine" = pass, "It's a problem" = fail). The project comes back. Null when the route does not exist. */
+  decideFinding(findingId: string, verdict: 'pass' | 'fail', by: string, note?: string): Promise<Project | null> {
+    return postDecision(`/api/findings/${encodeURIComponent(findingId)}/decision`, note ? { verdict, by, note } : { verdict, by })
+  },
+
+  /** GET /api/checks: the counts, findings and cleared items. Null when the route does not exist. */
+  async getChecks(): Promise<ChecksResult | null> {
+    try {
+      return await request<ChecksResult>('/api/checks')
+    } catch (e) {
+      if (isRouteMissing(e)) return null
+      throw e
+    }
   },
 
   /** URL of the original file (PDF.js reads it). The backend route may not exist yet. */

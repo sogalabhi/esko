@@ -1,6 +1,7 @@
 import { clusterFindings, clusterName, clusterNote, type Box, type Cluster, type ClusterItem, type ClusterRegion } from './clusters'
 import { fileShort } from './labels'
-import type { BBox, Conflict, ConflictLocation, Fact, Owner, Project, Question, Source } from '../types/project'
+import { ownerOf } from './checks'
+import type { BBox, Conflict, ConflictLocation, Fact, Finding, Owner, Project, Question, Source, Verdict } from '../types/project'
 
 /* ---------- seeded hand-drawn geometry (deterministic: same finding, same wobble) ---------- */
 
@@ -184,8 +185,24 @@ export interface Spot {
   source?: Source
 }
 
+/** What a mark shows: a review item a person decided counts as what they decided. */
+export function effectiveVerdict(f: Finding): Verdict {
+  if (f.verdict === 'review' && f.decision) return f.decision.verdict
+  return f.verdict
+}
+
 export interface Mark {
+  /**
+   * The conflict behind the mark. A finding with no conflict of its own gets one built from the finding
+   * (same id as the finding), so every mark draws, clusters and selects the same way.
+   */
   conflict: Conflict
+  /** The check result behind the mark, when there is one. */
+  finding?: Finding
+  /** True when the mark comes from a finding alone (no conflict links to it). */
+  standalone: boolean
+  /** Fail (red), Needs review (amber) or Pass (green). Conflicts with no finding read as Fail. */
+  verdict: Verdict
   /** Stable number for the finding on this file (does not change when others are resolved). */
   n: number
   owner: Owner
@@ -275,16 +292,62 @@ export interface MarkSet {
   passes: PassTick[]
 }
 
-export function buildMarks(project: Project, fileId: string, mockMode: boolean): MarkSet {
-  const onFile = project.conflicts.filter((c) => c.locations.some((l) => l.fileId === fileId))
-  const open = (c: Conflict) => isOpenFinding(c, project.questions, mockMode)
+const SEVERITY_OF: Record<Verdict, Conflict['severity']> = { fail: 'high', review: 'medium', pass: 'low' }
+
+/** A conflict-shaped view of a finding with no conflict of its own, so it can be placed and drawn like one. */
+function findingAsConflict(f: Finding, project: Project): Conflict {
+  return {
+    id: f.id,
+    kind: 'rule',
+    severity: SEVERITY_OF[effectiveVerdict(f)],
+    owner: ownerOf(f, project.conflicts) ?? 'legal',
+    factIds: f.factIds,
+    left: { value: f.found ?? '', sources: f.evidence },
+    right: { value: f.expected ?? '', sources: [] },
+    ruleId: f.ruleIds[0],
+    explanation: f.title,
+    locations: f.locations,
+  }
+}
+
+const VERDICT_WORD: Record<Verdict, string> = { fail: 'Fail', review: 'Needs review', pass: 'Pass' }
+const VERDICT_PREFIX: Record<Verdict, string> = { fail: '', review: 'Review: ', pass: 'Pass: ' }
+
+export interface BuildOptions {
+  /** Draw marks for Pass findings too (off by default). */
+  passes?: boolean
+}
+
+export function buildMarks(project: Project, fileId: string, mockMode: boolean, opt: BuildOptions = {}): MarkSet {
+  const conflictIds = new Set(project.conflicts.map((c) => c.id))
+  const finding = new Map<string, Finding>()
+  for (const f of project.findings) for (const id of f.conflictIds) if (!finding.has(id)) finding.set(id, f)
+  interface Item {
+    c: Conflict
+    f?: Finding
+    standalone: boolean
+  }
+  const all: Item[] = [
+    ...project.conflicts.map((c): Item => ({ c, f: finding.get(c.id), standalone: false })),
+    // A finding that links a conflict is that conflict's mark; one that links none draws its own.
+    ...project.findings.filter((f) => !f.conflictIds.some((id) => conflictIds.has(id))).map((f): Item => ({ c: findingAsConflict(f, project), f, standalone: true })),
+  ]
+  const verdictOf = (i: Item): Verdict => (i.f ? effectiveVerdict(i.f) : 'fail')
+  const open = (i: Item) => (i.standalone ? true : isOpenFinding(i.c, project.questions, mockMode))
+  const onFile = all.filter((i) => i.c.locations.some((l) => l.fileId === fileId))
+  // Numbers are stable per file; Pass items come after the others so showing them never renumbers a problem.
+  const numbered = [...onFile.filter((i) => verdictOf(i) !== 'pass'), ...onFile.filter((i) => verdictOf(i) === 'pass')]
+  const numberOf = new Map(numbered.map((i, k) => [i.c.id, k + 1]))
+  const shown = (i: Item) => open(i) && (opt.passes || verdictOf(i) !== 'pass')
+
   const placed: { x: number; y: number; w: number; h: number; drawn: boolean }[] = []
   const marks: Mark[] = []
   // Primary spots first, so a finding's own place gets the ring and other findings' extra spots there stay quiet.
-  const order = onFile.flatMap((c) => c.locations.map((l, index) => ({ c, l, index }))).filter(({ c, l }) => l.fileId === fileId && open(c))
+  const order = onFile.flatMap((i) => i.c.locations.map((l, index) => ({ i, l, index }))).filter(({ i, l }) => l.fileId === fileId && shown(i))
   order.sort((a, b) => Number(a.index > 0) - Number(b.index > 0))
   const spotOf = new Map<string, Spot>()
-  for (const { c, l, index } of order) {
+  for (const { i, l, index } of order) {
+    const c = i.c
     const here = placed.filter((p) => near(p.x, l.x) && near(p.y, l.y) && near(p.w, l.w) && near(p.h, l.h))
     const quiet = index > 0 && here.some((p) => p.drawn)
     placed.push({ ...l, drawn: !quiet })
@@ -297,18 +360,25 @@ export function buildMarks(project: Project, fileId: string, mockMode: boolean):
       ring: here.filter((p) => p.drawn).length,
       tag: here.length,
       quiet,
-      style: styleFor(c, l, index, project.facts),
+      style: i.standalone ? 'circle' : styleFor(c, l, index, project.facts),
       source: sourceFor(c, l, project.facts),
     })
   }
-  onFile.forEach((c, i) => {
-    if (!open(c)) return
+  for (const i of onFile) {
+    if (!shown(i)) continue
+    const c = i.c
+    const verdict = verdictOf(i)
     const spots: Spot[] = c.locations.flatMap((_, index) => spotOf.get(`${c.id}#${index}`) ?? [])
     const correction = spots[0]?.style === 'correct' ? shortCorrection(c.right.value) : undefined
-    marks.push({ conflict: c, n: i + 1, owner: c.owner, spots, note: noteFor(c, fileId, project), correction })
-  })
-  const offPack = project.conflicts.filter((c) => open(c) && !c.locations.some((l) => l.fileId === fileId))
-  const resolved = project.conflicts.filter((c) => !open(c)).length
+    const note = i.standalone ? c.explanation : noteFor(c, fileId, project)
+    marks.push({ conflict: c, finding: i.f, standalone: i.standalone, verdict, n: numberOf.get(c.id)!, owner: c.owner, spots, note: `${i.f ? VERDICT_PREFIX[verdict] : ''}${note}`, correction })
+  }
+  marks.sort((a, b) => a.n - b.n)
+  // Open items with no spot on this file (fail or review only; a Pass without a spot has nothing to show).
+  const offPack = all
+    .filter((i) => open(i) && verdictOf(i) !== 'pass' && !i.c.locations.some((l) => l.fileId === fileId))
+    .map((i) => i.c)
+  const resolved = project.conflicts.filter((c) => !isOpenFinding(c, project.questions, mockMode)).length
   const passes: PassTick[] = []
   for (const f of project.facts) {
     if (f.state !== 'pass') continue
@@ -322,12 +392,16 @@ export function buildMarks(project: Project, fileId: string, mockMode: boolean):
 export function spotLabel(mark: Mark, spot: Spot): string {
   const total = mark.spots.length
   const k = mark.spots.indexOf(spot) + 1
-  return total > 1 ? `${mark.conflict.explanation} (spot ${k} of ${total})` : mark.conflict.explanation
+  // A conflict's red mark keeps its plain text; any other verdict names itself in words.
+  const text = mark.standalone || mark.verdict !== 'fail' ? `${VERDICT_WORD[mark.verdict]}: ${mark.conflict.explanation}` : mark.conflict.explanation
+  return total > 1 ? `${text} (spot ${k} of ${total})` : text
 }
 
 /* ---------- clusters ---------- */
 
 export interface MarkCluster extends Cluster {
+  /** The worst verdict among its marks. */
+  verdict: Verdict
   /** The number written by the box: the lowest finding number in it. */
   n: number
   /** The owner with the most findings in it (sticky-note colour). */
@@ -342,6 +416,9 @@ export interface MarkGroups {
   singles: Mark[]
 }
 
+const VERDICT_RANK: Verdict[] = ['fail', 'review', 'pass']
+export const worstVerdict = (list: Verdict[]): Verdict => VERDICT_RANK.find((v) => list.includes(v)) ?? 'pass'
+
 const OWNER_ORDER: Owner[] = ['legal', 'rnd', 'brand']
 
 /**
@@ -352,7 +429,7 @@ export function clusterMarks(marks: Mark[], regions: ClusterRegion[]): MarkGroup
   const items: ClusterItem[] = marks.flatMap((m) => {
     const s = m.spots[0]
     if (!s) return []
-    return [{ id: m.conflict.id, panel: m.conflict.locations[s.index]?.panel ?? '', x: s.x, y: s.y, w: s.w, h: s.h, severity: m.conflict.severity, solo: m.spots.length > 1 }]
+    return [{ id: m.conflict.id, panel: m.conflict.locations[s.index]?.panel ?? '', x: s.x, y: s.y, w: s.w, h: s.h, severity: m.conflict.severity, solo: m.spots.length > 1 || m.standalone }]
   })
   const { clusters } = clusterFindings(items, regions)
   const byId = new Map(marks.map((m) => [m.conflict.id, m]))
@@ -362,7 +439,7 @@ export function clusterMarks(marks: Mark[], regions: ClusterRegion[]): MarkGroup
     const tally = new Map<Owner, number>()
     list.forEach((m) => tally.set(m.owner, (tally.get(m.owner) ?? 0) + 1))
     const owner = [...tally.entries()].sort((a, b) => b[1] - a[1] || OWNER_ORDER.indexOf(a[0]) - OWNER_ORDER.indexOf(b[0]))[0][0]
-    return { ...c, n: list[0].n, owner, marks: list, name: clusterName(c), note: clusterNote(c) }
+    return { ...c, n: list[0].n, owner, verdict: worstVerdict(list.map((m) => m.verdict)), marks: list, name: clusterName(c), note: clusterNote(c) }
   })
   return { clusters: out.sort((a, b) => a.n - b.n), singles: marks.filter((m) => !inCluster.has(m.conflict.id)) }
 }

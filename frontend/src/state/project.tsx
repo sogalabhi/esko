@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, type BriefReply, type DataSource } from '../api/client'
 import { auditSentence } from '../lib/briefAudit'
 import mock from '../mocks/project.json'
-import type { Brief, Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
+import type { Brief, FindingDecision, Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
 
 export const mockProject = mock as unknown as Project
 
@@ -46,6 +46,10 @@ interface State {
   /** Conflict resolutions made in this browser, kept across project refreshes until the backend has them. */
   resolutions: Record<string, Resolution>
   answerError: string | null
+  /** Why the last review decision was not saved. */
+  decisionError: string | null
+  /** Review items asked about and not yet decided (this browser only; the owner is named when known). */
+  waiting: Record<string, { owner?: string }>
   briefBusy: BriefBusy
   briefError: BriefError | null
   drawer: Source | null
@@ -70,6 +74,9 @@ type Action =
   | { type: 'setProject'; project: Project; settled?: string }
   | { type: 'run'; run: RunState }
   | { type: 'answerError'; message: string | null }
+  | { type: 'decide'; id: string; decision: FindingDecision | null }
+  | { type: 'wait'; id: string; owner?: string }
+  | { type: 'decisionError'; message: string | null }
   | { type: 'setBrief'; brief: Brief }
   | { type: 'briefBusy'; busy: BriefBusy }
   | { type: 'briefError'; error: BriefError | null }
@@ -86,6 +93,8 @@ function init([project, source]: Seed): State {
     answers: {},
     resolutions: {},
     answerError: null,
+    decisionError: null,
+    waiting: {},
     briefBusy: 'idle',
     briefError: null,
     drawer: null,
@@ -161,6 +170,20 @@ function reducer(seed: Seed) {
         return { ...s, run: a.run }
       case 'answerError':
         return { ...s, answerError: a.message }
+      case 'decide': {
+        const waiting = { ...s.waiting }
+        if (a.decision) delete waiting[a.id]
+        return {
+          ...s,
+          waiting,
+          decisionError: null,
+          project: { ...s.project, findings: s.project.findings.map((f) => (f.id === a.id ? { ...f, decision: a.decision ?? undefined } : f)) },
+        }
+      }
+      case 'wait':
+        return { ...s, waiting: { ...s.waiting, [a.id]: { owner: a.owner } } }
+      case 'decisionError':
+        return { ...s, decisionError: a.message }
       case 'setBrief':
         return { ...s, project: { ...s.project, brief: a.brief }, briefBusy: 'idle', briefError: null }
       case 'briefBusy':
@@ -252,6 +275,31 @@ function useStore(initial: Project, source: DataSource) {
     },
     [source, resync],
   )
+  /**
+   * Decide a review item. Shown at once; in api mode also POST /api/findings/{id}/decision and take the
+   * project back. In mock mode (or without the route) the decision stays local so the demo works.
+   */
+  const decideFinding = useCallback(
+    async (id: string, verdict: 'pass' | 'fail', by: string, note?: string) => {
+      const decision: FindingDecision = { verdict, by, at: new Date().toISOString(), ...(note ? { note } : {}) }
+      const prev = latest.current.project.findings.find((f) => f.id === id)?.decision ?? null
+      dispatch({ type: 'decide', id, decision })
+      if (source !== 'api') return
+      try {
+        const updated = await api.decideFinding(id, verdict, by, note)
+        if (updated) dispatch({ type: 'setProject', project: updated })
+      } catch (e) {
+        dispatch({ type: 'decide', id, decision: prev })
+        dispatch({ type: 'decisionError', message: `The decision was not saved: ${message(e)}` })
+        if (e instanceof ApiError && e.status === 409) void resync()
+      }
+    },
+    [source, resync],
+  )
+
+  /** "Ask someone": mark the item as waiting, locally. */
+  const askAbout = useCallback((id: string, owner?: string) => dispatch({ type: 'wait', id, owner }), [])
+
   const openSource = useCallback((src: Source) => dispatch({ type: 'open', source: src }), [])
   const closeDrawer = useCallback(() => dispatch({ type: 'close' }), [])
   const setMarket = useCallback((market: UiMarket) => dispatch({ type: 'market', market }), [])
@@ -458,6 +506,8 @@ function useStore(initial: Project, source: DataSource) {
       dismissBriefError,
       applyProject,
       resolveConflict,
+      decideFinding,
+      askAbout,
       answerQuestion,
       skipQuestion,
       undoAnswer,
@@ -467,7 +517,7 @@ function useStore(initial: Project, source: DataSource) {
       setLaunchDate,
       reset,
     }
-  }, [state, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset])
+  }, [state, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, decideFinding, askAbout, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, setMarket, setLaunchDate, reset])
 }
 
 export type Store = ReturnType<typeof useStore>

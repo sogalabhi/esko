@@ -1,12 +1,16 @@
 import { ChevronUp, CircleAlert, CircleCheck, Eye, EyeOff, GitCompareArrows, Printer, RotateCcw, StickyNote } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
+import { FindingCard } from '../components/FindingCard'
+import { SourceChips } from '../components/SourceChip'
+import { VerdictBadge } from '../components/VerdictBadge'
 import { ConflictCard } from '../components/ConflictCard'
 import { NoPackState } from '../components/NoPackState'
 import { Skeleton } from '../components/LoadGate'
 import { OWNER_LABEL } from '../lib/labels'
 import { prefersReducedMotion } from '../lib/motion'
 import { regionsFromFacts } from '../lib/clusters'
-import { buildMarks, clusterMarks, isOpenFinding, packFileId, type Mark, type MarkCluster, type PassTick, type Spot } from '../lib/markup'
+import { buildMarks, clusterMarks, effectiveVerdict, isOpenFinding, packFileId, type Mark, type MarkCluster, type PassTick, type Spot } from '../lib/markup'
 import { usePackZones } from '../lib/usePackZones'
 import { buildTrackChanges } from '../lib/trackChanges'
 import { SEVERITY_META } from '../three/meta'
@@ -23,7 +27,7 @@ const btn =
 const pressed = 'aria-pressed:border-accent aria-pressed:bg-accent/10 aria-pressed:text-accent'
 
 /** Page size when the PDF is not drawn: the extent of everything placed on the pack (mm). */
-function fallbackPage(project: Project, fileId: string | null): Page {
+export function fallbackPage(project: Project, fileId: string | null): Page {
   let w = 0
   let h = 0
   const grow = (x: number, y: number, bw: number, bh: number) => {
@@ -60,9 +64,16 @@ export function Markup() {
   const [track, setTrack] = useState(false)
   const [replay, setReplay] = useState(0)
   const [attempt, setAttempt] = useState(0)
-  const [selected, setSelected] = useState<string | null>(null)
-  /** The open cluster, by its place (stays open when one of its findings is resolved). */
-  const [expanded, setExpanded] = useState<string | null>(null)
+  // "Show on artwork" from Checks links here with ?finding=<id>: select its mark, or say where it sits when it has none.
+  const [params] = useSearchParams()
+  const focusFinding = project.findings.find((f) => f.id === params.get('finding'))
+  // Pass marks are off unless asked for, or the person came here to look at a passed check.
+  const [showPass, setShowPass] = useState(() => !!focusFinding && effectiveVerdict(focusFinding) === 'pass' && focusFinding.locations.length > 0)
+  // A pick the person made; until then the mark of the finding they came for is the selection.
+  const [picked, setPicked] = useState<string | null | undefined>(undefined)
+  /** The cluster list the person opened or closed; until then the box holding the focused mark is open. */
+  const [expandedPick, setExpandedPick] = useState<string | null | undefined>(undefined)
+  const focusedOnce = useRef<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLElement>(null)
   const findingRef = useRef<HTMLElement>(null)
@@ -73,10 +84,15 @@ export function Markup() {
   const mockMode = source === 'mock'
   const hide = useMemo(() => guideLayers(packFile?.skipped ?? []), [packFile])
   const img = useCartonImage(packId, !mockMode && !!packId, attempt, hide)
-  const set = useMemo(() => buildMarks(project, packId ?? '', mockMode), [project, packId, mockMode])
+  const set = useMemo(() => buildMarks(project, packId ?? '', mockMode, { passes: showPass }), [project, packId, mockMode, showPass])
   const zones = usePackZones(mockMode, packId)
   const regions = useMemo(() => [...zones, ...(packId ? regionsFromFacts(project.facts, packId) : [])], [zones, project.facts, packId])
   const groups = useMemo(() => clusterMarks(set.marks, regions), [set.marks, regions])
+  const focusMark = focusFinding ? set.marks.find((m) => m.finding?.id === focusFinding.id) : undefined
+  const focusCluster = focusMark ? groups.clusters.find((c) => c.marks.includes(focusMark)) : undefined
+  const selected = picked !== undefined ? picked : (focusMark?.conflict.id ?? null)
+  const expanded = expandedPick !== undefined ? expandedPick : (focusCluster?.key ?? null)
+  const setSelected = setPicked
   const openCluster = groups.clusters.find((c) => c.key === expanded)
   const sections = useMemo(() => (packId ? buildTrackChanges(project, packId) : []), [project, packId])
   const refFile = useMemo(() => {
@@ -91,6 +107,7 @@ export function Markup() {
   const settled = project.conflicts.filter((c) => c.resolution)
   const selectedConflict = project.conflicts.find((c) => c.id === selected)
   const selectedMark = set.marks.find((m) => m.conflict.id === selected)
+  const passCount = project.findings.filter((f) => effectiveVerdict(f) === 'pass' && f.locations.some((l) => l.fileId === packId)).length
 
   const onSelect = useCallback(
     (mark: Mark, spot: Spot) => {
@@ -100,7 +117,7 @@ export function Markup() {
     [openSource],
   )
   const onPass = useCallback((t: PassTick) => openSource(t.source), [openSource])
-  const onCluster = useCallback((c: MarkCluster) => setExpanded((k) => (k === c.key ? null : c.key)), [])
+  const onCluster = useCallback((c: MarkCluster) => setExpandedPick(expanded === c.key ? null : c.key), [expanded])
 
   useEffect(() => {
     if (expanded) clusterRef.current?.scrollIntoView?.({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' })
@@ -109,6 +126,19 @@ export function Markup() {
   useEffect(() => {
     if (track) trackRef.current?.scrollIntoView?.({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
   }, [track])
+
+  // Opened from a check: put keyboard focus on its mark (or on the box that holds it) once, when it is drawn.
+  const focusId = focusMark?.conflict.id
+  const focusBox = focusCluster?.id
+  useEffect(() => {
+    if (!focusId || img.status === 'loading' || focusedOnce.current === focusId) return
+    const groups = [...(canvasRef.current?.querySelectorAll<SVGGElement>(focusBox ? '[data-cluster]' : '[data-mark]') ?? [])]
+    const el = groups.find((g) => g.getAttribute(focusBox ? 'data-cluster' : 'data-mark') === (focusBox ?? focusId))?.querySelector<SVGGElement>(':scope > [role="button"]')
+    if (!el) return
+    focusedOnce.current = focusId
+    el.focus()
+    el.scrollIntoView?.({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' })
+  }, [focusId, focusBox, img.status, marked])
 
   // J / K move between marks (UI.md §8), in finding order.
   useEffect(() => {
@@ -136,19 +166,22 @@ export function Markup() {
   // New-product mode: no old pack to mark up (PLAN "Two modes").
   if (!packId) return <NoPackState />
 
-  const open = set.marks.length + set.offPack.length
+  const problems = set.marks.filter((m) => m.verdict !== 'pass')
+  const passMarks = set.marks.length - problems.length
+  const open = problems.length + set.offPack.length
   const resolvedNow = project.conflicts.filter((c) => !isOpenFinding(c, project.questions, mockMode)).length
   const grouped = groups.clusters.reduce((n, c) => n + c.marks.length, 0)
   const canvasLabel =
-    `Carton markup: ${set.marks.length} open finding${set.marks.length === 1 ? '' : 's'} marked` +
-    (groups.clusters.length ? `, ${grouped} of them in ${groups.clusters.length} box${groups.clusters.length === 1 ? '' : 'es'}` : '')
+    `Carton markup: ${problems.length} open finding${problems.length === 1 ? '' : 's'} marked` +
+    (groups.clusters.length ? `, ${grouped} of them in ${groups.clusters.length} box${groups.clusters.length === 1 ? '' : 'es'}` : '') +
+    (passMarks ? `, ${passMarks} passed check${passMarks === 1 ? '' : 's'} marked` : '')
 
   return (
     <section aria-labelledby="markup-title" className="mx-auto max-w-[1400px] space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 id="markup-title" className="text-[20px] font-semibold">
-            Markup
+            Marked-up artwork
           </h1>
           <p className="text-[14px] text-ink-2">The carton marked up like a senior reviewer did it. Every mark opens its sources.</p>
         </div>
@@ -171,6 +204,17 @@ export function Markup() {
               Marked
             </button>
           </div>
+          <button
+            type="button"
+            aria-pressed={showPass}
+            disabled={passCount === 0}
+            title={passCount === 0 ? 'No passed check has a spot on the carton' : undefined}
+            onClick={() => setShowPass((v) => !v)}
+            className={`${btn} ${pressed} disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            <CircleCheck size={15} aria-hidden="true" />
+            Pass marks <span className="font-mono">{passCount}</span>
+          </button>
           <button type="button" aria-pressed={sticky} onClick={() => setSticky((s) => !s)} className={`${btn} ${pressed}`}>
             <StickyNote size={15} aria-hidden="true" />
             Sticky notes by owner
@@ -191,6 +235,32 @@ export function Markup() {
           </button>
         </div>
       </header>
+
+      {focusFinding && (
+        <section aria-label="Check on the artwork" data-focus-finding className="rounded-card border border-border bg-surface p-3 text-[13px]">
+          <p className="flex flex-wrap items-center gap-2">
+            <VerdictBadge verdict={focusFinding.verdict} decision={focusFinding.decision} />
+            <span className="font-medium">{focusFinding.title}</span>
+            <Link to="/checks" className="ml-auto text-info underline focus-visible:outline-2 focus-visible:outline-info">
+              Back to Checks
+            </Link>
+          </p>
+          <p className="mt-1.5 text-ink-2">
+            {focusMark
+              ? 'Its mark is selected below.'
+              : effectiveVerdict(focusFinding) === 'pass' && focusFinding.locations.some((l) => l.fileId === packId)
+                ? 'Pass marks are hidden. Turn on "Pass marks" to see it.'
+                : focusFinding.locations.length > 0
+                  ? `This check has no mark on the carton. It is at: ${[...new Set(focusFinding.locations.map((l) => l.panel))].join(', ')}.`
+                  : 'This check has no spot on the carton: it rests on the files, not on a place.'}
+          </p>
+          {!focusMark && (
+            <div className="mt-1.5">
+              <SourceChips sources={focusFinding.evidence} />
+            </div>
+          )}
+        </section>
+      )}
 
       <p role="status" aria-live="polite" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
         <span className="inline-flex items-center gap-1.5">
@@ -229,7 +299,13 @@ export function Markup() {
       {marked && (
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-2">
           <span>Numbers match the notes.</span>
-          <span>Circle: problem at this spot</span>
+          <span className="inline-flex flex-wrap items-center gap-1.5">
+            Circle colour and word:
+            {(['fail', 'review', 'pass'] as const).map((v) => (
+              <VerdictBadge key={v} verdict={v} />
+            ))}
+          </span>
+          <span>Circle: check result at this spot</span>
           <span>Box: several problems in one place (opens the list)</span>
           <span>Struck: take off, or wrong value</span>
           <span>Written above: value computed by code</span>
@@ -309,7 +385,7 @@ export function Markup() {
               </h2>
               <p className="text-[13px] text-ink-2">One box on the carton marks these. Pick one to ring it on the carton and open its sources.</p>
             </div>
-            <button type="button" onClick={() => setExpanded(null)} className={btn}>
+            <button type="button" onClick={() => setExpandedPick(null)} className={btn}>
               <ChevronUp size={15} aria-hidden="true" />
               Close list
             </button>
@@ -351,6 +427,15 @@ export function Markup() {
             {selectedMark ? `Finding ${selectedMark.n}` : 'Finding'} · {OWNER_LABEL[selectedConflict.owner]}
           </h2>
           <ConflictCard conflict={selectedConflict} onResolve={(choice) => void resolveConflict(selectedConflict.id, choice)} />
+        </section>
+      )}
+
+      {selectedMark?.finding && (
+        <section aria-labelledby="check-title" data-selected-check className="space-y-2">
+          <h2 id="check-title" className="text-[14px] font-semibold">
+            Check {selectedMark.n} on the carton
+          </h2>
+          <FindingCard finding={selectedMark.finding} hideLocate />
         </section>
       )}
 

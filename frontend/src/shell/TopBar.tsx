@@ -1,11 +1,13 @@
-import { Download, PackagePlus, RefreshCw, RotateCcw, Search } from 'lucide-react'
+import { CircleAlert, CircleCheck, CircleDashed, CircleX, Download, PackagePlus, RefreshCw, RotateCcw, Search } from 'lucide-react'
+import { Link } from 'react-router'
+import { printVerdict } from '../lib/checks'
 import { formatValue, titleCase } from '../lib/labels'
 import { packFileId } from '../lib/markup'
 import { useProject, type UiMarket } from '../state/project'
 import type { Project } from '../types/project'
 import { BackendStatus } from './BackendStatus'
 
-const MARKETS: { id: UiMarket; label: string }[] = [
+export const MARKETS: { id: UiMarket; label: string }[] = [
   { id: 'US', label: 'United States' },
   { id: 'IN', label: 'India' },
 ]
@@ -69,6 +71,38 @@ export function HealthRing({ percent, open }: { percent: number; open: number })
   )
 }
 
+/** "Not ready to print: N fail · M review" or "Ready to print". Review = undecided review items. */
+export function VerdictLine({ findings }: { findings: Project['findings'] }) {
+  const v = printVerdict(findings)
+  let Icon = CircleDashed
+  let cls = 'text-ink-2'
+  let text = 'No checks yet'
+  let name = 'Print verdict: no checks yet'
+  if (v.checked && v.ready) {
+    Icon = CircleCheck
+    cls = 'text-ok'
+    text = 'Ready to print'
+    name = 'Print verdict: ready to print, no fails and nothing left to review'
+  } else if (v.checked) {
+    Icon = v.fail ? CircleX : CircleAlert
+    cls = v.fail ? 'text-bad' : 'text-warn'
+    text = `Not ready to print: ${v.fail} fail · ${v.review} review`
+    name = `Print verdict: not ready to print, ${v.fail} fail and ${v.review} to review`
+  }
+  return (
+    <Link
+      to="/checks"
+      data-verdict-line
+      aria-label={`${name}. Open Checks`}
+      title="Open Checks"
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-chip px-2 py-1 text-[13px] font-semibold hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info ${cls}`}
+    >
+      <Icon size={16} aria-hidden="true" />
+      {text}
+    </Link>
+  )
+}
+
 export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: () => void } = {}) {
   const { project, market, reset } = useProject()
   const marketLabel = MARKETS.find((m) => m.id === market)?.label ?? market
@@ -79,10 +113,6 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
   const product = [identity?.value ? titleCase(identity.value) : 'Untitled product', net ? formatValue(net) : '']
     .filter(Boolean)
     .join(' · ')
-
-  const reqs = project.requirements
-  const met = reqs.filter((r) => r.status === 'met').length
-  const percent = reqs.length ? Math.round((met / reqs.length) * 100) : 0
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' })
@@ -106,7 +136,7 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
       </span>
 
       <div className="ml-auto flex shrink-0 items-center gap-3">
-        <HealthRing percent={percent} open={reqs.length - met} />
+        <VerdictLine findings={project.findings} />
         <BackendStatus />
         {onAsk && (
           <button type="button" className={btn} onClick={onAsk} aria-expanded={askOpen} aria-label="Ask about this" title="Ask about this">

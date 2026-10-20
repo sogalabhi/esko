@@ -132,7 +132,7 @@ export function Facts() {
       <section className={`min-w-0 ${railCollapsed ? '' : 'lg:col-span-2'}`} aria-labelledby="facts-title">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 id="facts-title" className="text-[20px] font-semibold">
-            Facts
+            What we read
           </h1>
           <div role="group" aria-label="Filter facts" className="flex flex-wrap gap-1">
             {FILTERS.map((f) => (

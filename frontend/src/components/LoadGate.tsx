@@ -61,13 +61,13 @@ export function EmptyProject() {
 
 /**
  * Wraps a screen that needs project data: skeletons while loading, an error with a reason and Retry,
- * the empty state before any upload, and a partial-state banner when some files failed or no analysis ran.
+ * the empty state before any upload (`empty` replaces the default one), and a partial-state banner when some files failed or no analysis ran.
  */
-export function LoadGate({ children }: { children: ReactNode }) {
+export function LoadGate({ children, empty }: { children: ReactNode; empty?: ReactNode }) {
   const { load, project, reload } = useProject()
   if (load.status === 'loading') return <LoadingSkeleton />
   if (load.status === 'error') return <LoadError reason={load.reason} onRetry={() => void reload()} />
-  if (load.status === 'empty' || project.files.length === 0) return <EmptyProject />
+  if (load.status === 'empty' || project.files.length === 0) return <>{empty ?? <EmptyProject />}</>
 
   const failed = project.files.filter((f) => f.status === 'error')
   const notRun = project.facts.length === 0 && failed.length < project.files.length

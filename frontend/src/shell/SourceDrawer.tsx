@@ -182,7 +182,7 @@ export function ImagePreview({ source }: { source: Source }) {
   )
 }
 
-function SourcePreview({ source }: { source: Source }) {
+export function SourcePreview({ source }: { source: Source }) {
   const { project, source: dataSource } = useProject()
   const file = project.files.find((f) => f.id === source.fileId)
   const live = dataSource === 'api'

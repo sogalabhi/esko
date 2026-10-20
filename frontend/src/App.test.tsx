@@ -37,18 +37,40 @@ describe('App', () => {
     expect((await screen.findAllByText('Backend unreachable')).length).toBeGreaterThan(0)
   })
 
-  it('opens on Facts with the shell: product, market, health, rail', async () => {
+  it('opens on Checks (the default route) with the shell: product, market, verdict line, rail', async () => {
     healthy()
     renderAt('/')
     expect(screen.getByText('Granola — Berry Crunch · 480 g')).toBeInTheDocument()
     expect(screen.getByLabelText('Market: United States')).toHaveTextContent('United States')
-    expect(screen.getByRole('img', { name: /Required items: \d+% met, \d+ open/ })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Facts', level: 1 })).toBeInTheDocument()
-    const nav = screen.getByRole('navigation', { name: 'Steps' })
-    for (const l of ['Evidence', 'Facts', 'Questions', 'Pack', 'Markup']) {
-      expect(within(nav).getAllByText(l).length).toBeGreaterThan(0)
-    }
+    expect(screen.getByRole('link', { name: /Print verdict: not ready to print, 4 fail and 2 to review/ })).toHaveTextContent('Not ready to print: 4 fail · 2 review')
+    expect(screen.getByRole('heading', { name: 'Checks', level: 1 })).toBeInTheDocument()
     await screen.findAllByText('Backend OK')
+  })
+
+  it('rail: Files, What we read, Checks, Marked-up artwork, Report, then 3D pack under More tools; no Questions', async () => {
+    healthy()
+    renderAt('/checks')
+    const nav = screen.getByRole('navigation', { name: 'Steps' })
+    const links = within(nav).getAllByRole('link')
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/evidence', '/facts', '/checks', '/markup', '/report', '/pack'])
+    const names = ['1 Files', '2 What we read', '3 Checks', '4 Marked-up artwork', '5 Report', '3D pack']
+    names.forEach((n, i) => expect(links[i]).toHaveTextContent(n.replace(/^\d /, '')))
+    expect(within(nav).queryByRole('link', { name: /Questions/ })).toBeNull()
+    expect(within(nav).getByRole('separator')).toBeInTheDocument()
+    await screen.findAllByText('Backend OK')
+  })
+
+  it('keeps the Questions route and the renamed headings', async () => {
+    healthy()
+    const { unmount } = renderAt('/questions')
+    expect(screen.getByRole('heading', { name: 'Questions', level: 1 })).toBeInTheDocument()
+    unmount()
+    const facts = renderAt('/facts')
+    expect(screen.getByRole('heading', { name: 'What we read', level: 1 })).toBeInTheDocument()
+    facts.unmount()
+    const report = renderAt('/report')
+    expect(screen.getByRole('heading', { name: 'Report', level: 1 })).toBeInTheDocument()
+    report.unmount()
   })
 
   it('hides the Problem 1 brief and the unbuilt screens: not in the rail, and their links lead nowhere', async () => {
@@ -73,7 +95,7 @@ describe('App', () => {
     expect(screen.getByText(/· 14 open/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Reset demo' }))
     expect(screen.queryByText(/· 14 open/)).toBeNull()
-    await userEvent.click(screen.getByRole('link', { name: /Pack/ }))
+    await userEvent.click(screen.getByRole('link', { name: /3D pack/ }))
     expect(screen.getByRole('heading', { level: 1, name: /Pack \(3D View\)/i })).toBeInTheDocument()
   })
 })
