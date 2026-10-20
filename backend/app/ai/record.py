@@ -2,7 +2,7 @@
 
 Runs the live pipeline once over the two sample files (facts, conflicts, question wording) and saves each task's raw answer to
 tests/fixtures/ai/<task>.json, which the fake adapter replays. Uses quota; never run in tests.
-Usage: uv run python -m app.ai.record [carton.pdf sheet.xlsx] | --inputs | --rulebook [rulebook file]
+Usage: uv run python -m app.ai.record [carton.pdf sheet.xlsx] | --inputs | --rulebook [rulebook file] | --ask-finding
 """
 
 import sys
@@ -90,8 +90,35 @@ def main_rulebook(paths: list[Path] | None = None) -> int:
     return 0
 
 
+def main_ask_finding() -> int:
+    """Record ask_finding.json: the project is built from the recorded fixtures (no calls), then one live call asks
+    about the first finding that cites a rule."""
+    from app.ai.adapters.fake import FakeAdapter
+    from app.brief.ask import ask_finding
+
+    offline = AIClient(FakeAdapter.from_fixtures(FIXTURES, model="recorded"), AICache(None))
+    files, pieces, stored = [], {}, {}
+    for path in SAMPLES:
+        sf, ps = read_file(path, fingerprint(path.read_bytes()))
+        files.append(sf)
+        pieces[sf.id], stored[sf.id] = ps, path
+    project, _ = run_pipeline(offline, files, pieces, stored)
+    project = analyze(project, client=offline)
+    finding = next((f for f in project.findings if f.rule_ids and f.evidence), None)
+    if finding is None:
+        print("no finding with a rule and evidence to ask about")
+        return 1
+    live = build_ai_client(get_settings())
+    client = AIClient([Recorder(a) for a in live.adapters], AICache(None))
+    reply = ask_finding(project, finding, "Why does this matter, and what should I check?", client)
+    print(f"{finding.id}: calls={client.calls_made} models={sorted(set(client.models_used))} refusal={reply.refusal}")
+    return 0
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if args == ["--ask-finding"]:
+        sys.exit(main_ask_finding())
     if args[:1] == ["--rulebook"]:
         sys.exit(main_rulebook([Path(a) for a in args[1:]] or None))
     sys.exit(main_inputs() if args == ["--inputs"] else main([Path(a) for a in args] or SAMPLES))
