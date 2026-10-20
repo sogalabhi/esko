@@ -9,7 +9,9 @@ from datetime import datetime, timezone
 
 from app.analysis import analyze
 from app.markets.schema import MarketPack
-from app.models.project import Conflict, Fact, LogEntry, Project, Question, Resolution, Source, SourceWhere
+from app.models.project import (
+    Conflict, Fact, FindingDecision, LogEntry, Project, Question, Resolution, Source, SourceWhere,
+)
 from app.questions.build import INPUT_PREFIX
 from app.rules.adapter import side_fact_ids
 
@@ -136,6 +138,24 @@ def apply_resolution(project: Project, pack: MarketPack, conflict_id: str, choic
     return analyze(p, pack)
 
 
+def apply_finding_decision(project: Project, pack: MarketPack, finding_id: str, verdict: str, by: str,
+                           note: str | None = None, now: str | None = None) -> Project:
+    """A person calls a review item "It's fine" (pass) or "It's a problem" (fail). The finding keeps verdict review and
+    gains the decision; a fail is never made by this call, and nothing is decided silently."""
+    if verdict not in ("pass", "fail"):
+        raise AnswerError(f"Unknown verdict {verdict!r}")
+    if not (by or "").strip():
+        raise AnswerError("Say who decided (by)")
+    p = project.model_copy(deep=True)
+    f = next((x for x in p.findings if x.id == finding_id), None)
+    if f is None:
+        raise AnswerError(f"No finding {finding_id!r}", 404)
+    if f.verdict != "review":
+        raise AnswerError(f"Finding {finding_id!r} is a {f.verdict}, only a review item can be decided", 409)
+    f.decision = FindingDecision(verdict=verdict, by=by.strip(), at=now or utc_now(), note=(note or "").strip() or None)
+    return analyze(p, pack)  # findings are rebuilt and the decision is kept by finding id
+
+
 def replay(base: Project, pack: MarketPack, log: list[LogEntry]) -> tuple[Project, list[LogEntry]]:
     """Recompute the project from the run and the decisions, in order. A decision that no longer applies
     (its question or conflict is gone after an earlier one was undone) is left out of the returned log."""
@@ -146,6 +166,8 @@ def replay(base: Project, pack: MarketPack, log: list[LogEntry]) -> tuple[Projec
                 p = apply_answer(p, pack, e.target, e.answer or "", e.at)
             elif e.kind == "skip":
                 p = apply_skip(p, pack, e.target)
+            elif e.kind == "decide":
+                p = apply_finding_decision(p, pack, e.target, e.verdict or "", e.by, e.note, e.at)
             else:
                 p = apply_resolution(p, pack, e.target, e.choice or "", e.text, e.by, e.at)
         except AnswerError:

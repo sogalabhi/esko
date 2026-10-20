@@ -10,3 +10,6 @@ languages: [English]
 # and brand questions so they do not wait behind every regulatory decision.
 question_budget: 10
 design_slots: 3
+# Checker mode: the product checks finished artwork, so it asks no design (keep / change / remove) or brand-basics
+# questions. Set to true to bring them back (the design-brief flow).
+design_questions: false

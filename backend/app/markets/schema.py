@@ -39,6 +39,8 @@ class MarketSettings(_Strict):
     # Unset here means "not decided by this pack" (a layered pack, then the defaults, decide).
     question_budget: int | None = Field(default=None, ge=1)
     design_slots: int | None = Field(default=None, ge=0)
+    # Checker mode: False = no design (keep / change / remove) or brand-basics questions. Unset = ask them.
+    design_questions: bool | None = None
 
 
 class FactEquals(_Strict):
@@ -217,6 +219,14 @@ class MarketPack(_Strict):
     fact_keys: FactKeys | None = None
     layers: list[MarketSettings] = []  # settings of the packs layered on top (company rules)
     brief_inputs: list[BriefInput] = []
+
+    @property
+    def design_questions(self) -> bool:
+        """Whether design and brand-basics questions are asked. The last layer that sets it wins (the company pack)."""
+        for s in [*reversed(self.layers), self.settings]:
+            if s.design_questions is not None:
+                return s.design_questions
+        return True
 
     @property
     def question_budget(self) -> int:

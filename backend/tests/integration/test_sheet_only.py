@@ -11,6 +11,8 @@ from app.main import app
 from app.questions.answers import apply_answer
 from app.readers import fingerprint, read_file
 from app.routers import files, project as project_router
+from app import analysis
+from tests.helpers_p1 import design_pack
 from tests.integration.test_project_facts import CARTON, SHEET, fake_client
 
 
@@ -40,6 +42,7 @@ def test_nothing_is_called_printed_because_nothing_is_printed(project):
 
 
 def test_the_window_holds_ten_with_brand_basics_that_ask_for_things(project):
+    project = analyze(project, design_pack("us"))  # checker mode asks none; this is the design-brief flow
     opened = [q for q in project.questions if q.status == "open"]
     assert len(opened) == 10
     design = [q for q in opened if q.kind == "design"]
@@ -49,7 +52,8 @@ def test_the_window_holds_ten_with_brand_basics_that_ask_for_things(project):
 
 
 def test_the_brief_says_must_include_and_has_no_keep_lines_and_every_open_question(project):
-    pack = load_market(project.market)
+    pack = design_pack(project.market)  # checker mode asks no brand-basics questions
+    project = analyze(project, pack)
     q = next(q for q in project.questions if q.subject == "input:pack_feel")
     answered = apply_answer(project, pack, q.id, "Natural and simple")
     result = draft_brief(answered, pack)
@@ -83,7 +87,8 @@ def client(tmp_path, monkeypatch):
     store.clear()
 
 
-def test_no_route_errors_without_a_pack_except_the_pack_screen_itself(client):
+def test_no_route_errors_without_a_pack_except_the_pack_screen_itself(client, monkeypatch):
+    monkeypatch.setattr(analysis, "load_market", lambda market=None: design_pack(market or "us"))  # design-brief flow
     client.post("/api/files", files={"file": (SHEET.name, SHEET.read_bytes())})
     pre = client.get("/api/project").json()
     assert pre["mode"] == "new_product" and pre["modeReason"]

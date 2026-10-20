@@ -15,6 +15,7 @@ from app.questions.answers import apply_answer
 from app.readers import fingerprint, read_file
 from app.routers import files, project as project_router
 from scripts.score import FIXTURES, run_samples, score
+from tests.helpers_p1 import design_pack
 from tests.integration.test_project_facts import CARTON, SHEET, fake_client
 
 
@@ -148,7 +149,10 @@ def test_missing_gaps_and_math_get_questions_and_duplicates_are_merged(project):
     assert next(q for q in project.questions if q.id.startswith("q-math-dv")).subject.count(",") >= 9
 
 
-def test_design_questions_have_reserved_seats_and_the_rest_wait(project, pack):
+def test_design_questions_have_reserved_seats_and_the_rest_wait(project):
+    # checker mode (the company pack) asks no design questions; this is the design-brief flow with the setting on
+    pack = design_pack("us")
+    project = analyze(project, pack)
     opened = [q for q in project.questions if q.status == "open"]
     design = [q for q in opened if q.kind == "design"]
     assert len(opened) == 10 and len(design) == 3 and project.questions_waiting == len(project.waiting_questions) > 0

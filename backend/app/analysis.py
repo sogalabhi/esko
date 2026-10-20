@@ -10,6 +10,7 @@ from datetime import date
 from functools import lru_cache
 
 from app.ai.client import AIClient
+from app.checks.verdicts import build_findings, keep_decisions
 from app.markets import layer_packs, load_pack, packs_root
 from app.markets.loader import active_rules
 from app.markets.schema import MarketPack
@@ -130,8 +131,12 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
                                                      {f.id for f in out.files if f.type in PACK_FILE_TYPES})
     decisions = rank(conf_cands + build_missing_candidates(pack, facts, reqs, absorbed))
     # keep / change / remove questions are about assets on an old pack; brand basics are asked in both modes
-    assets = build_design_candidates(pack, facts, conflicts) if out.mode == "redesign" else []
-    design = interleave(assets, build_input_candidates(pack, facts, out.mode))
+    # (a pack with design_questions off is in checker mode: no design or brand-basics questions at all)
+    if pack.design_questions:
+        assets = build_design_candidates(pack, facts, conflicts) if out.mode == "redesign" else []
+        design = interleave(assets, build_input_candidates(pack, facts, out.mode))
+    else:
+        design = []
     closed = [q for q in out.questions if q.status != "open"]
     closed_ids = {q.id for q in closed}
     decisions = [c for c in decisions if c.id not in closed_ids]
@@ -151,6 +156,7 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
     out.questions = closed + [c.to_question() for c in chosen]
     out.waiting_questions = [c.to_question() for c in waiting]
     out.questions_waiting = len(waiting)
+    out.findings = keep_decisions(build_findings(out, pack), project.findings)  # a person's decisions are kept
     return out
 
 
