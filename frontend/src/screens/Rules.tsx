@@ -7,6 +7,7 @@ import { LoadError, LoadingSkeleton, Skeleton } from '../components/LoadGate'
 import { SourceChip } from '../components/SourceChip'
 import { VerdictBadge } from '../components/VerdictBadge'
 import { ruleStatusText } from '../lib/labels'
+import { tidyRef } from '../lib/ruleRef'
 import { CHECK_TYPE_LABEL, sourceWhere } from '../lib/rulebook'
 import { useProject } from '../state/project'
 import type { Finding, Project, Rule, RulebookRule } from '../types/project'
@@ -43,7 +44,7 @@ function MarketRuleRow({ rule, findings }: { rule: Rule; findings: Finding[] }) 
     <li data-market-rule={rule.id} className="rounded-card border border-border bg-surface p-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="rounded-[3px] border border-ink-2 px-1 font-mono text-[11px] leading-4 text-ink-2">{rule.market === 'company' ? 'Company' : rule.market}</span>
-        <span className="font-mono text-[14px] font-semibold">{rule.ref}</span>
+        <span className="font-mono text-[14px] font-semibold">{tidyRef(rule.ref)}</span>
         <span className="inline-flex items-center gap-1 text-[12px] font-medium text-ok">
           <ShieldCheck size={13} aria-hidden="true" />
           {rule.status === 'in_force' ? 'In force' : ruleStatusText(rule)}

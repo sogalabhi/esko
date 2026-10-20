@@ -6,7 +6,7 @@ import { SourceChips } from '../components/SourceChip'
 import { VerdictBadge } from '../components/VerdictBadge'
 import { ConflictCard } from '../components/ConflictCard'
 import { NoPackState } from '../components/NoPackState'
-import { Skeleton } from '../components/LoadGate'
+import { CartonDrawing, CartonError } from '../components/CartonDrawing'
 import { OWNER_LABEL } from '../lib/labels'
 import { prefersReducedMotion } from '../lib/motion'
 import { regionsFromFacts } from '../lib/clusters'
@@ -19,7 +19,7 @@ import type { BBox, Project } from '../types/project'
 import { MarkupCanvas, type Page } from './markup/MarkupCanvas'
 import { Poster } from './markup/Poster'
 import { TrackChanges } from './markup/TrackChanges'
-import { guideLayers, useCartonImage } from './markup/useCartonImage'
+import { useCartonImage } from './markup/useCartonImage'
 import './markup/markup.css'
 
 const btn =
@@ -82,8 +82,7 @@ export function Markup() {
   const packId = packFileId(project)
   const packFile = project.files.find((f) => f.id === packId)
   const mockMode = source === 'mock'
-  const hide = useMemo(() => guideLayers(packFile?.skipped ?? []), [packFile])
-  const img = useCartonImage(packId, !mockMode && !!packId, attempt, hide)
+  const img = useCartonImage(packId, !mockMode && !!packId, attempt)
   const set = useMemo(() => buildMarks(project, packId ?? '', mockMode, { passes: showPass }), [project, packId, mockMode, showPass])
   const zones = usePackZones(mockMode, packId)
   const regions = useMemo(() => [...zones, ...(packId ? regionsFromFacts(project.facts, packId) : [])], [zones, project.facts, packId])
@@ -169,7 +168,11 @@ export function Markup() {
   const problems = set.marks.filter((m) => m.verdict !== 'pass')
   const passMarks = set.marks.length - problems.length
   const open = problems.length + set.offPack.length
-  const resolvedNow = project.conflicts.filter((c) => !isOpenFinding(c, project.questions, mockMode)).length
+  // Resolved: review items a person decided, plus resolved conflicts that are not behind one of those.
+  const decided = project.findings.filter((f) => f.verdict === 'review' && f.decision)
+  const decidedConflicts = new Set(decided.flatMap((f) => f.conflictIds))
+  const resolvedNow = decided.length + project.conflicts.filter((c) => !decidedConflicts.has(c.id) && !isOpenFinding(c, project.questions, mockMode)).length
+  const passedNow = project.findings.filter((f) => f.verdict === 'pass').length
   const grouped = groups.clusters.reduce((n, c) => n + c.marks.length, 0)
   const canvasLabel =
     `Carton markup: ${problems.length} open finding${problems.length === 1 ? '' : 's'} marked` +
@@ -274,7 +277,7 @@ export function Markup() {
         </span>
         <span className="inline-flex items-center gap-1.5">
           <CircleCheck size={15} aria-hidden="true" className="text-ok" />
-          <span className="font-mono">{set.passes.length}</span> check{set.passes.length === 1 ? '' : 's'} passed
+          <span className="font-mono">{passedNow}</span> check{passedNow === 1 ? '' : 's'} passed
         </span>
       </p>
 
@@ -286,14 +289,7 @@ export function Markup() {
       )}
 
       {img.status === 'error' && (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-chip border border-warn/40 bg-warn/10 px-3 py-2 text-[13px]">
-          <CircleAlert size={15} aria-hidden="true" className="shrink-0 text-warn" />
-          <span className="flex-1">The carton PDF could not be drawn: {img.reason}. Showing the panel outlines instead; the marks are in the same places.</span>
-          <button type="button" onClick={() => setAttempt((a) => a + 1)} className={btn}>
-            <RotateCcw size={14} aria-hidden="true" />
-            Retry
-          </button>
-        </div>
+        <CartonError reason={img.reason} then="Showing the panel outlines instead; the marks are in the same places." onRetry={() => setAttempt((a) => a + 1)} />
       )}
 
       {marked && (
@@ -321,10 +317,7 @@ export function Markup() {
 
       <figure ref={canvasRef} className="overflow-hidden rounded-card border border-border bg-surface">
         {img.status === 'loading' ? (
-          <div role="status" aria-label="Drawing the carton from the PDF" className="relative w-full" style={{ aspectRatio: `${page.w + 168} / ${page.h}` }}>
-            <span className="sr-only">Drawing the carton from the PDF…</span>
-            <Skeleton className="absolute inset-[5%_14%] h-auto rounded-card" />
-          </div>
+          <CartonDrawing ratio={`${page.w + 168} / ${page.h}`} />
         ) : (
           <MarkupCanvas
             key={`${marked}-${replay}`}

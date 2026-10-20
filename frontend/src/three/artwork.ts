@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CanvasTexture, SRGBColorSpace, type Texture } from 'three'
-import { api } from '../api/client'
+import { CanvasTexture, SRGBColorSpace, Texture } from 'three'
+import { loadPageImage, pageImageReason } from '../lib/pageImage'
 import { panelsFrame, type PageFrame } from './geometry'
 import type { DielinePanel, PackArtwork } from './types'
 
@@ -77,31 +77,20 @@ function toTexture(canvas: HTMLCanvasElement): Texture {
   return t
 }
 
-/** Render the PDF page once into a canvas. Resolves with the canvas and the page size in mm. */
-async function renderPdfPage(fileId: string, page: number, signal: { cancelled: boolean }): Promise<{ canvas: HTMLCanvasElement; frame: PageFrame }> {
-  const url = api.rawUrl(fileId)
-  const head = await fetch(url, { method: 'HEAD' })
-  if (!head.ok) throw new Error(head.status === 404 ? 'the carton file is not on the server' : `the server answered ${head.status}`)
-  // A dev server answers unknown routes with its HTML page; only draw a real PDF.
-  if (!/pdf/i.test(head.headers.get('content-type') ?? '')) throw new Error('the server did not return the carton PDF')
-  const pdfjs = await import('pdfjs-dist')
-  pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default
-  const task = pdfjs.getDocument({ url })
-  try {
-    const doc = await task.promise
-    const pg = await doc.getPage(page)
-    const base = pg.getViewport({ scale: 1 }) // 1 unit = 1 pt
-    const frame: PageFrame = { x: 0, y: 0, w: (base.width * 25.4) / 72, h: (base.height * 25.4) / 72 }
-    const k = Math.min(PX_PER_MM, MAX_PX / Math.max(frame.w, frame.h))
-    const c = canvas2d(Math.ceil(frame.w * k), Math.ceil(frame.h * k))
-    if (!c) throw new Error('this browser cannot draw the page')
-    if (signal.cancelled) throw new Error('cancelled')
-    const viewport = pg.getViewport({ scale: (k * 25.4) / 72 })
-    await pg.render({ canvas: c.canvas, canvasContext: c.ctx, viewport }).promise
-    return { canvas: c.canvas, frame }
-  } finally {
-    void task.destroy()
-  }
+/** The page image every screen shares (guide layers already off), as a decoded image plus the page size in mm. */
+async function loadPageTexture(fileId: string, page: number, signal: { cancelled: boolean }): Promise<{ texture: Texture; frame: PageFrame }> {
+  // The backend draws page 1 only.
+  if (page !== 1) throw new Error('only page 1 of the carton PDF can be drawn')
+  const { url, w, h } = await loadPageImage(fileId)
+  const img = new Image()
+  img.src = url
+  await img.decode()
+  if (signal.cancelled) throw new Error('cancelled')
+  const t = new Texture(img)
+  t.colorSpace = SRGBColorSpace
+  t.anisotropy = 4
+  t.needsUpdate = true
+  return { texture: t, frame: { x: 0, y: 0, w, h } }
 }
 
 /**
@@ -120,12 +109,13 @@ export function useArtwork(panels: DielinePanel[], artwork?: PackArtwork): Artwo
   useEffect(() => {
     if (!artwork) return
     const signal = { cancelled: false }
-    renderPdfPage(artwork.fileId, artwork.page ?? 1, signal)
-      .then(({ canvas, frame }) => {
-        if (!signal.cancelled) setPdf({ key, texture: toTexture(canvas), frame })
+    loadPageTexture(artwork.fileId, artwork.page ?? 1, signal)
+      .then(({ texture, frame }) => {
+        if (signal.cancelled) texture.dispose()
+        else setPdf({ key, texture, frame })
       })
       .catch((e: unknown) => {
-        if (!signal.cancelled) setPdf({ key, reason: e instanceof Error ? e.message : 'the PDF could not be drawn' })
+        if (!signal.cancelled) setPdf({ key, reason: pageImageReason(e) })
       })
     return () => {
       signal.cancelled = true

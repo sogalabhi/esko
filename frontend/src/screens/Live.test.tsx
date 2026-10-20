@@ -5,6 +5,7 @@ import mock from '../mocks/project.json'
 import { calls, get, json, post, renderLive, stubFetch } from '../test/renderLive'
 import type { Project } from '../types/project'
 import { ImagePreview } from '../shell/SourceDrawer'
+import { clearPageImages } from '../lib/pageImage'
 import { Evidence } from './Evidence'
 import { Facts } from './Facts'
 import { Questions } from './Questions'
@@ -184,14 +185,15 @@ describe('Questions with the answers route', () => {
 })
 
 describe('Source drawer PDF crop', () => {
-  it('falls back to the panel frame and says why when the backend has no raw file', async () => {
+  it('falls back to the panel frame and says why when the backend cannot draw the page', async () => {
     const src = project.facts.flatMap((f) => f.sources).find((s) => s.where.bbox && s.where.panel)!
-    const f = stubFetch((url, init) => (url.endsWith('/raw') && init?.method === 'HEAD' ? json({ detail: 'Not Found' }, 404) : undefined))
+    clearPageImages()
+    const f = stubFetch((url) => (url.endsWith('/page.jpg') ? json({ detail: 'Not Found' }, 404) : undefined))
     const { PdfPreview } = await import('../shell/SourceDrawer')
     renderLive(<PdfPreview source={src} panels={project.pack.panels} live />)
-    expect(await screen.findByText(/original PDF is not available from the backend yet/)).toBeInTheDocument()
+    expect(await screen.findByText(/The carton could not be drawn \(the backend does not have this file any more\)/)).toBeInTheDocument()
     expect(screen.getByRole('img', { name: /panel with the quote highlighted/ })).toBeInTheDocument()
-    expect(calls(f)[0]).toMatch(/^HEAD \/api\/files\/.+\/raw$/)
+    expect(calls(f)[0]).toMatch(/^GET \/api\/files\/.+\/page\.jpg$/)
   })
 })
 

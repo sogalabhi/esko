@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { api } from '../api/client'
+import { useEffect } from 'react'
+import { usePageImage } from '../lib/pageImage'
 import type { BBox, PackPanel, Source } from '../types/project'
 
-const TARGET_PX = 440
 const PAD_MM = 10
 
 /** The region of the page to show (mm): the panel, or the quote with some margin. */
@@ -14,74 +13,55 @@ function regionOf(source: Source, panels: PackPanel[]): { x: number; y: number; 
 }
 
 /**
- * Renders the real panel crop from the original PDF with PDF.js and outlines the quote.
- * Calls onUnavailable when the backend has no raw-file route or the PDF cannot be drawn,
- * so the caller can show the placeholder frame instead.
+ * The panel crop from the carton page image every screen shares (one download for all crops), with the
+ * quote outlined. The crop is CSS: the page image is scaled so the region fills the box, then shifted.
+ * Calls onUnavailable when the backend cannot draw the page, so the caller can show the placeholder frame.
  */
 export function PdfCrop({ source, panels, onUnavailable }: { source: Source; panels: PackPanel[]; onUnavailable: (reason: string) => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [ready, setReady] = useState(false)
   const region = regionOf(source, panels)
   const bbox: BBox | undefined = source.where.bbox
   const { fileId } = source
   const page = source.where.page ?? 1
-  const key = region ? `${region.x},${region.y},${region.w},${region.h}` : ''
+  // The backend draws page 1 only.
+  const drawable = !!region && page === 1
+  const img = usePageImage(fileId, drawable)
+  const failure = img.status === 'error' ? img.reason : null
 
   useEffect(() => {
-    if (!region) {
-      onUnavailable('this source has no panel or position to crop')
-      return
-    }
-    let cancelled = false
-    let destroy: (() => void) | undefined
-    ;(async () => {
-      try {
-        const url = api.rawUrl(fileId)
-        const head = await fetch(url, { method: 'HEAD' })
-        if (!head.ok) throw new Error(head.status === 404 ? 'the backend has no copy of this file (restart it, or re-upload)' : `the backend answered ${head.status}`)
-        if (!(head.headers.get('content-type') ?? '').includes('pdf')) throw new Error('the backend did not return a PDF (is it running and restarted?)')
-        const pdfjs = await import('pdfjs-dist')
-        pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default
-        const task = pdfjs.getDocument({ url })
-        destroy = () => void task.destroy()
-        const doc = await task.promise
-        const pg = await doc.getPage(page)
-        const canvas = canvasRef.current
-        const ctx = canvas?.getContext('2d')
-        if (cancelled || !canvas || !ctx) return
-        const dpr = window.devicePixelRatio || 1
-        const pxPerMm = TARGET_PX / region.w
-        const k = pxPerMm * dpr // device pixels per mm
-        canvas.width = Math.ceil(region.w * k)
-        canvas.height = Math.ceil(region.h * k)
-        const viewport = pg.getViewport({ scale: (k * 25.4) / 72 })
-        await pg.render({ canvas, canvasContext: ctx, viewport, transform: [1, 0, 0, 1, -region.x * k, -region.y * k] }).promise
-        if (!cancelled) setReady(true)
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e)
-        const reason = /dynamically imported module/i.test(msg)
-          ? 'the PDF viewer failed to load (restart npm run dev and hard-refresh)'
-          : msg
-        if (!cancelled) onUnavailable(reason)
-      }
-    })()
-    return () => {
-      cancelled = true
-      destroy?.()
-    }
+    if (!region) onUnavailable('this source has no panel or position to crop')
+    else if (page !== 1) onUnavailable('only page 1 of the PDF can be drawn')
+    else if (failure) onUnavailable(failure)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileId, page, key])
+  }, [!region, page, failure])
 
   if (!region) return null
   const pct = (v: number, base: number, size: number) => `${((v - base) / size) * 100}%`
+  const ready = img.status === 'ready'
   return (
     <figure>
       <div
         className="relative w-full max-w-[440px] overflow-hidden rounded-chip border border-border bg-bg"
         style={{ aspectRatio: `${region.w} / ${region.h}` }}
       >
-        {!ready && <div aria-hidden="true" className="absolute inset-0 animate-pulse bg-border" />}
-        <canvas ref={canvasRef} role="img" aria-label={`${source.where.panel ?? `Page ${page}`} crop with the quote outlined`} className="block h-full w-full" />
+        {!ready && (
+          <div role="status" className="absolute inset-0 flex items-center justify-center bg-border">
+            <span className="animate-pulse text-[12px] font-medium text-ink-2">Drawing the carton…</span>
+          </div>
+        )}
+        {ready && (
+          <img
+            src={img.url}
+            alt={`${source.where.panel ?? `Page ${page}`} crop with the quote outlined`}
+            draggable={false}
+            className="absolute max-w-none select-none"
+            style={{
+              width: `${(img.w / region.w) * 100}%`,
+              height: `${(img.h / region.h) * 100}%`,
+              left: `${(-region.x / region.w) * 100}%`,
+              top: `${(-region.y / region.h) * 100}%`,
+            }}
+          />
+        )}
         {ready && bbox && (
           <div
             data-highlight

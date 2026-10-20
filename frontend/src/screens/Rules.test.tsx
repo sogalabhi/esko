@@ -23,6 +23,16 @@ describe('Rules screen: what is listed', () => {
     expect(screen.getByText(/Dancing_Fish_US_Label_Rulebook.docx/, { selector: 'span.font-medium' })).toBeInTheDocument()
   })
 
+  it('shows a market rule\'s clause once, not the regulation and the clause that repeats it', () => {
+    const p = structuredClone(project)
+    p.rules[0].ref = '21 CFR 101.9 101.9(c)(6)(iii)'
+    p.rules[1].ref = 'FD&C Act 403(w)(1), 21 U.S.C. 343(w)(1) 21 U.S.C. 343(w)(1)(A)'
+    renderWithProject(<Rules />, '/', p)
+    expect(screen.getByText('21 CFR 101.9(c)(6)(iii)')).toBeInTheDocument()
+    expect(screen.getByText('FD&C Act 403(w)(1), 21 U.S.C. 343(w)(1)(A)')).toBeInTheDocument()
+    expect(screen.queryByText('21 CFR 101.9 101.9(c)(6)(iii)')).toBeNull()
+  })
+
   it('a verified rule shows its id, title, text, check type, quote and where it came from', () => {
     renderWithProject(<Rules />)
     const card = ruleCard('DF-05')

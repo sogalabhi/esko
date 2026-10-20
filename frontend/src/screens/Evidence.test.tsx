@@ -32,7 +32,7 @@ describe('Evidence screen', () => {
     const sheet = card('f-sheet')
     expect(within(sheet).getByText(/Content spreadsheet/)).toBeInTheDocument()
     expect(within(sheet).getByText(/per-pack formulas/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Review facts' })).toHaveAttribute('href', '/facts')
+    expect(screen.getByRole('link', { name: 'See the checks' })).toHaveAttribute('href', '/checks')
   })
 
   it('counter line is derived from the store', () => {

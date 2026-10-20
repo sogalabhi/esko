@@ -2,7 +2,7 @@ import { CircleAlert, CircleCheck, CircleDashed, CircleX, FileText, FileUp, Prin
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ProofLine } from '../components/ProofLine'
-import { Skeleton } from '../components/LoadGate'
+import { CartonDrawing, CartonError } from '../components/CartonDrawing'
 import { VERDICT_LABEL, VerdictBadge } from '../components/VerdictBadge'
 import { DECISION_WORD, orderFindings, printVerdict, resolveRule } from '../lib/checks'
 import { KIND_LABELS } from '../lib/findingKinds'
@@ -10,6 +10,7 @@ import { marketCode, sourceLong } from '../lib/labels'
 import { regionsFromFacts } from '../lib/clusters'
 import { buildMarks, clusterMarks, packFileId } from '../lib/markup'
 import { hasNoEvidence, productLine, rulesUsed } from '../lib/report'
+import { tidyRef } from '../lib/ruleRef'
 import { stamp } from '../lib/time'
 import { usePackZones } from '../lib/usePackZones'
 import { SourcePreview } from '../shell/SourceDrawer'
@@ -18,7 +19,7 @@ import { useProject } from '../state/project'
 import type { BBox, Cleared, Finding, Project, Source } from '../types/project'
 import { fallbackPage } from './Markup'
 import { MarkupCanvas } from './markup/MarkupCanvas'
-import { guideLayers, useCartonImage } from './markup/useCartonImage'
+import { useCartonImage } from './markup/useCartonImage'
 import './markup/markup.css'
 import './report.css'
 
@@ -79,7 +80,7 @@ function RuleLines({ finding, project }: { finding: Finding; project: Project })
         return (
           <li key={id} className="inline-flex flex-wrap items-center gap-1.5">
             <span className="rounded-[3px] border border-ink-2 px-1 font-mono text-[11px] leading-4 text-ink-2">{marketCode(r.rule.market)}</span>
-            <span className="font-mono">{r.rule.ref}</span>
+            <span className="font-mono">{tidyRef(r.rule.ref)}</span>
             {r.title && <span>{r.title}</span>}
             {r.statusText && <span className="text-ink-2">· {r.statusText}</span>}
             {r.warning && (
@@ -196,8 +197,8 @@ function ArtworkMarkup({ project }: { project: Project }) {
   const mockMode = source === 'mock'
   const packId = packFileId(project)
   const packFile = project.files.find((f) => f.id === packId)
-  const hide = useMemo(() => guideLayers(packFile?.skipped ?? []), [packFile])
-  const img = useCartonImage(packId, !mockMode && !!packId, 0, hide)
+  const [attempt, setAttempt] = useState(0)
+  const img = useCartonImage(packId, !mockMode && !!packId, attempt)
   const set = useMemo(() => buildMarks(project, packId ?? '', mockMode), [project, packId, mockMode])
   const zones = usePackZones(mockMode, packId)
   const regions = useMemo(() => [...zones, ...(packId ? regionsFromFacts(project.facts, packId) : [])], [zones, project.facts, packId])
@@ -212,20 +213,16 @@ function ArtworkMarkup({ project }: { project: Project }) {
   return (
     <>
       {img.status === 'error' && (
-        <p role="alert" className="mb-2 flex items-start gap-1.5 rounded-chip border border-warn/40 bg-warn/10 px-3 py-2 text-[13px]">
-          <TriangleAlert size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-warn" />
-          The carton PDF could not be drawn: {img.reason}. The marks sit on the panel outlines instead.
-        </p>
+        <div className="mb-2">
+          <CartonError reason={img.reason} then="The marks sit on the panel outlines instead." onRetry={() => setAttempt((a) => a + 1)} />
+        </div>
       )}
       {total === 0 ? (
         <Empty>Nothing to mark: no fail or review check has a spot on the carton.</Empty>
       ) : (
         <figure aria-labelledby="markup-caption" className="overflow-hidden rounded-card border border-border bg-surface">
           {img.status === 'loading' ? (
-            <div role="status" aria-label="Drawing the carton from the PDF" className="relative w-full" style={{ aspectRatio: `${page.w + 168} / ${page.h}` }}>
-              <span className="sr-only">Drawing the carton from the PDF…</span>
-              <Skeleton className="absolute inset-[5%_14%] h-auto rounded-card" />
-            </div>
+            <CartonDrawing ratio={`${page.w + 168} / ${page.h}`} />
           ) : (
             <MarkupCanvas
               page={page}
@@ -467,7 +464,7 @@ export function Report() {
               {rules.map((r) => (
                 <tr key={`${r.origin}-${r.id}`} data-report-row data-rule={r.id} data-unverified={r.unverified || undefined} className="border-b border-border align-top">
                   <td className="py-1.5 pr-2">
-                    <span className="font-mono">{r.ref}</span> <span>{r.label}</span>
+                    <span className="font-mono">{tidyRef(r.ref)}</span> <span>{r.label}</span>
                   </td>
                   <td className="py-1.5 pr-2">{r.origin}</td>
                   <td className="py-1.5 pr-2">

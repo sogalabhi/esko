@@ -356,4 +356,27 @@ export const api = {
   rawUrl(fileId: string): string {
     return `/api/files/${encodeURIComponent(fileId)}/raw`
   },
+
+  /** Page 1 as a JPEG the backend drew once (guide layers off, 6 px per mm). The page size in mm is in the response headers. */
+  pageImageUrl(fileId: string): string {
+    return `/api/files/${encodeURIComponent(fileId)}/page.jpg`
+  },
+
+  /** Fetches {@link pageImageUrl}: the image and the page size in mm. Throws an ApiError with a plain reason. */
+  async fetchPageImage(fileId: string): Promise<{ blob: Blob; w: number; h: number }> {
+    let res: Response
+    try {
+      res = await fetch(api.pageImageUrl(fileId))
+    } catch {
+      throw new ApiError(0, UNREACHABLE)
+    }
+    if (!res.ok) {
+      const reason = res.status === 404 ? 'The backend does not have this file any more.' : res.status === 415 ? 'This file is not a PDF, so it cannot be drawn.' : ''
+      throw new ApiError(res.status, reason || (await detailOf(res)) || `The backend answered ${res.status}.`)
+    }
+    const w = Number(res.headers.get('X-Page-Width-Mm'))
+    const h = Number(res.headers.get('X-Page-Height-Mm'))
+    if (!(w > 0) || !(h > 0)) throw new ApiError(res.status, 'The backend did not say how big the page is.')
+    return { blob: await res.blob(), w, h }
+  },
 }

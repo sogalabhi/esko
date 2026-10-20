@@ -6,13 +6,8 @@ import { renderWithProject } from '../test/render'
 import { get, json, renderLive, stubFetch } from '../test/renderLive'
 import type { Project } from '../types/project'
 import { Markup } from './Markup'
+import { clearPageImages } from '../lib/pageImage'
 import { guideLayers } from './markup/useCartonImage'
-
-vi.mock('pdfjs-dist', () => ({
-  GlobalWorkerOptions: {},
-  getDocument: () => ({ promise: Promise.reject(Object.assign(new Error('Missing PDF'), { status: 404 })), destroy: () => {} }),
-}))
-vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({ default: 'worker.js' }))
 
 const project = (): Project => structuredClone(mockProject)
 const onCarton = (p: Project) => p.conflicts.filter((c) => c.locations.some((l) => l.fileId === 'f-carton'))
@@ -27,6 +22,7 @@ const STANDALONE = ['f-hidden-eu-table', 'f-claim-high-grain']
 const clusterButton = () => within(canvas()).getByRole('button', { name: /^Nutrition: 7 problems/ })
 
 beforeEach(() => {
+  clearPageImages()
   // Each test starts with the poster class off.
   document.body.classList.remove('bf-printing')
 })
@@ -155,7 +151,8 @@ describe('Markup: red pen', () => {
     renderWithProject(<Markup />, '/markup', p)
     expect(document.querySelector('[data-mark="c-honey"]')).toBeNull()
     expect(within(canvas()).queryByRole('button', { name: p.conflicts.find((c) => c.id === 'c-honey')!.explanation })).toBeNull()
-    expect(screen.getByRole('status', { name: '' })).toHaveTextContent('1 resolved')
+    // The decided review item (sheet status, "fine") and the conflict resolved here.
+    expect(screen.getByRole('status', { name: '' })).toHaveTextContent('2 resolved')
   })
 
   it('a mark opens the Source Drawer at its spot and the finding card; deciding it removes the mark live', async () => {
@@ -191,7 +188,22 @@ describe('Markup: red pen', () => {
   it('ticks the barcode pass and names it', () => {
     renderWithProject(<Markup />, '/markup', project())
     expect(within(canvas()).getByRole('button', { name: /^Check passed: UPC/ })).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: '' })).toHaveTextContent('1 check passed')
+  })
+
+  it('counts the pass findings in the stats line, not the ticks on the carton', () => {
+    const p = project()
+    const pass = p.findings.filter((f) => f.verdict === 'pass').length
+    expect(pass).toBeGreaterThan(1)
+    renderWithProject(<Markup />, '/markup', p)
+    expect(screen.getByRole('status', { name: '' })).toHaveTextContent(`${pass} checks passed`)
+  })
+
+  it('counts a decided review item as resolved', () => {
+    const p = project()
+    const decided = p.findings.filter((f) => f.verdict === 'review' && f.decision).length
+    expect(decided).toBeGreaterThan(0)
+    renderWithProject(<Markup />, '/markup', p)
+    expect(screen.getByRole('status', { name: '' })).toHaveTextContent(`${decided} resolved`)
   })
 
   it('every mark has a name and visible text beside the drawing', () => {
@@ -339,13 +351,29 @@ describe('Markup: states', () => {
   })
 
   it('says why the carton PDF could not be drawn, keeps the marks on the outlines, and retries', async () => {
-    stubFetch(get('/api/project', () => json(project())))
+    let answer = () => json({ detail: 'Not Found' }, 404)
+    const f = stubFetch(
+      get('/api/project', () => json(project())),
+      (url) => (url === '/api/files/f-carton/page.jpg' ? answer() : undefined),
+    )
     renderLive(<Markup />, { gate: true, route: '/markup' })
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('The carton PDF could not be drawn: the backend does not have this file any more')
     expect(markButtons().length).toBeGreaterThan(0)
+    // Retry asks again, and the carton replaces the notice.
+    answer = () => new Response('jpeg', { status: 200, headers: { 'X-Page-Width-Mm': '457', 'X-Page-Height-Mm': '380' } })
     await userEvent.setup().click(within(alert).getByRole('button', { name: 'Retry' }))
-    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
+    expect(f.mock.calls.filter(([u]) => u === '/api/files/f-carton/page.jpg')).toHaveLength(2)
+  })
+
+  it('says "Drawing the carton…" while the page image is on its way', async () => {
+    stubFetch(
+      get('/api/project', () => json(project())),
+      (url) => (url === '/api/files/f-carton/page.jpg' ? new Promise<Response>(() => {}) : undefined) as never,
+    )
+    renderLive(<Markup />, { gate: true, route: '/markup' })
+    expect(await screen.findByText('Drawing the carton…')).toBeInTheDocument()
   })
 })
 

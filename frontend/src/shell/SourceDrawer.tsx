@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, Sparkles, X } from 'lucide-react'
+import { CircleAlert, CircleCheck, RotateCcw, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client'
 import { sourceLong } from '../lib/labels'
@@ -67,6 +67,7 @@ export function SheetPreview({ source }: { source: Source }) {
 /** Real PDF.js crop when the backend serves the original file; otherwise the panel frame placeholder. */
 export function PdfPreview({ source, panels, live = false }: { source: Source; panels: PackPanel[]; live?: boolean }) {
   const [failed, setFailed] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
   // A new source gets a fresh try.
   const id = `${source.fileId}|${source.where.panel}|${source.where.page}|${source.where.bbox}`
   const [seen, setSeen] = useState(id)
@@ -74,7 +75,7 @@ export function PdfPreview({ source, panels, live = false }: { source: Source; p
     setSeen(id)
     setFailed(null)
   }
-  if (live && !failed) return <PdfCrop source={source} panels={panels} onUnavailable={(reason) => setFailed(reason)} />
+  if (live && !failed) return <PdfCrop key={attempt} source={source} panels={panels} onUnavailable={(reason) => setFailed(reason)} />
   return (
     <PdfFrame
       source={source}
@@ -82,15 +83,16 @@ export function PdfPreview({ source, panels, live = false }: { source: Source; p
       note={
         live
           ? failed
-            ? `The original PDF is not available from the backend yet (${failed}). Showing the panel frame only.`
-            : 'The original PDF is not available from the backend yet, so this shows the panel frame only.'
+            ? `The carton could not be drawn (${failed}). Showing the panel frame only.`
+            : 'The carton could not be drawn, so this shows the panel frame only.'
           : undefined
       }
+      onRetry={live && failed ? () => { setFailed(null); setAttempt((a) => a + 1) } : undefined}
     />
   )
 }
 
-export function PdfFrame({ source, panels, note }: { source: Source; panels: PackPanel[]; note?: string }) {
+export function PdfFrame({ source, panels, note, onRetry }: { source: Source; panels: PackPanel[]; note?: string; onRetry?: () => void }) {
   const panel = panels.find((p) => p.name === source.where.panel)
   const bbox = source.where.bbox
   const frame = panel ?? (bbox ? { name: 'Page', x: bbox[0] - 10, y: bbox[1] - 10, w: bbox[2] + 20, h: bbox[3] + 20 } : null)
@@ -122,7 +124,13 @@ export function PdfFrame({ source, panels, note }: { source: Source; panels: Pac
         )}
       </svg>
       <figcaption className="mt-1 text-[12px] text-ink-2">
-        {note ?? (panel ? 'Panel frame with the quote position (mm). Page crop arrives with the PDF viewer.' : 'Quote position on the page (mm). Page crop arrives with the PDF viewer.')}
+        {note ?? (panel ? 'Panel frame with the quote position (mm).' : 'Quote position on the page (mm).')}
+        {onRetry && (
+          <button type="button" onClick={onRetry} className="ml-2 inline-flex items-center gap-1 rounded-chip border border-border bg-surface px-2 py-0.5 text-[12px] font-medium text-ink hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info">
+            <RotateCcw size={12} aria-hidden="true" />
+            Retry
+          </button>
+        )}
       </figcaption>
     </figure>
   )

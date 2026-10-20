@@ -1,6 +1,7 @@
 import { ExternalLink, TriangleAlert } from 'lucide-react'
 import { useId } from 'react'
 import { marketCode, ruleStatusText } from '../lib/labels'
+import { tidyRef } from '../lib/ruleRef'
 import type { Rule } from '../types/project'
 
 interface Props {
@@ -23,7 +24,7 @@ export function RuleChip({ rule, title, statusText, warning }: Props) {
         className="inline-flex items-center gap-1 whitespace-nowrap rounded-chip border border-border bg-surface px-2 py-0.5 text-[12px] text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info"
       >
         <span className="rounded-[3px] border border-ink-2 px-1 font-mono text-[11px] leading-4 text-ink-2">{marketCode(rule.market)}</span>
-        <span className="font-mono">{rule.ref}</span>
+        <span className="font-mono">{tidyRef(rule.ref)}</span>
         {title && <span>{title}</span>}
         <span className="text-ink-2">· {statusText ?? ruleStatusText(rule)}</span>
         {warning && (

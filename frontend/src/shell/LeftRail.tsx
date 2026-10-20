@@ -38,13 +38,13 @@ function RailLink({ item, collapsed }: { item: Item; collapsed: boolean }) {
     >
       <Icon size={18} aria-hidden="true" className="shrink-0" />
       <span className={`hidden flex-1 truncate ${collapsed ? '' : 'lg:inline'}`}>
-        {step && <span className="mr-1 font-mono text-ink-2">{step}</span>}
+        {step && <span className="mr-1 font-mono font-normal text-ink-2">{step}</span>}
         {label}
       </span>
       <span className={`sr-only ${collapsed ? '' : 'lg:hidden'}`}>{name}</span>
       {dot && (
         <span className={`hidden items-center gap-1.5 ${collapsed ? '' : 'lg:flex'}`}>
-          {count != null && <span className="font-mono text-[12px] text-ink-2">{count}</span>}
+          {count != null && <span className="font-mono text-[12px] font-normal text-ink-2">{count}</span>}
           <span className={`inline-block h-2 w-2 rounded-full ${DOT[dot].cls}`} aria-hidden="true" title={word ?? DOT[dot].word} />
           <span className="sr-only">
             {count != null ? `${count}, ` : ''}

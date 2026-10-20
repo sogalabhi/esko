@@ -6,12 +6,6 @@ import { renderWithProject } from '../test/render'
 import type { Project } from '../types/project'
 import { Report } from './Report'
 
-vi.mock('pdfjs-dist', () => ({
-  GlobalWorkerOptions: {},
-  getDocument: () => ({ promise: Promise.reject(Object.assign(new Error('Missing PDF'), { status: 404 })), destroy: () => {} }),
-}))
-vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({ default: 'worker.js' }))
-
 const project = (): Project => structuredClone(mockProject)
 const section = (name: RegExp | string) => screen.getByRole('region', { name })
 afterEach(() => vi.unstubAllGlobals())
