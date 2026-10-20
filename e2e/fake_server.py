@@ -28,4 +28,4 @@ def fake_client() -> AIClient:
 app.dependency_overrides[project_router.get_ai_client] = fake_client
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="warning")
+    uvicorn.run(app, host="127.0.0.1", port=int(os.environ.get("E2E_API_PORT", "8000")), log_level="warning")

@@ -11,7 +11,8 @@ export default defineConfig({
     include: ['pdfjs-dist', 'three', '@react-three/fiber', '@react-three/drei'],
   },
   server: {
-    proxy: { '/api': 'http://127.0.0.1:8000' },
+    // API_PORT lets the e2e run start its own backend next to a running `npm run dev`.
+    proxy: { '/api': `http://127.0.0.1:${process.env.API_PORT ?? '8000'}` },
   },
   test: {
     environment: 'jsdom',
