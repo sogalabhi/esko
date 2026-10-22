@@ -336,7 +336,7 @@ describe('Markup: states', () => {
     p.conflicts = []
     renderWithProject(<Markup />, '/markup', p)
     expect(screen.getByRole('heading', { name: 'No current pack' })).toBeInTheDocument()
-    expect(screen.getByText(/The brief works without it/)).toBeInTheDocument()
+    expect(screen.getByText(/to see what changes on it/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Upload the old pack' })).toHaveAttribute('href', '/evidence')
     expect(screen.queryByRole('group', { name: /Carton markup/ })).toBeNull()
     expect(document.querySelectorAll('[data-mark], [data-cluster]')).toHaveLength(0)

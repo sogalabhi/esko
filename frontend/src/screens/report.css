@@ -1,31 +1,247 @@
-/* Print approval report: A4 portrait, no app chrome (the rail, top bar, drawer and Ask panel carry .no-print). */
+/* Print approval report. Screen keeps readable sizes; print is a short A4 document (no rail, top bar or buttons: .no-print). */
+
+.rp-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.rp-table th,
+.rp-table td {
+  padding: 6px 10px 6px 0;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  font-weight: inherit;
+  text-align: left;
+}
+.rp-table thead th {
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+.rp-table tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+.rp-table th[scope='row'].font-medium {
+  font-weight: 500;
+}
+.rp-h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.rp-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: 12px;
+  font-size: 13px;
+}
+.rp-block-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+.rp-kv {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.rp-k {
+  flex: none;
+  width: 4.5rem;
+  color: var(--ink-2);
+}
+.rp-ev {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 8px;
+}
+@media (max-width: 639px) {
+  .rp-ev {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.rp-ev {
+  padding: 1px 0;
+}
+.rp-table .font-mono {
+  font-size: 0.93em;
+}
+.rp-line {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.report-crop {
+  position: relative;
+  width: 70mm;
+  max-width: 100%;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-chip);
+  background: var(--bg);
+}
+.report-crop-frame figure,
+.report-crop-frame svg {
+  width: 100%;
+  height: 100%;
+}
+.report-crop-frame figcaption {
+  display: none;
+}
+@media (min-width: 640px) {
+  .rp-block-grid.has-crop {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+}
+
 @media print {
   @page report {
     size: A4 portrait;
-    margin: 14mm;
+    margin: 12mm;
+  }
+  @page artwork {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  body:has(.report-doc),
+  body:has(.report-doc) main {
+    background: #fff !important;
   }
   .report-doc {
     page: report;
     max-width: none !important;
-    font-size: 10pt;
+    font-size: 9.5pt;
+    line-height: 1.3;
     color: #000;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
-  .report-doc .report-break {
-    break-before: page;
+  /* The app's px sizes become the report's pt sizes. */
+  .report-doc [class*='text-[1'],
+  .report-doc .rp-table,
+  .report-doc .rp-block,
+  .report-doc .rp-line {
+    font-size: 8.5pt !important;
   }
-  .report-doc [data-report-finding],
-  .report-doc [data-report-row],
-  .report-doc figure,
-  .report-doc [data-signoff] {
-    break-inside: avoid;
+  .report-doc .rp-table thead th {
+    font-size: 8pt;
   }
-  .report-doc h2 {
+  .report-doc h1[class] {
+    font-size: 16pt !important;
+  }
+  .report-doc h2[class] {
+    font-size: 13pt !important;
     break-after: avoid;
   }
-  .report-doc [data-crop] canvas,
-  .report-doc [data-crop] svg {
-    max-height: 45mm;
+  .report-doc h3.rp-h3 {
+    font-size: 10.5pt;
+    break-after: avoid;
+  }
+  .report-doc h4[class] {
+    font-size: 9.5pt !important;
+  }
+  .report-doc [data-report-verdict][class] {
+    font-size: 12pt !important;
+    margin-top: 3mm;
+    padding: 2mm 4mm;
+  }
+  .report-doc section[data-report-section] {
+    margin-top: 6mm;
+  }
+  .report-doc section[data-report-section] > div {
+    margin-top: 2mm;
+  }
+  .report-doc dl[data-report-meta] {
+    margin-top: 2mm;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1mm 5mm;
+  }
+  .report-doc dl[data-report-meta] dd {
+    font-size: 9pt !important;
+  }
+  .report-doc .rp-table th,
+  .report-doc .rp-table td {
+    padding: 1.2mm 2mm 1.2mm 0;
+  }
+  .report-doc .rp-table thead {
+    display: table-header-group;
+  }
+  .report-doc .rp-table tr,
+  .report-doc [data-report-finding],
+  .report-doc [data-report-row],
+  .report-doc .rp-line,
+  .report-doc [data-signoff],
+  .report-doc figure {
+    break-inside: avoid;
+  }
+  .report-doc .rp-block {
+    border: 0;
+    border-bottom: 0.2mm solid #999;
+    border-radius: 0;
+    padding: 2mm 0;
+    background: none;
+  }
+  .report-doc .rp-block-grid {
+    gap: 4mm;
+  }
+  .report-doc .rp-block-grid.has-crop {
+    grid-template-columns: minmax(0, 1fr) 70mm;
+  }
+  .report-doc .rp-k {
+    width: 16mm;
+  }
+  .report-doc .rp-clamp,
+  .report-doc .rp-quote {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  .report-doc .report-crop {
+    width: 70mm;
+    height: 35mm;
+    aspect-ratio: auto;
+  }
+  .report-doc .rp-ev {
+    grid-template-columns: 40mm 27mm minmax(0, 1fr);
+    column-gap: 3mm;
+  }
+  .report-doc .rp-quote {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+  .report-doc ul,
+  .report-doc ol {
+    margin: 0;
+  }
+  /* The carton gets a landscape page of its own. */
+  .report-doc .report-artwork-page {
+    page: artwork;
+    margin-top: 0;
+  }
+  .report-doc .report-artwork-page figure {
+    border: 0;
+  }
+  .report-doc .report-artwork-page figure svg {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 172mm;
+    margin: 0 auto;
+  }
+  .report-doc .report-artwork-page figcaption {
+    padding: 1mm 0;
+  }
+  /* Print summary: only the summary and the marked-up artwork. */
+  .report-doc[data-print='summary'] [data-part='detail'] {
+    display: none !important;
   }
 }

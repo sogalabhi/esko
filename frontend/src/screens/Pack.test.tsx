@@ -75,7 +75,7 @@ describe('Pack screen with the backend: never sample data', () => {
     p.files = p.files.filter((f) => f.type !== 'pdf')
     live(p, () => json({ detail: 'No dieline PDF uploaded' }, 404))
     expect(await screen.findByRole('heading', { name: 'No current pack' })).toBeInTheDocument()
-    expect(screen.getByText(/The brief works without it/)).toBeInTheDocument()
+    expect(screen.getByText(/to see what changes on it/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Upload the old pack' })).toHaveAttribute('href', '/evidence')
     noSample()
   })

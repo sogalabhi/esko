@@ -21,8 +21,19 @@ def test_overloaded_model_falls_back_to_next():
     sleeps: list[float] = []
     client = AIClient([a, b], sleep=sleeps.append, max_retries=2)
     assert ping(client).status == "ok"
-    assert len(a.calls) == 3 and len(b.calls) == 1  # retried with waits on m1, then m2 answered
-    assert sleeps == [2.0, 4.0]
+    assert len(a.calls) == 1 and len(b.calls) == 1  # m2 tried at once, no waiting on m1
+    assert sleeps == []
+    assert client.models_used == ["m2"]
+
+
+def test_waits_only_when_every_model_is_busy():
+    a = FakeAdapter({"ping": RetryableAIError("503")}, model="m1")
+    b = FakeAdapter({"ping": [RetryableAIError("503"), OK]}, model="m2")
+    sleeps: list[float] = []
+    client = AIClient([a, b], sleep=sleeps.append, max_retries=2)
+    assert ping(client).status == "ok"
+    assert len(a.calls) == 2 and len(b.calls) == 2  # one round each, one wait, then m2 answered
+    assert sleeps == [2.0]
     assert client.models_used == ["m2"]
 
 

@@ -183,7 +183,7 @@ export function Pack() {
             <img src={shot} alt="Snapshot of the 3D carton" className="h-16 w-24 rounded border border-border object-cover" />
             <div>
               <p className="font-medium text-ink">3D Pack Snapshot captured</p>
-              <p className="text-[12px] text-ink-2">High-res PNG snapshot ready for export or the design brief.</p>
+              <p className="text-[12px] text-ink-2">High-res PNG snapshot ready for export or the approval report.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

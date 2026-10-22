@@ -15,8 +15,9 @@ T = TypeVar("T", bound=BaseModel)
 
 class AIClient:
     """Runs a task on the first model that answers. `adapter` may be one adapter or a list in
-    fallback order; a model that stays rate-limited/overloaded after all retries (or is unknown)
-    hands over to the next one."""
+    fallback order. A rate-limited/overloaded model hands over to the next one at once; only when
+    every model in a round is busy does the client wait and start another round. An unknown model
+    is dropped from the list."""
 
     def __init__(
         self,
@@ -58,19 +59,28 @@ class AIClient:
                 except ValidationError:
                     pass
         request = AIRequest(task=task, prompt=prompt, schema=schema, images=images)
-        last_exc: Exception | None = None
-        for adapter in self.adapters:
-            try:
-                return self._run_on(adapter, request, task, prompt_version, fp, schema)
-            except (RetryableAIError, AIModelNotFound) as exc:
-                last_exc = exc  # try the next model in the list
-        assert last_exc is not None
-        raise last_exc
+        pending = list(self.adapters)
+        attempt = 0
+        while True:
+            last_exc: Exception | None = None
+            for adapter in list(pending):
+                try:
+                    return self._run_on(adapter, request, task, prompt_version, fp, schema)
+                except AIModelNotFound as exc:
+                    pending.remove(adapter)
+                    last_exc = exc
+                except RetryableAIError as exc:
+                    last_exc = exc  # try the next model in the list
+            assert last_exc is not None
+            if not pending or attempt >= self.max_retries:
+                raise last_exc
+            self.sleep(self.base_delay * 2**attempt)
+            attempt += 1
 
     def _run_on(self, adapter, request, task, prompt_version, fp, schema):
         last: Exception | None = None
         for _ in range(2):
-            raw = self._call(adapter, request)
+            raw = adapter.generate(request)
             try:
                 result = schema.model_validate_json(raw)
             except ValidationError as exc:
@@ -82,17 +92,6 @@ class AIClient:
             self.calls_made += 1
             return result
         raise AIResponseInvalid(f"Task {task!r}: model output did not match the schema: {last}")
-
-    def _call(self, adapter: Adapter, request: AIRequest) -> str:
-        attempt = 0
-        while True:
-            try:
-                return adapter.generate(request)
-            except RetryableAIError:
-                if attempt >= self.max_retries:
-                    raise
-                self.sleep(self.base_delay * 2**attempt)
-                attempt += 1
 
 
 def build_ai_client(settings: Settings) -> AIClient:
