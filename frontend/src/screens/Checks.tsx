@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, ClipboardCheck, CircleAlert, CircleCheck, FileUp, Info } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardCheck, CircleAlert, CircleCheck, CircleX, FileUp, Info, UserRound, type LucideIcon } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { FindingCard } from '../components/FindingCard'
@@ -6,6 +6,7 @@ import { ProofLine } from '../components/ProofLine'
 import { SourceChips } from '../components/SourceChip'
 import { VERDICT_LABEL, VERDICT_ORDER, VerdictBadge } from '../components/VerdictBadge'
 import { checkCounts, orderFindings, type FindingFilter } from '../lib/checks'
+import { KIND_LABELS } from '../lib/findingKinds'
 import { useProject } from '../state/project'
 import type { Cleared, Finding, Verdict } from '../types/project'
 
@@ -100,7 +101,43 @@ function ClearedPanel({ items, open, onToggle }: { items: Cleared[]; open: boole
   )
 }
 
-/** Fail / Needs review / Pass groups, a filter, and the Needs review queue inside the review group. */
+const ROW_ICON: Record<Verdict, { Icon: LucideIcon; cls: string }> = {
+  fail: { Icon: CircleX, cls: 'text-bad' },
+  review: { Icon: CircleAlert, cls: 'text-warn' },
+  pass: { Icon: CircleCheck, cls: 'text-ok' },
+}
+
+/** One finding as a one-line row; the full card opens in the detail pane. The group heading says the verdict in words. */
+function FindingRow({ finding: f, selected, onSelect }: { finding: Finding; selected: boolean; onSelect: () => void }) {
+  const { Icon, cls } = ROW_ICON[f.verdict]
+  return (
+    <button
+      type="button"
+      data-finding-row
+      data-finding-id={f.id}
+      data-verdict={f.verdict}
+      aria-current={selected ? 'true' : undefined}
+      onClick={onSelect}
+      className={`flex w-full min-w-0 items-center gap-2 rounded-chip border px-2.5 py-1.5 text-left text-[14px] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info ${
+        selected ? 'border-accent bg-accent/10' : 'border-transparent hover:border-border hover:bg-surface'
+      }`}
+    >
+      <Icon size={15} aria-hidden="true" className={`shrink-0 ${cls}`} />
+      <span className="min-w-0 flex-1 truncate" title={f.title}>
+        {f.title}
+      </span>
+      {f.decision && (
+        <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-ink-2">
+          <UserRound size={12} aria-hidden="true" />
+          {f.decision.verdict === 'pass' ? 'Decided: fine' : 'Decided: a problem'}
+        </span>
+      )}
+      <span className="hidden shrink-0 text-[12px] text-ink-2 sm:inline">{KIND_LABELS[f.kind]}</span>
+    </button>
+  )
+}
+
+/** Fail / Needs review / Pass as rows beside a detail pane holding the selected finding's full card. */
 export function Checks() {
   const { project, decisionError } = useProject()
   const [filter, setFilter] = useState<ChecksFilter>('all')
@@ -108,44 +145,63 @@ export function Checks() {
   const [params] = useSearchParams()
   const wanted = params.get('finding')
   const rootRef = useRef<HTMLElement>(null)
+  const paneRef = useRef<HTMLElement>(null)
   const findings = project.findings
   const cleared = project.cleared
   const counts = useMemo(() => checkCounts(findings), [findings])
   const total = findings.length
 
-  // /checks?finding=<id> (from the Rules screen) scrolls to that card and focuses it.
+  const shown = VERDICT_ORDER.filter((v) => filter === 'all' || filter === v)
+  const groups = useMemo(
+    () => VERDICT_ORDER.map((v) => ({ v, list: orderFindings(findings.filter((f) => f.verdict === v)) })),
+    [findings],
+  )
+  const visible = groups.filter((g) => shown.includes(g.v)).flatMap((g) => g.list)
   const known = wanted != null && findings.some((f) => f.id === wanted)
+  const [selectedId, setSelectedId] = useState<string | null>(known ? wanted : null)
+  // The selection follows the filter: a finding the filter hides gives way to the first one shown.
+  const selected = visible.find((f) => f.id === selectedId) ?? visible[0] ?? null
+  const position = selected ? visible.indexOf(selected) : -1
+
+  const select = (f: Finding | undefined, { focusRow = false } = {}) => {
+    if (!f) return
+    setSelectedId(f.id)
+    const row = rootRef.current?.querySelector<HTMLElement>(`[data-finding-row][data-finding-id="${CSS.escape(f.id)}"]`)
+    if (focusRow) row?.focus()
+    row?.scrollIntoView?.({ block: 'nearest' })
+    paneRef.current?.scrollTo?.({ top: 0 })
+  }
+
+  // /checks?finding=<id> (from the Rules screen) selects that finding and focuses its card.
   useEffect(() => {
     if (!wanted || !known) return
     setFilter('all')
+    setSelectedId(wanted)
     const t = setTimeout(() => {
-      const card = [...(rootRef.current?.querySelectorAll<HTMLElement>('[data-finding-card]') ?? [])].find((c) => c.dataset.findingId === wanted)
-      if (!card) return
-      card.scrollIntoView?.({ block: 'center' })
-      card.focus()
+      const row = rootRef.current?.querySelector<HTMLElement>(`[data-finding-row][data-finding-id="${CSS.escape(wanted)}"]`)
+      row?.scrollIntoView?.({ block: 'center' })
+      paneRef.current?.querySelector<HTMLElement>('[data-finding-card]')?.focus()
     }, 0)
     return () => clearTimeout(t)
   }, [wanted, known])
 
-  // J / K move between cards (UI.md §8); 1 / 2 / 3 pick "It's fine" / "It's a problem" / "Ask someone" on a review card.
+  // J / K move between findings (UI.md §8); 1 / 2 / 3 pick "It's fine" / "It's a problem" / "Ask someone" on a review card.
+  const keys = useRef({ visible, position, select })
+  keys.current = { visible, position, select }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const t = e.target as HTMLElement | null
       if (t && (/INPUT|TEXTAREA|SELECT/.test(t.tagName) || t.isContentEditable)) return
-      const root = rootRef.current
-      if (!root) return
-      const cards = [...root.querySelectorAll<HTMLElement>('[data-finding-card]')]
-      const here = cards.findIndex((c) => c.contains(document.activeElement))
+      const { visible, position, select } = keys.current
       const k = e.key.toLowerCase()
       if (k === 'j' || k === 'k') {
-        if (!cards.length) return
+        if (!visible.length) return
         e.preventDefault()
-        const next = k === 'j' ? Math.min(cards.length - 1, here + 1) : Math.max(0, here < 0 ? 0 : here - 1)
-        cards[next].focus()
-        cards[next].scrollIntoView?.({ block: 'nearest' })
-      } else if (['1', '2', '3'].includes(k) && here >= 0) {
-        const b = cards[here].querySelector<HTMLButtonElement>(`[data-review-controls] [aria-keyshortcuts="${k}"]`)
+        const next = k === 'j' ? Math.min(visible.length - 1, position + 1) : Math.max(0, position - 1)
+        select(visible[next], { focusRow: true })
+      } else if (['1', '2', '3'].includes(k)) {
+        const b = paneRef.current?.querySelector<HTMLButtonElement>(`[data-review-controls] [aria-keyshortcuts="${k}"]`)
         if (b) {
           e.preventDefault()
           b.click()
@@ -159,12 +215,11 @@ export function Checks() {
   if (total === 0) return <EmptyChecks />
 
   const countOf = (id: ChecksFilter) => (id === 'all' ? total : id === 'cleared' ? cleared.length : counts[id])
-  const shown = VERDICT_ORDER.filter((v) => filter === 'all' || filter === v)
   const showCleared = filter === 'all' || filter === 'cleared'
-  const inGroup = (v: Verdict): Finding[] => orderFindings(findings.filter((f) => f.verdict === v))
+  const navButton = 'inline-flex h-7 w-7 items-center justify-center rounded-chip border border-border bg-surface hover:border-ink-2 disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-info'
 
   return (
-    <section ref={rootRef} aria-labelledby="checks-title" className="mx-auto max-w-[960px]">
+    <section ref={rootRef} aria-labelledby="checks-title" className="mx-auto max-w-[1320px]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 id="checks-title" className="text-[20px] font-semibold">
@@ -209,39 +264,67 @@ export function Checks() {
         </p>
       )}
 
-      <div className="mt-4 space-y-6">
-        {shown.map((v) => {
-          const list = inGroup(v)
-          const headId = `group-${v}-title`
-          return (
-            <section key={v} aria-labelledby={headId} data-group={v}>
-              <h2 id={headId} className="flex flex-wrap items-center gap-2 text-[16px] font-semibold">
-                <VerdictBadge verdict={v} />
-                <span className="font-mono">{list.length}</span>
-                {v === 'review' && list.length > 0 && (
-                  <span className="text-[13px] font-normal text-ink-2">
-                    {counts.undecided === 0 ? 'all decided' : `${counts.undecided} left to decide`}
-                  </span>
-                )}
-              </h2>
-              {list.length === 0 ? (
-                <p className="mt-2 flex items-center gap-1.5 text-[14px] text-ink-2">
-                  <ClipboardCheck size={15} aria-hidden="true" />
-                  {GROUP_EMPTY[v]}
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-3">
-                  {list.map((f) => (
-                    <li key={f.id}>
-                      <FindingCard finding={f} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )
-        })}
-        {showCleared && <ClearedPanel items={cleared} open={clearedOpen} onToggle={() => setClearedOpen((o) => !o)} />}
+      <div className={`mt-4 gap-5 ${filter === 'cleared' ? '' : 'lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'}`}>
+        <div className="min-w-0 space-y-5">
+          {groups
+            .filter((g) => shown.includes(g.v))
+            .map(({ v, list }) => {
+              const headId = `group-${v}-title`
+              return (
+                <section key={v} aria-labelledby={headId} data-group={v}>
+                  <h2 id={headId} className="flex flex-wrap items-center gap-2 text-[16px] font-semibold">
+                    <VerdictBadge verdict={v} />
+                    <span className="font-mono">{list.length}</span>
+                    {v === 'review' && list.length > 0 && (
+                      <span className="text-[13px] font-normal text-ink-2">
+                        {counts.undecided === 0 ? 'all decided' : `${counts.undecided} left to decide`}
+                      </span>
+                    )}
+                  </h2>
+                  {list.length === 0 ? (
+                    <p className="mt-2 flex items-center gap-1.5 text-[14px] text-ink-2">
+                      <ClipboardCheck size={15} aria-hidden="true" />
+                      {GROUP_EMPTY[v]}
+                    </p>
+                  ) : (
+                    <ul className="mt-1.5 space-y-0.5">
+                      {list.map((f) => (
+                        <li key={f.id}>
+                          <FindingRow finding={f} selected={selected?.id === f.id} onSelect={() => select(f)} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              )
+            })}
+          {showCleared && <ClearedPanel items={cleared} open={clearedOpen} onToggle={() => setClearedOpen((o) => !o)} />}
+        </div>
+
+        {filter !== 'cleared' && selected && (
+          <aside
+            ref={paneRef}
+            aria-label="Selected finding"
+            data-detail
+            className="mt-5 min-w-0 lg:sticky lg:top-4 lg:mt-0 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto"
+          >
+            <div className="mb-2 flex items-center justify-between gap-2 text-[13px] text-ink-2">
+              <span>
+                Finding <span className="font-mono">{position + 1}</span> of <span className="font-mono">{visible.length}</span>
+                <span className="hidden sm:inline"> · J / K to move</span>
+              </span>
+              <span className="flex gap-1">
+                <button type="button" className={navButton} aria-label="Previous finding" disabled={position <= 0} onClick={() => select(visible[position - 1])}>
+                  <ChevronLeft size={15} aria-hidden="true" />
+                </button>
+                <button type="button" className={navButton} aria-label="Next finding" disabled={position >= visible.length - 1} onClick={() => select(visible[position + 1])}>
+                  <ChevronRight size={15} aria-hidden="true" />
+                </button>
+              </span>
+            </div>
+            <FindingCard key={selected.id} finding={selected} />
+          </aside>
+        )}
       </div>
     </section>
   )

@@ -11,23 +11,53 @@ import { Checks, EmptyChecks } from './Checks'
 
 const project = mock as unknown as Project
 const group = (v: string) => document.querySelector<HTMLElement>(`[data-group="${v}"]`)!
+const rows = (root: ParentNode = document) => [...root.querySelectorAll<HTMLElement>('[data-finding-row]')]
+const row = (name: RegExp) => rows().find((r) => name.test(r.textContent ?? ''))!
+/** Select a finding's row; its full card opens in the detail pane. */
+const open = async (name: RegExp) => {
+  await waitFor(() => expect(row(name)).toBeDefined())
+  await userEvent.click(row(name))
+  return screen.getByRole('article', { name })
+}
 
 beforeEach(() => window.localStorage.clear())
 afterEach(() => vi.unstubAllGlobals())
 
 describe('Checks groups and filter', () => {
-  it('groups Fail / Needs review / Pass with the mock counts', () => {
+  it('groups Fail / Needs review / Pass as one-line rows with the mock counts; the first finding is open beside them', () => {
     renderWithProject(<Checks />)
     expect(screen.getByRole('heading', { name: 'Checks', level: 1 })).toBeInTheDocument()
     const want = { fail: 4, review: 3, pass: 2 } as const
     for (const v of ['fail', 'review', 'pass'] as const) {
-      expect(within(group(v)).getAllByRole('article')).toHaveLength(want[v])
+      expect(rows(group(v))).toHaveLength(want[v])
       expect(within(group(v)).getByRole('heading', { level: 2 })).toHaveTextContent(String(want[v]))
     }
     expect(within(group('review')).getByRole('heading', { level: 2 })).toHaveTextContent('2 left to decide')
-    // Undecided review items first, the decided one last.
-    const titles = within(group('review')).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
-    expect(titles.at(-1)).toBe('The content sheet is still a draft')
+    // Undecided review items first, the decided one last, and its row says so.
+    const last = rows(group('review')).at(-1)!
+    expect(last).toHaveAttribute('data-finding-id', 'f-approval-sheet-draft')
+    expect(last).toHaveTextContent('Decided: fine')
+    // One full card at a time: the selected finding, in the detail pane.
+    const pane = screen.getByRole('complementary', { name: 'Selected finding' })
+    expect(screen.getAllByRole('article')).toHaveLength(1)
+    expect(within(pane).getByRole('article', { name: /Honey percentage/ })).toBeInTheDocument()
+    expect(pane).toHaveTextContent('Finding 1 of 9')
+    expect(rows()[0]).toHaveAttribute('aria-current', 'true')
+  })
+
+  it('a row opens its card; Previous and Next step through the list', async () => {
+    renderWithProject(<Checks />)
+    const card = await open(/HIGH-GRAIN/)
+    expect(card).toHaveTextContent('Needs review')
+    expect(row(/HIGH-GRAIN/)).toHaveAttribute('aria-current', 'true')
+    expect(screen.getByRole('complementary', { name: 'Selected finding' })).toHaveTextContent('Finding 6 of 9')
+    await userEvent.click(screen.getByRole('button', { name: 'Next finding' }))
+    expect(screen.getByRole('article', { name: /content sheet is still a draft/ })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Previous finding' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Previous finding' }))
+    expect(screen.getByRole('article', { name: /Vegan claim/ })).toBeInTheDocument()
+    await userEvent.click(row(/Honey percentage/))
+    expect(screen.getByRole('button', { name: 'Previous finding' })).toBeDisabled()
   })
 
   it('the filter buttons carry counts and show one group at a time', async () => {
@@ -41,23 +71,27 @@ describe('Checks groups and filter', () => {
     expect(document.querySelector('[data-group="pass"]')).toBeNull()
     await userEvent.click(within(filters).getByRole('button', { name: 'Needs review 3' }))
     expect(document.querySelector('[data-group="fail"]')).toBeNull()
-    expect(within(group('review')).getAllByRole('article')).toHaveLength(3)
+    expect(rows(group('review'))).toHaveLength(3)
+    // The open card follows the filter: the first finding it shows.
+    expect(screen.getByRole('article', { name: /Vegan claim/ })).toBeInTheDocument()
     await userEvent.click(within(filters).getByRole('button', { name: 'Pass 2' }))
-    expect(within(group('pass')).getAllByRole('article')).toHaveLength(2)
+    expect(rows(group('pass'))).toHaveLength(2)
     await userEvent.click(within(filters).getByRole('button', { name: 'All 9' }))
-    expect(screen.getAllByRole('article')).toHaveLength(9)
+    expect(rows()).toHaveLength(9)
   })
 
-  it('J and K move between cards; 2 on a review card chooses "It\'s a problem" (asks for the name first)', async () => {
+  it('J and K move the selection; 2 on a review card chooses "It\'s a problem" (asks for the name first)', async () => {
     renderWithProject(<Checks />)
-    const cards = screen.getAllByRole('article')
+    const all = rows()
     await userEvent.keyboard('j')
-    expect(cards[0]).toHaveFocus()
+    expect(all[1]).toHaveFocus()
+    expect(all[1]).toHaveAttribute('aria-current', 'true')
     await userEvent.keyboard('jj')
-    expect(cards[2]).toHaveFocus()
+    expect(all[3]).toHaveFocus()
     await userEvent.keyboard('k')
-    expect(cards[1]).toHaveFocus()
-    cards[4].focus()
+    expect(all[2]).toHaveFocus()
+    expect(screen.getByRole('article', { name: /Manufacturer address/ })).toBeInTheDocument()
+    await userEvent.click(row(/Vegan claim/))
     await userEvent.keyboard('2')
     expect(await screen.findByText(/Add your name first/)).toBeInTheDocument()
   })
@@ -111,18 +145,19 @@ describe('Checked and fine', () => {
 })
 
 describe('Deep link to a finding', () => {
-  it('?finding=<id> scrolls to the card and focuses it', async () => {
+  it('?finding=<id> selects that finding, scrolls its row into view and focuses its card', async () => {
     const scroll = vi.fn()
     Element.prototype.scrollIntoView = scroll
     renderWithProject(<Checks />, '/checks?finding=f-pass-identity')
-    const card = document.querySelector<HTMLElement>('[data-finding-id="f-pass-identity"]')!
-    await waitFor(() => expect(card).toHaveFocus())
+    await waitFor(() => expect(document.querySelector('article[data-finding-id="f-pass-identity"]')).toHaveFocus())
+    expect(document.querySelector('[data-finding-row][data-finding-id="f-pass-identity"]')).toHaveAttribute('aria-current', 'true')
     expect(scroll).toHaveBeenCalled()
   })
 
   it('an unknown id changes nothing', () => {
     renderWithProject(<Checks />, '/checks?finding=nope')
-    expect(screen.getAllByRole('article')).toHaveLength(9)
+    expect(rows()).toHaveLength(9)
+    expect(screen.getByRole('article', { name: /Honey percentage/ })).toBeInTheDocument()
     expect(document.body).toHaveFocus()
   })
 })
@@ -130,7 +165,7 @@ describe('Deep link to a finding', () => {
 describe('Needs review decisions (mock mode: applied locally)', () => {
   it('needs a name before it decides, and then logs the decision with the note', async () => {
     renderWithProject(<Checks />)
-    const card = screen.getByRole('article', { name: /HIGH-GRAIN/ })
+    const card = await open(/HIGH-GRAIN/)
     await userEvent.click(within(card).getByRole('button', { name: "It's fine" }))
     expect(within(card).getByRole('alert')).toHaveTextContent('Add your name first')
     expect(within(card).getByLabelText('Your name')).toHaveFocus()
@@ -145,13 +180,14 @@ describe('Needs review decisions (mock mode: applied locally)', () => {
     expect(within(card).queryByRole('button', { name: "It's fine" })).toBeNull()
     // The item stays in the review group; the queue shrinks; the name is remembered.
     expect(within(group('review')).getByRole('heading', { level: 2 })).toHaveTextContent('1 left to decide')
+    expect(row(/HIGH-GRAIN/)).toHaveTextContent('Decided: fine')
     expect(window.localStorage.getItem('bf.approver')).toBe('Priya')
   })
 
   it('"It\'s a problem" is shown as a problem', async () => {
     window.localStorage.setItem('bf.approver', 'Priya')
     renderWithProject(<Checks />)
-    const card = screen.getByRole('article', { name: /Vegan claim/ })
+    const card = await open(/Vegan claim/)
     expect(within(card).getByLabelText('Your name')).toHaveValue('Priya')
     await userEvent.click(within(card).getByRole('button', { name: "It's a problem" }))
     expect(within(card).getByText('Decided: a problem')).toBeInTheDocument()
@@ -176,7 +212,7 @@ describe('Needs review decisions (api mode)', () => {
       }),
     )
     renderLive(<Checks />, { gate: true })
-    const card = await screen.findByRole('article', { name: /HIGH-GRAIN/ })
+    const card = await open(/HIGH-GRAIN/)
     await userEvent.type(within(card).getByLabelText('Your name'), 'Priya')
     await userEvent.type(within(card).getByLabelText('Note (optional)'), 'Approved by Regulatory')
     await userEvent.click(within(card).getByRole('button', { name: "It's fine" }))
@@ -191,7 +227,7 @@ describe('Needs review decisions (api mode)', () => {
       post('/api/findings/f-claim-high-grain/decision', () => json({ detail: 'Only review items can be decided' }, 422)),
     )
     renderLive(<Checks />, { gate: true })
-    const card = await screen.findByRole('article', { name: /HIGH-GRAIN/ })
+    const card = await open(/HIGH-GRAIN/)
     await userEvent.type(within(card).getByLabelText('Your name'), 'Priya')
     await userEvent.click(within(card).getByRole('button', { name: "It's a problem" }))
     expect(await screen.findByRole('alert')).toHaveTextContent('The decision was not saved: Only review items can be decided')
@@ -204,7 +240,7 @@ describe('Needs review decisions (api mode)', () => {
       post('/api/findings/f-claim-high-grain/decision', () => json({ detail: 'Not Found' }, 404)),
     )
     renderLive(<Checks />, { gate: true })
-    const card = await screen.findByRole('article', { name: /HIGH-GRAIN/ })
+    const card = await open(/HIGH-GRAIN/)
     await userEvent.type(within(card).getByLabelText('Your name'), 'Priya')
     await userEvent.click(within(card).getByRole('button', { name: "It's fine" }))
     expect(await within(card).findByText(/Priya decided/)).toBeInTheDocument()

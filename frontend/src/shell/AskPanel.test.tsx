@@ -101,9 +101,9 @@ describe('Ask about this finding', () => {
   const honey = () => screen.getByRole('article', { name: /Honey percentage/ })
   const askButton = () => within(honey()).getByRole('button', { name: /Ask about this finding/ })
 
-  it('every card has the button; it opens the panel with that finding as context, and the top-bar Ask stays general', async () => {
+  it('the selected finding\'s card has the button; it opens the panel with that finding as context, and the top-bar Ask stays general', async () => {
     renderWithProject(withChecks)
-    expect(screen.getAllByRole('button', { name: /Ask about this finding/ })).toHaveLength(9)
+    expect(screen.getAllByRole('button', { name: /Ask about this finding/ })).toHaveLength(1)  // one card: the selected finding
     await userEvent.click(askButton())
     const panel = screen.getByRole('complementary', { name: 'Ask about this' })
     const ctx = within(panel).getByRole('region', { name: 'Finding in question' })

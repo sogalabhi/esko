@@ -44,7 +44,8 @@ test('demo flow: upload, what we read, source drawer, checks verdict', async ({ 
   await nav.getByRole('link', { name: /Checks/ }).click()
   await expect(page.getByRole('heading', { name: 'Checks', level: 1 })).toBeVisible()
   await expect(page.getByRole('link', { name: /Print verdict: not ready to print/ })).toBeVisible()
-  const honey = page.getByRole('article').filter({ hasText: /honey/i }).first()
+  await page.locator('[data-finding-row]').filter({ hasText: /honey/i }).first().click()
+  const honey = page.locator('[data-detail] [data-finding-card]')
   await expect(honey).toContainText(/fail/i)
   await expect(honey).toContainText('Quote checked by code')
 

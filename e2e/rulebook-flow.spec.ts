@@ -47,7 +47,8 @@ test.describe('rulebook, checks, decisions, ask, markup, report', () => {
     await openChecks(page)
     await expect(page.getByRole('link', { name: /Print verdict: not ready to print/ })).toBeVisible()
 
-    const gmo = page.locator('[data-group="fail"] [data-finding-id="f-rule-df-16"]')
+    await page.locator('[data-group="fail"] [data-finding-row][data-finding-id="f-rule-df-16"]').click()
+    const gmo = page.locator('[data-detail] [data-finding-card][data-finding-id="f-rule-df-16"]')
     await expect(gmo).toBeVisible()
     await expect(gmo).toContainText(/GMO/i)
     await expect(gmo.getByLabel('Rules')).toContainText('DF-16')
@@ -62,21 +63,25 @@ test.describe('rulebook, checks, decisions, ask, markup, report', () => {
 
   test('review decision is kept by the backend across a reload', async ({ page }) => {
     await openChecks(page)
-    const card = page.locator('[data-group="review"] [data-finding-card]').filter({ has: page.getByRole('button', { name: "It's fine" }) }).first()
-    const id = await card.getAttribute('data-finding-id')
+    // Undecided review items are listed first: open the first one.
+    const row = page.locator('[data-group="review"] [data-finding-row]').first()
+    const id = await row.getAttribute('data-finding-id')
+    await row.click()
+    const card = page.locator(`[data-detail] [data-finding-card][data-finding-id="${id}"]`)
     await card.getByLabel('Your name').fill('Maya Tester')
     await card.getByRole('button', { name: "It's fine" }).click()
-    const decided = page.locator(`[data-finding-id="${id}"]`)
-    await expect(decided.locator('[data-decision]')).toContainText('Maya Tester decided: it\'s fine')
+    await expect(card.locator('[data-decision]')).toContainText('Maya Tester decided: it\'s fine')
 
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Checks', level: 1 })).toBeVisible()
-    await expect(page.locator(`[data-finding-id="${id}"] [data-decision]`)).toContainText('Maya Tester decided: it\'s fine')
+    await page.locator(`[data-finding-row][data-finding-id="${id}"]`).click()
+    await expect(page.locator(`[data-detail] [data-finding-id="${id}"] [data-decision]`)).toContainText('Maya Tester decided: it\'s fine')
   })
 
   test('ask about a finding gives an answer or a refusal reason', async ({ page }) => {
     await openChecks(page)
-    const card = page.locator('[data-group="fail"]').getByRole('article').first()
+    await page.locator('[data-group="fail"] [data-finding-row]').first().click()
+    const card = page.locator('[data-detail] [data-finding-card]')
     await card.getByRole('button', { name: /^Ask about this finding/ }).click()
     const panel = page.getByRole('complementary', { name: 'Ask about this' })
     await expect(panel.getByRole('region', { name: 'Finding in question' })).toBeVisible()
@@ -88,7 +93,13 @@ test.describe('rulebook, checks, decisions, ask, markup, report', () => {
 
   test('Show on artwork opens the marked-up artwork on that finding', async ({ page }) => {
     await openChecks(page)
-    const card = page.locator('[data-group="fail"] [data-finding-card]').filter({ has: page.getByRole('link', { name: 'Show on artwork' }) }).first()
+    // Open fail rows until one is marked on the artwork.
+    const card = page.locator('[data-detail] [data-finding-card]')
+    const rows = page.locator('[data-group="fail"] [data-finding-row]')
+    for (let i = 0; i < (await rows.count()); i++) {
+      await rows.nth(i).click()
+      if (await card.getByRole('link', { name: 'Show on artwork' }).count()) break
+    }
     const title = (await card.getByRole('heading', { level: 3 }).textContent()) ?? ''
     await card.getByRole('link', { name: 'Show on artwork' }).click()
     await expect(page).toHaveURL(/\/markup\?finding=/)
