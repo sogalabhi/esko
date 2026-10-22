@@ -94,7 +94,8 @@ url() { grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$STATE/tunnel.log" 2>
 start_tunnel() {
   if running tunnel; then return; fi
   echo "== cloudflare tunnel"
-  launch tunnel cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$WEB_PORT"
+  # http2 over TCP: campus and office networks often block the UDP that the default (QUIC) needs.
+  launch tunnel cloudflared tunnel --no-autoupdate --protocol http2 --url "http://127.0.0.1:$WEB_PORT"
   for _ in $(seq 1 30); do [[ -n "$(url)" ]] && break; sleep 1; done
   [[ -n "$(url)" ]] || { stop_one tunnel; echo "no tunnel URL, see $STATE/tunnel.log" >&2; exit 1; }
 }
