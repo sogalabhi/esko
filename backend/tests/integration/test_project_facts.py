@@ -212,7 +212,7 @@ def test_api_run_then_get_project_validates_and_is_camel_case(client):
     assert parsed.facts and parsed.conflicts
     assert set(body) == {"files", "facts", "conflicts", "questions", "requirements", "rules", "pack", "brief", "trust",
                          "market", "demoMode", "mode", "modeReason", "questionsWaiting", "waitingQuestions",
-                         "findings", "cleared", "rulebook"}  # P2 checker (PARALLEL_PLAN Step 0)
+                         "findings", "cleared", "rulebook", "scenario", "history"}  # P2 checker (PARALLEL_PLAN Step 0)
     fact = body["facts"][0]
     assert {"id", "group", "field", "value", "unit", "state", "sources"} <= set(fact)
     assert {"fileId", "where", "quote", "quoteChecked"} == set(fact["sources"][0])

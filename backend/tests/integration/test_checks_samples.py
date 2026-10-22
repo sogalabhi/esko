@@ -202,8 +202,8 @@ def test_get_checks_returns_the_summary_findings_and_cleared(client):
         client.post("/api/files", files={"file": (p.name, p.read_bytes())})
     run = client.post("/api/project/run").json()
     body = client.get("/api/checks").json()
-    assert body["summary"] == {"fail": 23, "review": 10, "pass": 4, "cleared": 2}  # review: the hidden table
-    assert body["cleared"] == run["cleared"] and len(body["cleared"]) == 2 and body["findings"] == run["findings"]
+    assert body["summary"] == {"fail": 24, "review": 12, "pass": 4, "cleared": 4}  # review: the hidden table; images: 1 fail, 2 review, 2 cleared
+    assert body["cleared"] == run["cleared"] and len(body["cleared"]) == 4 and body["findings"] == run["findings"]
     first = body["findings"][0]
     assert {"id", "verdict", "kind", "title", "whyItMatters", "ruleIds", "evidence", "basis"} <= set(first)
     assert re.fullmatch(r"f-[a-z]+-.+", first["id"])

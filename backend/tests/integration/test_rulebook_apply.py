@@ -127,8 +127,8 @@ def test_deleting_the_rulebook_restores_the_findings_without_it(client):
 def test_the_verdict_counts_without_and_with_the_rulebook(client):
     c0 = Counter(f["verdict"] for f in client.run_body["findings"])
     c1 = Counter(f["verdict"] for f in upload(client)["findings"])
-    assert c0 == {"fail": 23, "review": 10, "pass": 4}
-    assert (c1["fail"], c1["review"], c1["pass"]) == (c1["fail"], 11, 7) and c1["fail"] >= 23
+    assert c0 == {"fail": 24, "review": 12, "pass": 4}  # with the placed-image checks
+    assert (c1["fail"], c1["review"], c1["pass"]) == (c1["fail"], 13, 7) and c1["fail"] >= 24
 
 
 def test_a_decision_on_a_review_item_survives_adding_and_removing_the_rulebook(client):
@@ -143,7 +143,7 @@ def test_a_decision_on_a_review_item_survives_adding_and_removing_the_rulebook(c
 
 
 def test_every_flag_false_answer_key_item_that_is_a_true_pass_is_cleared_with_a_proof(client):
-    cleared = client.run_body["cleared"]
+    cleared = [c for c in client.run_body["cleared"] if not c["id"].startswith("c-image-")]  # placed images: own tests
     by_title = {c["title"]: c for c in cleared}
     upc = next(c for c in cleared if "check digit" in c["title"])
     assert upc["proof"] == "Digits 12000000003 give check digit 6; printed 6." and upc["evidence"]
@@ -152,7 +152,7 @@ def test_every_flag_false_answer_key_item_that_is_a_true_pass_is_cleared_with_a_
     true_passes = {i["id"] for i in ANSWER_KEY if i["expected"]["flag"] is False and i["kind"] == "pass"}
     assert true_passes == {"upc-check-digit", "guide-text-ignored"} and len(by_title) == 2
     assert all(c["proof"] and c["evidence"] for c in cleared)
-    assert client.get("/api/checks").json()["summary"]["cleared"] == len(cleared) == 2
+    assert client.get("/api/checks").json()["summary"]["cleared"] == len(client.run_body["cleared"]) == len(cleared) + 2
 
 
 def test_hidden_text_is_a_finding_never_a_fact_review_alone_and_fail_with_a_rule_banning_it(client):

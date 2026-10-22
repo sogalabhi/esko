@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.checks.units import parse_quantity
 from app.markets.loader import active_rules
-from app.markets.schema import MarketPack, Rule
+from app.markets.schema import ARTWORK_CHECKS, MarketPack, Rule
 from app.rules.conditions import USABLE_STATES, Context, FactView, build_context, evaluate_condition, norm
 
 Status = Literal["met", "missing", "conflict", "not_applicable"]
@@ -78,6 +78,8 @@ def evaluate(pack: MarketPack, facts: Sequence[FactView], on_date: date | None =
     sizes = {i.item: i.min_height_mm for i in pack.pack_items if i.min_height_mm is not None}
     out: list[RequirementResult] = []
     for rule in active_rules(pack, on_date or date.today(), include_unapproved):
+        if rule.check_type in ARTWORK_CHECKS:  # measured on the artwork file, not a fact (app/checks/images.py)
+            continue
         req = rule.requires
         if not evaluate_condition(rule.applies_if, ctx):
             status: Status = "not_applicable"

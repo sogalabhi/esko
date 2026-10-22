@@ -385,10 +385,11 @@ def _fold(into: Finding, c: Conflict) -> None:
     into.fact_ids = list(dict.fromkeys([*into.fact_ids, *c.fact_ids]))
 
 
-def build_findings(project: Project, pack: MarketPack, pieces: Mapping[str, Sequence[SourcePiece]] | None = None
-                   ) -> list[Finding]:
+def build_findings(project: Project, pack: MarketPack, pieces: Mapping[str, Sequence[SourcePiece]] | None = None,
+                   extra: Sequence[Finding] = ()) -> list[Finding]:
     """Every finding for the project as it stands, fail first. A conflict a person settled gives no finding.
-    `pieces` (file id -> what the readers found) adds the hidden-text findings."""
+    `pieces` (file id -> what the readers found) adds the hidden-text findings; `extra` are findings measured on
+    the artwork elsewhere (placed images), held to the same bar."""
     ctx = _Ctx(project, pack)
     missing, claims = _requirement_findings(ctx)
     out: list[Finding] = list(missing)
@@ -409,7 +410,7 @@ def build_findings(project: Project, pack: MarketPack, pieces: Mapping[str, Sequ
             out.append(f)
         else:
             host.requirement_ids = list(dict.fromkeys([*host.requirement_ids, *f.requirement_ids]))
-    out += _pass_findings(ctx) + _hidden_findings(project, pieces or {})
+    out += _pass_findings(ctx) + _hidden_findings(project, pieces or {}) + list(extra)
     out += _ai_suggested(ctx, {i for f in out for i in f.fact_ids})
 
     seen: dict[str, int] = {}

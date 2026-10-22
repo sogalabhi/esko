@@ -240,7 +240,7 @@ export interface Trust {
 // --- P2 checker: findings, the cleared list and an uploaded rulebook (docs/PARALLEL_PLAN.md, Step 0) ---
 
 export type Verdict = 'fail' | 'review' | 'pass'
-export type FindingKind = 'missing' | 'mismatch' | 'math' | 'rule' | 'claim' | 'format' | 'hidden' | 'text_size' | 'approval'
+export type FindingKind = 'missing' | 'mismatch' | 'math' | 'rule' | 'claim' | 'format' | 'hidden' | 'text_size' | 'approval' | 'image'
 
 /** A person's call on a review item: "It's fine" (pass) or "It's a problem" (fail). */
 export interface FindingDecision {

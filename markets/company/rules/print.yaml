@@ -1,0 +1,41 @@
+# Company layer: print-readiness rules from the Ghent Workgroup PDF specification (GWG2015, Heatset and Coldset
+# Printing, release 17 Nov 2015). Quotes read from the official PDF (gwg.org, 28 Oct 2026); the values are the
+# GWG_SheetSpot_2015 variant table (5.7: sheetfed offset with spot colours, as folding cartons are printed).
+# DRAFT, not approved: a person must confirm the variant matches the printer before approving.
+- id: company.print.image_resolution
+  market: company
+  source:
+    regulation: Ghent Workgroup PDF Specification GWG2015
+    clause: 4.26 Image Resolution for Grayscale and Color Images; variant 5.7 GWG_SheetSpot_2015 (Error 149 ppi, Warning 224 ppi)
+    url: https://gwg.org/wp-content/uploads/2026/05/GWG2015-Specification_Release.pdf
+    quote: "The effective resolution of continuous-tone image elements not covered by requirement 4.28 shall not be lower than or equal to the value defined in the table specific for each Variant unless its width or height is 16 pixels or less."
+  summary: Every photo or other continuous-tone image must print above 149 ppi at its placed size (an error at or below), and above 224 ppi to pass without a warning.
+  status: in_force
+  requires:
+    item: continuous_tone_image
+    fail_at_or_below: 149
+    review_at_or_below: 224
+    exempt_px: 16
+  check_type: image_resolution
+  stricter_than_law: true
+  approved: false
+  notes: "Effective resolution (GWG2015 3.13): the image's pixel width and height combined with how it is placed; when width and height differ, the smaller applies. GWG Error = fail, Warning = needs review. Requirement 4.28 (a single image filling the page) does not apply to a pack dieline."
+
+- id: company.print.one_bit_image_resolution
+  market: company
+  source:
+    regulation: Ghent Workgroup PDF Specification GWG2015
+    clause: 4.27 Image Resolution for 1-bit Images; variant 5.7 GWG_SheetSpot_2015 (Error 549 ppi, Warning 799 ppi)
+    url: https://gwg.org/wp-content/uploads/2026/05/GWG2015-Specification_Release.pdf
+    quote: "The effective resolution of 1-bit image elements shall not be lower than or equal to the value defined in the table specific for each Variant unless its width or height is 16 pixels or less."
+  summary: Every 1-bit image (line art, scanned text) must print above 549 ppi at its placed size (an error at or below), and above 799 ppi to pass without a warning.
+  status: in_force
+  requires:
+    item: one_bit_image
+    fail_at_or_below: 549
+    review_at_or_below: 799
+    exempt_px: 16
+  check_type: image_resolution
+  stricter_than_law: true
+  approved: false
+  notes: "GWG Error = fail, Warning = needs review."

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "savedAt": "2026-10-20T18:46:35+00:00",
+ "savedAt": "2026-10-28T04:40:35+00:00",
  "files": [
   {
    "file": {
@@ -13629,6 +13629,22 @@
     "status": "upcoming"
    },
    {
+    "id": "company.print.image_resolution",
+    "market": "company",
+    "ref": "Ghent Workgroup PDF Specification GWG2015 4.26 Image Resolution for Grayscale and Color Images; variant 5.7 GWG_SheetSpot_2015 (Error 149 ppi, Warning 224 ppi)",
+    "summary": "Every photo or other continuous-tone image must print above 149 ppi at its placed size (an error at or below), and above 224 ppi to pass without a warning.",
+    "url": "https://gwg.org/wp-content/uploads/2026/05/GWG2015-Specification_Release.pdf",
+    "status": "in_force"
+   },
+   {
+    "id": "company.print.one_bit_image_resolution",
+    "market": "company",
+    "ref": "Ghent Workgroup PDF Specification GWG2015 4.27 Image Resolution for 1-bit Images; variant 5.7 GWG_SheetSpot_2015 (Error 549 ppi, Warning 799 ppi)",
+    "summary": "Every 1-bit image (line art, scanned text) must print above 549 ppi at its placed size (an error at or below), and above 799 ppi to pass without a warning.",
+    "url": "https://gwg.org/wp-content/uploads/2026/05/GWG2015-Specification_Release.pdf",
+    "status": "in_force"
+   },
+   {
     "id": "company.vegan.certification",
     "market": "company",
     "ref": "Certified Vegan Standards (vegan.org) Certified Vegan Standards, products may not contain",
@@ -15350,6 +15366,50 @@
     ]
    },
    {
+    "id": "f-image-front-88-4",
+    "verdict": "fail",
+    "kind": "image",
+    "title": "Image on the Front panel prints at 112 ppi",
+    "whyItMatters": "Below the printer's minimum resolution an image prints soft or blocky, and the printer's preflight rejects the file.",
+    "ruleIds": [
+     "company.print.image_resolution"
+    ],
+    "expected": "Above 149 ppi (above 224 ppi recommended)",
+    "found": "112.2 ppi",
+    "proof": "1500 × 1000 px placed at 339.4 × 226.3 mm: 1500 px ÷ 13.36 in = 112.2 ppi across, 1000 px ÷ 8.91 in = 112.2 ppi down; the smaller applies.",
+    "basis": "code",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        149.56,
+        133.65,
+        148.58
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 339.4 × 226.3 mm",
+      "quoteChecked": true
+     }
+    ],
+    "locations": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "panel": "Front",
+      "x": 239.35,
+      "y": 149.56,
+      "w": 133.65,
+      "h": 148.58
+     }
+    ],
+    "factIds": [],
+    "conflictIds": [],
+    "requirementIds": []
+   },
+   {
     "id": "f-hidden-left",
     "verdict": "fail",
     "kind": "hidden",
@@ -16255,6 +16315,109 @@
     ]
    },
    {
+    "id": "f-image-front-162-1",
+    "verdict": "review",
+    "kind": "image",
+    "title": "2 images drawn together on the Front panel print at 189 ppi",
+    "whyItMatters": "Under the recommended resolution an image can print soft; the printer's preflight warns.",
+    "ruleIds": [
+     "company.print.image_resolution"
+    ],
+    "expected": "Above 149 ppi (above 224 ppi recommended)",
+    "found": "188.7 ppi",
+    "proof": "1417 × 1417 px placed at 190.7 × 190.7 mm: 1417 px ÷ 7.51 in = 188.7 ppi across, 1417 px ÷ 7.51 in = 188.7 ppi down; the smaller applies.",
+    "basis": "code",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     }
+    ],
+    "locations": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "panel": "Front",
+      "x": 239.35,
+      "y": 144.49,
+      "w": 133.65,
+      "h": 153.65
+     }
+    ],
+    "factIds": [],
+    "conflictIds": [],
+    "requirementIds": []
+   },
+   {
+    "id": "f-image-back-88-5",
+    "verdict": "review",
+    "kind": "image",
+    "title": "Image on the Back panel prints at 186 ppi",
+    "whyItMatters": "Under the recommended resolution an image can print soft; the printer's preflight warns.",
+    "ruleIds": [
+     "company.print.image_resolution"
+    ],
+    "expected": "Above 149 ppi (above 224 ppi recommended)",
+    "found": "186.1 ppi",
+    "proof": "1500 × 1000 px placed at 204.7 × 136.5 mm: 1500 px ÷ 8.06 in = 186.1 ppi across, 1000 px ÷ 5.37 in = 186.1 ppi down; the smaller applies.",
+    "basis": "code",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        19.35,
+        152.12,
+        133.65,
+        136.49
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 204.7 × 136.5 mm",
+      "quoteChecked": true
+     }
+    ],
+    "locations": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "panel": "Back",
+      "x": 19.35,
+      "y": 152.12,
+      "w": 133.65,
+      "h": 136.49
+     }
+    ],
+    "factIds": [],
+    "conflictIds": [],
+    "requirementIds": []
+   },
+   {
     "id": "f-approval-f-1",
     "verdict": "review",
     "kind": "approval",
@@ -16918,6 +17081,140 @@
       "quoteChecked": true
      }
     ]
+   },
+   {
+    "id": "c-image-back-162-0",
+    "title": "2 images drawn together on the Back panel print at 225 ppi",
+    "proof": "1417 × 1417 px placed at 159.9 × 159.9 mm: 1417 px ÷ 6.30 in = 225.0 ppi across, 1417 px ÷ 6.30 in = 225.0 ppi down; the smaller applies. Limit: above 149 ppi (above 224 ppi recommended).",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     }
+    ]
+   },
+   {
+    "id": "c-image-proportions-c633ab2f9d227c14",
+    "title": "No image is stretched (4 image placements checked)",
+    "proof": "Across and down scales agree within 1% for every placement (ppi): Back 225.0 across, 225.0 down; Front 188.7 across, 188.7 down; Front 112.2 across, 112.2 down; Back 186.1 across, 186.1 down.",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        149.56,
+        133.65,
+        148.58
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 339.4 × 226.3 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        19.35,
+        152.12,
+        133.65,
+        136.49
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 204.7 × 136.5 mm",
+      "quoteChecked": true
+     }
+    ]
    }
   ],
   "rulebook": {
@@ -17318,7 +17615,9 @@
      "findingIds": []
     }
    ]
-  }
+  },
+  "scenario": null,
+  "history": []
  },
  "project": {
   "market": "us",
@@ -22397,6 +22696,22 @@
     "status": "upcoming"
    },
    {
+    "id": "company.print.image_resolution",
+    "market": "company",
+    "ref": "Ghent Workgroup PDF Specification GWG2015 4.26 Image Resolution for Grayscale and Color Images; variant 5.7 GWG_SheetSpot_2015 (Error 149 ppi, Warning 224 ppi)",
+    "summary": "Every photo or other continuous-tone image must print above 149 ppi at its placed size (an error at or below), and above 224 ppi to pass without a warning.",
+    "url": "https://gwg.org/wp-content/uploads/2026/05/GWG2015-Specification_Release.pdf",
+    "status": "in_force"
+   },
+   {
+    "id": "company.print.one_bit_image_resolution",
+    "market": "company",
+    "ref": "Ghent Workgroup PDF Specification GWG2015 4.27 Image Resolution for 1-bit Images; variant 5.7 GWG_SheetSpot_2015 (Error 549 ppi, Warning 799 ppi)",
+    "summary": "Every 1-bit image (line art, scanned text) must print above 549 ppi at its placed size (an error at or below), and above 799 ppi to pass without a warning.",
+    "url": "https://gwg.org/wp-content/uploads/2026/05/GWG2015-Specification_Release.pdf",
+    "status": "in_force"
+   },
+   {
     "id": "company.vegan.certification",
     "market": "company",
     "ref": "Certified Vegan Standards (vegan.org) Certified Vegan Standards, products may not contain",
@@ -24118,6 +24433,50 @@
     ]
    },
    {
+    "id": "f-image-front-88-4",
+    "verdict": "fail",
+    "kind": "image",
+    "title": "Image on the Front panel prints at 112 ppi",
+    "whyItMatters": "Below the printer's minimum resolution an image prints soft or blocky, and the printer's preflight rejects the file.",
+    "ruleIds": [
+     "company.print.image_resolution"
+    ],
+    "expected": "Above 149 ppi (above 224 ppi recommended)",
+    "found": "112.2 ppi",
+    "proof": "1500 × 1000 px placed at 339.4 × 226.3 mm: 1500 px ÷ 13.36 in = 112.2 ppi across, 1000 px ÷ 8.91 in = 112.2 ppi down; the smaller applies.",
+    "basis": "code",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        149.56,
+        133.65,
+        148.58
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 339.4 × 226.3 mm",
+      "quoteChecked": true
+     }
+    ],
+    "locations": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "panel": "Front",
+      "x": 239.35,
+      "y": 149.56,
+      "w": 133.65,
+      "h": 148.58
+     }
+    ],
+    "factIds": [],
+    "conflictIds": [],
+    "requirementIds": []
+   },
+   {
     "id": "f-hidden-left",
     "verdict": "fail",
     "kind": "hidden",
@@ -25023,6 +25382,109 @@
     ]
    },
    {
+    "id": "f-image-front-162-1",
+    "verdict": "review",
+    "kind": "image",
+    "title": "2 images drawn together on the Front panel print at 189 ppi",
+    "whyItMatters": "Under the recommended resolution an image can print soft; the printer's preflight warns.",
+    "ruleIds": [
+     "company.print.image_resolution"
+    ],
+    "expected": "Above 149 ppi (above 224 ppi recommended)",
+    "found": "188.7 ppi",
+    "proof": "1417 × 1417 px placed at 190.7 × 190.7 mm: 1417 px ÷ 7.51 in = 188.7 ppi across, 1417 px ÷ 7.51 in = 188.7 ppi down; the smaller applies.",
+    "basis": "code",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     }
+    ],
+    "locations": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "panel": "Front",
+      "x": 239.35,
+      "y": 144.49,
+      "w": 133.65,
+      "h": 153.65
+     }
+    ],
+    "factIds": [],
+    "conflictIds": [],
+    "requirementIds": []
+   },
+   {
+    "id": "f-image-back-88-5",
+    "verdict": "review",
+    "kind": "image",
+    "title": "Image on the Back panel prints at 186 ppi",
+    "whyItMatters": "Under the recommended resolution an image can print soft; the printer's preflight warns.",
+    "ruleIds": [
+     "company.print.image_resolution"
+    ],
+    "expected": "Above 149 ppi (above 224 ppi recommended)",
+    "found": "186.1 ppi",
+    "proof": "1500 × 1000 px placed at 204.7 × 136.5 mm: 1500 px ÷ 8.06 in = 186.1 ppi across, 1000 px ÷ 5.37 in = 186.1 ppi down; the smaller applies.",
+    "basis": "code",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        19.35,
+        152.12,
+        133.65,
+        136.49
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 204.7 × 136.5 mm",
+      "quoteChecked": true
+     }
+    ],
+    "locations": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "panel": "Back",
+      "x": 19.35,
+      "y": 152.12,
+      "w": 133.65,
+      "h": 136.49
+     }
+    ],
+    "factIds": [],
+    "conflictIds": [],
+    "requirementIds": []
+   },
+   {
     "id": "f-approval-f-1",
     "verdict": "review",
     "kind": "approval",
@@ -25686,6 +26148,140 @@
       "quoteChecked": true
      }
     ]
+   },
+   {
+    "id": "c-image-back-162-0",
+    "title": "2 images drawn together on the Back panel print at 225 ppi",
+    "proof": "1417 × 1417 px placed at 159.9 × 159.9 mm: 1417 px ÷ 6.30 in = 225.0 ppi across, 1417 px ÷ 6.30 in = 225.0 ppi down; the smaller applies. Limit: above 149 ppi (above 224 ppi recommended).",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     }
+    ]
+   },
+   {
+    "id": "c-image-proportions-c633ab2f9d227c14",
+    "title": "No image is stretched (4 image placements checked)",
+    "proof": "Across and down scales agree within 1% for every placement (ppi): Back 225.0 across, 225.0 down; Front 188.7 across, 188.7 down; Front 112.2 across, 112.2 down; Back 186.1 across, 186.1 down.",
+    "evidence": [
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        52.0,
+        152.07,
+        101.0,
+        146.07
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 159.9 × 159.9 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        144.49,
+        133.65,
+        153.65
+       ]
+      },
+      "quote": "Image 1417 × 1417 px, 8-bit, placed at 190.7 × 190.7 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Front",
+       "page": 1,
+       "bbox": [
+        239.35,
+        149.56,
+        133.65,
+        148.58
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 339.4 × 226.3 mm",
+      "quoteChecked": true
+     },
+     {
+      "fileId": "c633ab2f9d227c14",
+      "where": {
+       "panel": "Back",
+       "page": 1,
+       "bbox": [
+        19.35,
+        152.12,
+        133.65,
+        136.49
+       ]
+      },
+      "quote": "Image 1500 × 1000 px, 8-bit, placed at 204.7 × 136.5 mm",
+      "quoteChecked": true
+     }
+    ]
    }
   ],
   "rulebook": {
@@ -26086,7 +26682,9 @@
      "findingIds": []
     }
    ]
-  }
+  },
+  "scenario": null,
+  "history": []
  },
  "log": [],
  "pack": {

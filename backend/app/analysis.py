@@ -12,12 +12,14 @@ from functools import lru_cache
 from app.ai.client import AIClient
 from app import store
 from app.checks.cleared import build_cleared
+from app.checks.images import check_images
 from app.checks.rulebook_apply import apply_rulebook
 from app.checks.verdicts import build_findings, keep_decisions
 from app.markets import layer_packs, load_pack, packs_root
 from app.markets.loader import active_rules
 from app.markets.schema import MarketPack
 from app.models.pieces import SourcePiece
+from app.readers.pdf_images import PlacedImage, cached_pdf_images
 from app.models.project import PACK_FILE_TYPES, Conflict, Fact, Project, Requirement, Rule, project_mode
 from app.questions.build import (
     MISSING_PREFIX,
@@ -101,7 +103,8 @@ def build_requirements(pack: MarketPack, facts: list[Fact], contested: set[str],
 
 def analyze(project: Project, pack: MarketPack | None = None, *, market: str | None = None,
             client: AIClient | None = None, on_date: date | None = None,
-            pieces: dict[str, list[SourcePiece]] | None = None) -> Project:
+            pieces: dict[str, list[SourcePiece]] | None = None,
+            images: dict[str, list[PlacedImage]] | None = None) -> Project:
     pack = pack or load_market(market)
     out = project.model_copy(deep=True)
     facts = [f for f in out.facts if not f.id.startswith(MISSING_PREFIX)]
@@ -168,13 +171,26 @@ def analyze(project: Project, pack: MarketPack | None = None, *, market: str | N
     out.files = [f for f in out.files if f.role != "rulebook" or f.id == book_file]
     if pieces is None:  # what the readers found, by file; the rulebook's own text is never checked as artwork
         pieces = {f.id: store.get_pieces(f.id) or [] for f in out.files if f.role != "rulebook"}
-    findings = build_findings(out, pack, pieces)
+    if images is None:
+        images = artwork_images(out)
+    image_findings, image_cleared = check_images(out, pack, images, on_date)
+    findings = build_findings(out, pack, pieces, image_findings)
     if rulebook is not None:
         findings, out.rulebook = apply_rulebook(out, pack, findings, rulebook, pieces, store.get_pieces(rulebook.file_id) or [])
         out = store.with_rulebook_file(out)
     out.findings = keep_decisions(findings, project.findings)  # a person's decisions are kept
-    out.cleared = build_cleared(out, pack, pieces)
+    out.cleared = build_cleared(out, pack, pieces) + image_cleared
     return out
 
 
-__all__ = ["analyze", "build_requirements", "load_market"]
+def artwork_images(project: Project) -> dict[str, list[PlacedImage]]:
+    """Placed images on each artwork PDF, read from the stored upload (file id -> placements)."""
+    out: dict[str, list[PlacedImage]] = {}
+    for f in project.files:
+        path = store.get_path(f.id) if f.role == "artwork" and f.type == "pdf" else None
+        if path is not None and path.is_file():
+            out[f.id] = list(cached_pdf_images(str(path), f.id))
+    return out
+
+
+__all__ = ["analyze", "artwork_images", "build_requirements", "load_market"]

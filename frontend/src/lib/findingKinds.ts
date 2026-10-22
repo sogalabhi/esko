@@ -11,4 +11,5 @@ export const KIND_LABELS: Record<FindingKind, string> = {
   hidden: 'Hidden copy',
   text_size: 'Text size',
   approval: 'Approval',
+  image: 'Image quality',
 }

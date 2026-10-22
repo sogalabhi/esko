@@ -329,7 +329,7 @@ class Trust(CamelModel):
 # --- P2 checker: findings, the cleared list and an uploaded rulebook (docs/PARALLEL_PLAN.md, Step 0) ---------
 
 Verdict = Literal["fail", "review", "pass"]
-FindingKind = Literal["missing", "mismatch", "math", "rule", "claim", "format", "hidden", "text_size", "approval"]
+FindingKind = Literal["missing", "mismatch", "math", "rule", "claim", "format", "hidden", "text_size", "approval", "image"]
 
 
 class FindingDecision(OmitNone):

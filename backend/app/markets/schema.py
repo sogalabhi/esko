@@ -85,6 +85,17 @@ class Requires(_Strict):
     min: float | None = None  # range
     max: float | None = None  # range
     words: list[str] | None = None  # word_list: every word must appear in the fact value
+    # Measured on the artwork (image_resolution): a measure at or below `fail_at_or_below` fails, at or below
+    # `review_at_or_below` needs review. Images whose width or height is at most `exempt_px` pixels are not checked.
+    fail_at_or_below: float | None = None
+    review_at_or_below: float | None = None
+    exempt_px: int | None = None
+
+
+# Check types measured on the artwork file by code, never matched against facts (the rule engine skips them).
+# image_resolution: requires.item names the image kind, "continuous_tone_image" or "one_bit_image".
+ARTWORK_CHECKS = ("image_resolution",)
+IMAGE_KINDS = ("continuous_tone_image", "one_bit_image")
 
 
 class Rule(_Strict):
@@ -97,10 +108,19 @@ class Rule(_Strict):
     to: date | None = None
     applies_if: Condition | None = None
     requires: Requires
-    check_type: Literal["present", "exact", "range", "size", "word_list"]
+    check_type: Literal["present", "exact", "range", "size", "word_list", "image_resolution"]
     stricter_than_law: bool = False
     approved: bool = False
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def _measured(self) -> Rule:
+        if self.check_type == "image_resolution":
+            if self.requires.item not in IMAGE_KINDS:
+                raise ValueError(f"an image_resolution rule's item must be one of {', '.join(IMAGE_KINDS)}")
+            if self.requires.fail_at_or_below is None and self.requires.review_at_or_below is None:
+                raise ValueError("an image_resolution rule needs fail_at_or_below or review_at_or_below")
+        return self
 
 
 class DailyValue(_Strict):
