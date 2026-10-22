@@ -208,3 +208,20 @@ def test_get_checks_returns_the_summary_findings_and_cleared(client):
     assert {"id", "verdict", "kind", "title", "whyItMatters", "ruleIds", "evidence", "basis"} <= set(first)
     assert re.fullmatch(r"f-[a-z]+-.+", first["id"])
     assert all(q["kind"] != "design" for q in run["questions"])
+
+
+def test_every_flag_false_item_is_cleared_with_a_proof_or_is_not_a_fail(client):
+    for p in (SHEET, CARTON):
+        client.post("/api/files", files={"file": (p.name, p.read_bytes())})
+    client.post("/api/project/run")
+    body = client.get("/api/checks").json()
+    ids = [c["id"] for c in body["cleared"]]
+    upc = next(c for c in body["cleared"] if "check digit" in c["title"])
+    guide = next(c for c in body["cleared"] if "guide text" in c["title"])
+    assert "check digit" in upc["proof"] and upc["evidence"], ids
+    assert "Art orientation" in guide["proof"] and "Copy free" in guide["proof"] and guide["evidence"], ids
+    assert all(c["proof"] and c["evidence"] for c in body["cleared"])
+    # the hidden EU table is a finding that is never a fail without a rulebook; the AI-suggested items are reviews
+    by = {f["id"]: f for f in body["findings"]}
+    assert by["f-hidden-left"]["verdict"] == "review"
+    assert by["f-approval-f-1"]["verdict"] == by["f-approval-f-3"]["verdict"] == "review"

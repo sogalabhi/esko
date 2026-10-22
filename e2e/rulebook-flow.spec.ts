@@ -108,7 +108,7 @@ test.describe('rulebook, checks, decisions, ask, markup, report', () => {
     await nav(page).getByRole('link', { name: /Report/ }).click()
     await expect(page.getByRole('heading', { name: 'Report', level: 1 })).toBeVisible()
     await expect(page.locator('[data-report-verdict]')).toContainText(/not ready/i)
-    await expect(page.getByRole('heading', { name: /^Fail/, level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /^Fail/, level: 3 })).toBeVisible()
     expect(await page.locator('[data-report-finding][data-verdict="fail"]').count()).toBeGreaterThan(0)
     await expect(page.getByRole('heading', { name: /^Rules used/, level: 2 })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Sign-off', level: 2 })).toBeVisible()
