@@ -15,7 +15,8 @@ STATE=${BRIEFFORGE_STATE:-$HOME/.briefforge}
 API_PORT=${API_PORT:-8765}
 WEB_PORT=${WEB_PORT:-4765}
 BIN=$HOME/.local/bin
-export PATH="$BIN:$PATH" API_PORT
+NODE_DIR=$HOME/.local/opt/node  # private Node, used when the system one is too old for Vite
+export PATH="$NODE_DIR/bin:$BIN:$PATH" API_PORT
 mkdir -p "$STATE" "$BIN"
 
 running() { [[ -f "$STATE/$1.pid" ]] && kill -0 "$(cat "$STATE/$1.pid")" 2>/dev/null; }
@@ -54,7 +55,14 @@ install_tools() {
     curl -fsSL -o "$BIN/cloudflared" "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$arch"
     chmod +x "$BIN/cloudflared"
   fi
-  command -v node >/dev/null || { echo "node is not installed (Vite needs Node 20.19+ or 22.12+)" >&2; exit 1; }
+  if ! node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) ? 0 : 1)' 2>/dev/null; then
+    echo "== installing Node 22 into $NODE_DIR"
+    local arch file
+    case "$(uname -m)" in x86_64) arch=x64 ;; aarch64 | arm64) arch=arm64 ;; *) echo "unsupported arch" >&2; exit 1 ;; esac
+    file=$(curl -fsSL https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt | grep -oE "node-v[0-9.]+-linux-$arch\.tar\.xz" | head -1)
+    rm -rf "$NODE_DIR" && mkdir -p "$NODE_DIR"
+    curl -fsSL "https://nodejs.org/dist/latest-v22.x/$file" | tar -xJ --strip-components=1 -C "$NODE_DIR"
+  fi
 }
 
 build() {
