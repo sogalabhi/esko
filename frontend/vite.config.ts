@@ -14,6 +14,10 @@ export default defineConfig({
     // API_PORT lets the e2e run start its own backend next to a running `npm run dev`.
     proxy: { '/api': `http://127.0.0.1:${process.env.API_PORT ?? '8000'}` },
   },
+  preview: {
+    // deploy/shared-host.sh serves the build (with the /api proxy above) through a Cloudflare quick tunnel.
+    allowedHosts: ['.trycloudflare.com'],
+  },
   test: {
     environment: 'jsdom',
     globals: true,
