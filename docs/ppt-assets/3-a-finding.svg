@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <title>What a finding looks like</title>
+  <rect width="1920" height="1080" fill="#ffffff"/>
+  <text x="100" y="130" font-size="60" font-weight="700" fill="#16243a">Every finding shows its evidence</text>
+  <text x="100" y="185" font-size="30" fill="#52607a">Two examples from Esko's own sample carton</text>
+
+  <!-- card 1 -->
+  <rect x="100" y="250" width="840" height="640" rx="20" fill="#ffffff" stroke="#c9d1de" stroke-width="3"/>
+  <rect x="140" y="290" width="150" height="54" rx="27" fill="#fdecea"/>
+  <text x="165" y="327" font-size="28" font-weight="700" fill="#b42318">✕  Fail</text>
+  <text x="140" y="410" font-size="40" font-weight="700" fill="#16243a">Honey: 9% approved, 1% printed</text>
+  <text x="140" y="455" font-size="26" fill="#52607a">Artwork must match the approved information</text>
+  <rect x="140" y="500" width="360" height="190" rx="12" fill="#f1f4f9"/>
+  <text x="165" y="545" font-size="22" font-weight="700" fill="#52607a">APPROVED SHEET · CELL B26</text>
+  <text x="165" y="620" font-size="40" font-weight="700" fill="#16243a">Honey (9%)</text>
+  <rect x="540" y="500" width="360" height="190" rx="12" fill="#f1f4f9"/>
+  <text x="565" y="545" font-size="22" font-weight="700" fill="#52607a">CARTON · BACK PANEL</text>
+  <text x="565" y="620" font-size="40" font-weight="700" fill="#b42318">Honey (1%)</text>
+  <text x="140" y="760" font-size="28" fill="#16243a">Both quotes found in the files by code</text>
+  <text x="140" y="810" font-size="28" fill="#16243a">Rule cited · marked on the artwork</text>
+  <text x="780" y="860" font-size="26" font-weight="700" fill="#05603a" text-anchor="end">✓ checked by code</text>
+
+  <!-- card 2 -->
+  <rect x="980" y="250" width="840" height="640" rx="20" fill="#ffffff" stroke="#c9d1de" stroke-width="3"/>
+  <rect x="1020" y="290" width="150" height="54" rx="27" fill="#fdecea"/>
+  <text x="1045" y="327" font-size="28" font-weight="700" fill="#b42318">✕  Fail</text>
+  <text x="1020" y="410" font-size="40" font-weight="700" fill="#16243a">Total Fat % Daily Value is wrong</text>
+  <text x="1020" y="455" font-size="26" fill="#52607a">Calculated by code, not by the AI</text>
+  <rect x="1020" y="500" width="760" height="130" rx="12" fill="#f1f4f9"/>
+  <text x="1050" y="575" font-size="44" font-weight="700" fill="#16243a" font-family="'IBM Plex Mono', 'Courier New', monospace">15 g ÷ 78 g = 19.2%</text>
+  <rect x="1020" y="650" width="760" height="100" rx="12" fill="#fdecea"/>
+  <text x="1050" y="715" font-size="40" font-weight="700" fill="#b42318">Printed on the carton: 2.2%</text>
+  <text x="1020" y="810" font-size="28" fill="#16243a">Reference value from the FDA rule, kept as data</text>
+  <text x="1700" y="860" font-size="26" font-weight="700" fill="#05603a" text-anchor="end">✓ checked by code</text>
+
+  <text x="100" y="960" font-size="30" fill="#16243a" font-weight="600">Anything resting on AI judgement is <tspan fill="#93400a">Needs review</tspan> and goes to a named person. It is never a Fail.</text>
+</svg>

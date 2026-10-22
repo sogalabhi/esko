@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <title>The AI reads, the code proves, a person decides</title>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="#52607a"/></marker></defs>
+  <rect width="1920" height="1080" fill="#ffffff"/>
+  <text x="100" y="130" font-size="60" font-weight="700" fill="#16243a">The AI reads. The code proves. A person decides.</text>
+  <text x="100" y="185" font-size="30" fill="#52607a">Why a Fail can be trusted</text>
+
+  <g text-anchor="middle" font-size="30" font-weight="700">
+    <rect x="100" y="300" width="320" height="260" rx="18" fill="#eef2fb" stroke="#3b5bdb" stroke-width="3"/>
+    <text x="260" y="355" fill="#3b5bdb" font-size="24">AI</text>
+    <text x="260" y="410" fill="#16243a">Reads the files</text>
+    <text x="260" y="460" fill="#16243a" font-weight="400" font-size="26">every fact comes</text>
+    <text x="260" y="495" fill="#16243a" font-weight="400" font-size="26">with a quote</text>
+
+    <rect x="520" y="300" width="320" height="260" rx="18" fill="#eef6f5" stroke="#0f766e" stroke-width="3"/>
+    <text x="680" y="355" fill="#0f766e" font-size="24">CODE</text>
+    <text x="680" y="410" fill="#16243a">Checks the quote</text>
+    <text x="680" y="460" fill="#16243a" font-weight="400" font-size="26">is really in the file;</text>
+    <text x="680" y="495" fill="#16243a" font-weight="400" font-size="26">numbers never fuzzy</text>
+
+    <rect x="940" y="300" width="320" height="260" rx="18" fill="#eef6f5" stroke="#0f766e" stroke-width="3"/>
+    <text x="1100" y="355" fill="#0f766e" font-size="24">CODE</text>
+    <text x="1100" y="410" fill="#16243a">Applies rules</text>
+    <text x="1100" y="460" fill="#16243a" font-weight="400" font-size="26">maths, units, text size,</text>
+    <text x="1100" y="495" fill="#16243a" font-weight="400" font-size="26">rules kept as data</text>
+
+    <rect x="1360" y="300" width="320" height="260" rx="18" fill="#fff4e0" stroke="#b54708" stroke-width="3"/>
+    <text x="1520" y="355" fill="#93400a" font-size="24">PERSON</text>
+    <text x="1520" y="410" fill="#16243a">Decides the rest</text>
+    <text x="1520" y="460" fill="#16243a" font-weight="400" font-size="26">name and decision</text>
+    <text x="1520" y="495" fill="#16243a" font-weight="400" font-size="26">are logged</text>
+  </g>
+  <g stroke="#52607a" stroke-width="5" marker-end="url(#a)">
+    <line x1="424" y1="430" x2="514" y2="430"/><line x1="844" y1="430" x2="934" y2="430"/><line x1="1264" y1="430" x2="1354" y2="430"/>
+  </g>
+
+  <g font-size="30" fill="#16243a">
+    <text x="100" y="680" font-weight="700">A Fail needs all three:</text>
+    <text x="100" y="735">①  a cited rule</text>
+    <text x="100" y="785">②  a check done by code, not by the AI</text>
+    <text x="100" y="835">③  evidence whose quote code has confirmed</text>
+    <text x="1020" y="680" font-weight="700">Otherwise it is Needs review</text>
+    <text x="1020" y="735">AI-suggested facts, claims that need proof,</text>
+    <text x="1020" y="785">evidence outside the artwork: a person decides.</text>
+    <text x="1020" y="835">A rule the AI invents is never applied.</text>
+  </g>
+</svg>

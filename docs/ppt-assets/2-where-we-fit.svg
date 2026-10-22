@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <title>Where BriefForge fits: the check between artwork and approval</title>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="#52607a"/></marker></defs>
+  <rect width="1920" height="1080" fill="#ffffff"/>
+  <text x="100" y="130" font-size="60" font-weight="700" fill="#16243a">The spec changes. The label doesn't.</text>
+  <text x="100" y="185" font-size="30" fill="#52607a">BriefForge makes the comparison nobody has time to do by hand</text>
+
+  <g font-size="30" font-weight="600" fill="#16243a" text-anchor="middle">
+    <rect x="100" y="340" width="300" height="190" rx="16" fill="#f1f4f9" stroke="#a9b4c6" stroke-width="3"/>
+    <text x="250" y="425">Approved</text><text x="250" y="465">product info</text>
+    <rect x="500" y="340" width="300" height="190" rx="16" fill="#f1f4f9" stroke="#a9b4c6" stroke-width="3"/>
+    <text x="650" y="425">Artwork</text><text x="650" y="465">design</text>
+    <rect x="900" y="300" width="360" height="270" rx="20" fill="#0f766e"/>
+    <text x="1080" y="395" fill="#ffffff" font-size="38" font-weight="700">BriefForge</text>
+    <text x="1080" y="445" fill="#ffffff" font-size="30">checks the artwork</text>
+    <text x="1080" y="485" fill="#ffffff" font-size="30">against both</text>
+    <text x="1080" y="525" fill="#d7f0ec" font-size="26">evidence for every finding</text>
+    <rect x="1360" y="340" width="300" height="190" rx="16" fill="#f1f4f9" stroke="#a9b4c6" stroke-width="3"/>
+    <text x="1510" y="425">Approval</text><text x="1510" y="465">and sign-off</text>
+  </g>
+  <g stroke="#52607a" stroke-width="5" fill="none" marker-end="url(#a)">
+    <line x1="404" y1="435" x2="494" y2="435"/>
+    <line x1="804" y1="435" x2="894" y2="435"/>
+    <line x1="1264" y1="435" x2="1354" y2="435"/>
+  </g>
+
+  <!-- the gap -->
+  <path d="M250 340 C250 250 650 250 650 340" fill="none" stroke="#b42318" stroke-width="5" stroke-dasharray="14 10"/>
+  <text x="100" y="262" font-size="26" font-weight="700" fill="#b42318">The gap: specs and artwork live in separate documents</text>
+
+  <!-- rulebook feeding in -->
+  <rect x="900" y="660" width="360" height="110" rx="16" fill="#eef6f5" stroke="#0f766e" stroke-width="3"/>
+  <text x="1080" y="710" font-size="30" font-weight="700" fill="#16243a" text-anchor="middle">Rulebook</text>
+  <text x="1080" y="748" font-size="26" fill="#52607a" text-anchor="middle">law + company rules</text>
+  <line x1="1080" y1="656" x2="1080" y2="576" stroke="#0f766e" stroke-width="5" marker-end="url(#a)"/>
+
+  <!-- output -->
+  <g font-size="30" font-weight="700">
+    <rect x="1360" y="620" width="440" height="64" rx="12" fill="#fdecea"/><text x="1385" y="663" fill="#b42318">✕  Fail: proven by code</text>
+    <rect x="1360" y="700" width="440" height="64" rx="12" fill="#fff4e0"/><text x="1385" y="743" fill="#93400a">?  Needs review: a person</text>
+    <rect x="1360" y="780" width="440" height="64" rx="12" fill="#e7f6ee"/><text x="1385" y="823" fill="#05603a">✓  Pass: where found</text>
+  </g>
+  <path d="M1264 540 C1310 540 1310 650 1352 650" fill="none" stroke="#0f766e" stroke-width="4" stroke-dasharray="3 9" stroke-linecap="round"/>
+
+  <text x="100" y="1040" font-size="24" fill="#52607a">Spec-to-label drift is the cause named in Esko's analysis of 2025 FDA recalls.</text>
+</svg>
