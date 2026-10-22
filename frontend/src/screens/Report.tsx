@@ -55,6 +55,7 @@ import { useProject } from "../state/project";
 import type { BBox, Cleared, Finding, Project, Source } from "../types/project";
 import { fallbackPage } from "./Markup";
 import { MarkupCanvas } from "./markup/MarkupCanvas";
+import { HistoryPanel } from "../components/HistoryPanel";
 import { useCartonImage } from "./markup/useCartonImage";
 import "./markup/markup.css";
 import "./report.css";
@@ -651,11 +652,7 @@ function ArtworkMarkup({ project, set }: { project: Project; set: MarkSet }) {
           />
         </div>
       )}
-      {total === 0 ? (
-        <Empty>
-          Nothing to mark: no fail or review check has a spot on the carton.
-        </Empty>
-      ) : (
+      {
         <figure
           aria-labelledby="markup-caption"
           className="report-artwork overflow-hidden rounded-card border border-border bg-surface"
@@ -670,7 +667,7 @@ function ArtworkMarkup({ project, set }: { project: Project; set: MarkSet }) {
               hints={hints}
               set={set}
               groups={groups}
-              marked
+              marked={total > 0 || set.passes.length > 0}
               sticky={false}
               animate={false}
               interactive={false}
@@ -681,11 +678,12 @@ function ArtworkMarkup({ project, set }: { project: Project; set: MarkSet }) {
             id="markup-caption"
             className="border-t border-border px-3 py-2 text-[12px] text-ink-2"
           >
-            {packFile?.name ?? "Carton"} · fail and review marks, positions in
-            mm. The tables on the first page say what each numbered mark is.
+            {total === 0
+              ? `${packFile?.name ?? "Carton"} · no fail or review marks: nothing is left to correct on the carton.`
+              : `${packFile?.name ?? "Carton"} · fail and review marks, positions in mm. The tables on the first page say what each numbered mark is.`}
           </figcaption>
         </figure>
-      )}
+      }
     </>
   );
 }
@@ -919,6 +917,12 @@ export function Report() {
           />
         )}
       </Section>
+
+      {project.history && project.history.length > 0 && (
+        <Section id="rep-history" title="Version history" part="summary">
+          <HistoryPanel history={project.history} note={project.scenario} />
+        </Section>
+      )}
 
       <section
         aria-labelledby="rep-signoff"

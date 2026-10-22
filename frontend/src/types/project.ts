@@ -308,11 +308,25 @@ export interface ChecksResult {
   cleared: Cleared[]
 }
 
+export interface HistoryEntry {
+  version: string
+  at: string
+  by: string
+  role: string
+  title: string
+  detail: string
+  counts?: { fail?: number; review?: number; pass?: number } | null
+}
+
 export interface Project {
-  /** P2 checker results. */
+  /** Checker results. */
   findings: Finding[]
   cleared: Cleared[]
   rulebook: Rulebook | null
+  /** Set when the project is a staged scenario, not a live run. */
+  scenario?: string | null
+  /** The versions of the artwork: who did what, and when (staged scenario only). */
+  history?: HistoryEntry[]
   /** Market pack id the backend analysed with, e.g. 'us'. */
   market?: string | null
   /** True while unapproved rules are in use. */

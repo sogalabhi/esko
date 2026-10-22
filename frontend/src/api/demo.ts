@@ -29,5 +29,5 @@ async function demoRequest<T>(path: string, init?: RequestInit): Promise<T> {
 export const demoApi = {
   status: () => demoRequest<DemoStatus>('/api/demo'),
   /** Restores the saved demo project on the backend (no AI calls) and returns it. */
-  load: () => demoRequest<Project>('/api/demo/load', { method: 'POST' }),
+  load: (name?: string) => demoRequest<Project>(`/api/demo/load${name ? `?name=${name}` : ''}`, { method: 'POST' }),
 }

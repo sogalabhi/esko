@@ -257,6 +257,7 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
         <h1 className="text-[20px] font-semibold">Files</h1>
         <div className="flex flex-wrap items-start gap-2">
           <LoadDemoButton label="Load demo" />
+          <LoadDemoButton label="Load demo: approved final version" name="approved" toast={false} />
           <Link
             to="/checks"
             className="inline-flex items-center gap-1.5 rounded-chip bg-accent px-4 py-2 text-[14px] font-semibold text-white hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info"

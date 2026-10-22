@@ -410,6 +410,18 @@ class LogEntry(BaseModel):
     at: str
 
 
+class HistoryEntry(CamelModel):
+    """One step in the life of the artwork: who did what, and when. Only the staged approved-version scenario has any."""
+
+    version: str
+    at: str
+    by: str
+    role: str
+    title: str
+    detail: str = ""
+    counts: dict[str, int] | None = None
+
+
 class Project(OmitNone):
     omit_none = ("market",)
     market: str | None = None
@@ -434,3 +446,6 @@ class Project(OmitNone):
     findings: list[Finding] = []
     cleared: list[Cleared] = []
     rulebook: Rulebook | None = None
+    # A staged scenario (not a live run) says so here; the app shows it. history: the versions of the artwork.
+    scenario: str | None = None
+    history: list[HistoryEntry] = []

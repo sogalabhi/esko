@@ -21,8 +21,11 @@ def save() -> dict:
 
 
 @router.post("/load", response_model=Project, response_model_by_alias=True)
-def load() -> Project:
+def load(name: str | None = None) -> Project:
+    """name: a variant under backend/demo/ (for example "approved"); none loads the main demo."""
+    if name is not None and name not in demo.VARIANTS:
+        raise HTTPException(status_code=404, detail=f"No demo called {name!r}.")
     try:
-        return demo.load_snapshot()
+        return demo.load_snapshot(demo.DEMO_DIR / name if name else None)
     except demo.SnapshotError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e

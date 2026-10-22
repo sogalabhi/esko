@@ -11,6 +11,17 @@ export function ProofLine({ basis, proof }: Pick<Finding, 'basis' | 'proof'>) {
       </p>
     )
   }
+  if (proof?.startsWith('Staged:')) {
+    // A staged scenario record, not a code check of the current files: never labelled "Checked by code".
+    return (
+      <p data-basis="staged" className="flex items-start gap-1.5 text-[13px] text-ink-2">
+        <ShieldCheck size={15} aria-hidden="true" className="mt-0.5 shrink-0" />
+        <span>
+          <span className="font-medium">Scenario record</span>: {proof.replace('Staged: ', '')}
+        </span>
+      </p>
+    )
+  }
   return (
     <p data-basis="code" className="flex items-start gap-1.5 text-[13px]">
       <ShieldCheck size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-ok" />

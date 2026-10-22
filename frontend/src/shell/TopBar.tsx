@@ -134,6 +134,11 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
       <span className="shrink-0 rounded-chip border border-border px-2.5 py-1 text-[13px] font-medium text-ink" aria-label={`Market: ${marketLabel}`}>
         {marketLabel}
       </span>
+      {project.scenario && (
+        <span title={project.scenario} className="shrink-0 rounded-chip border border-warn px-2 py-0.5 text-[12px] font-semibold text-warn">
+          Illustrative scenario
+        </span>
+      )}
 
       <div className="ml-auto flex shrink-0 items-center gap-3">
         <VerdictLine findings={project.findings} />

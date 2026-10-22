@@ -18,6 +18,7 @@ from app.pack import service as pack_service
 
 DEMO_DIR = Path(__file__).resolve().parents[1] / "demo"
 VERSION = 1
+VARIANTS = ("approved",)  # folders under demo/ that hold only a snapshot.json (the files come from the main demo)
 
 
 class SnapshotError(Exception):
@@ -103,6 +104,8 @@ def load_snapshot(directory: Path | None = None, upload_dir: Path | None = None)
         pieces = [SourcePiece.model_validate(p) for p in e["pieces"]]
         src = directory / e["upload"]
         if not src.is_file():
+            src = DEMO_DIR / e["upload"]  # a variant snapshot reuses the main demo's files
+        if not src.is_file():
             raise SnapshotError(f"The snapshot is missing {e['upload']}.")
         dest = upload_dir / file.id / src.name
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -113,6 +116,8 @@ def load_snapshot(directory: Path | None = None, upload_dir: Path | None = None)
     if book:
         book_file = SourceFile.model_validate(book["file"])
         src = directory / book["upload"]
+        if not src.is_file():
+            src = DEMO_DIR / book["upload"]
         if not src.is_file():
             raise SnapshotError(f"The snapshot is missing {book['upload']}.")
         dest = upload_dir / book_file.id / src.name

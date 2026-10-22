@@ -35,11 +35,14 @@ export function LoadDemoButton({
   label = 'Load demo: Dancing Fish Berry Crunch',
   variant = 'secondary',
   toast = true,
+  name,
 }: {
   label?: string
   variant?: 'primary' | 'secondary'
   /** Host the "Demo data loaded" toast here. Pass false when another <DemoLoadedToast /> is always mounted. */
   toast?: boolean
+  /** A demo variant on the backend, for example "approved"; none loads the main demo. */
+  name?: string
 }) {
   const { source, reload } = useProject()
   const [avail, setAvail] = useState<Availability>(
@@ -69,7 +72,7 @@ export function LoadDemoButton({
     setBusy(true)
     setError('')
     try {
-      await demoApi.load()
+      await demoApi.load(name)
       await reload()
       window.dispatchEvent(new Event(LOADED_EVENT))
     } catch (e) {

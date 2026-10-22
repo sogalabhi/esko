@@ -1,4 +1,7 @@
-import type { CSSProperties, KeyboardEvent, ReactNode } from 'react'
+import { useMemo, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
+import { Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
+import { useViewGestures } from './useViewGestures'
+import { useViewport } from './useViewport'
 import { OWNER_LABEL } from '../../lib/labels'
 import {
   boxEdgeToward,
@@ -90,6 +93,11 @@ const padBox = (b: { x: number; y: number; w: number; h: number }) => ({ x: b.x 
 
 export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, sticky, animate, interactive = true, selectedId, onSelect, onCluster, expandedId, onPass, label }: Props) {
   const { singles, clusters } = groups ?? { singles: set.marks, clusters: [] }
+  // Zoom and pan: a window (viewBox) onto the whole page; wheel, drag, pinch and the buttons below move it.
+  const frame = useMemo(() => ({ x: -MARGIN, y: 0, w: page.w + MARGIN * 2, h: page.h }), [page.w, page.h])
+  const viewport = useViewport(frame)
+  const wrap = useRef<HTMLDivElement>(null)
+  const gestures = useViewGestures(wrap, interactive ? viewport : undefined)
   const notes = layoutNotes(noteTargets(singles, clusters), page, {
     width: NOTE_W,
     lineHeight: NOTE_LINE,
@@ -417,9 +425,18 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
     )
   }
 
+  const zoomed = viewport.zoom > 1.001
+  const zoomButton = 'inline-flex h-8 w-8 items-center justify-center rounded-chip border border-border bg-surface text-ink hover:bg-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-info'
   return (
+    <div
+      ref={wrap}
+      className="relative overflow-hidden"
+      style={interactive ? { touchAction: 'none', cursor: zoomed ? 'grab' : undefined } : undefined}
+      data-zoom={interactive ? viewport.zoom.toFixed(2) : undefined}
+      {...(interactive ? gestures : {})}
+    >
     <svg
-      viewBox={`${-MARGIN} 0 ${page.w + MARGIN * 2} ${page.h}`}
+      viewBox={`${viewport.view.x} ${viewport.view.y} ${viewport.view.w} ${viewport.view.h}`}
       className={`block h-auto w-full ${animate ? '' : 'still'}`}
       role={interactive ? 'group' : undefined}
       aria-label={interactive ? label : undefined}
@@ -455,5 +472,22 @@ export function MarkupCanvas({ page, image, panels, hints, set, groups, marked, 
         </g>
       )}
     </svg>
+    {interactive && (
+      <div role="group" aria-label="Zoom" className="absolute right-2 top-2 flex items-center gap-1">
+        <button type="button" className={zoomButton} onClick={() => viewport.zoomIn()} aria-label="Zoom in" title="Zoom in">
+          <ZoomIn size={16} aria-hidden="true" />
+        </button>
+        <button type="button" className={zoomButton} onClick={() => viewport.zoomOut()} aria-label="Zoom out" title="Zoom out" disabled={!zoomed}>
+          <ZoomOut size={16} aria-hidden="true" />
+        </button>
+        <button type="button" className={zoomButton} onClick={() => viewport.fit()} aria-label="Fit the whole carton" title="Fit the whole carton" disabled={!zoomed}>
+          <Maximize2 size={15} aria-hidden="true" />
+        </button>
+        <span className="rounded-chip bg-surface px-1.5 py-0.5 font-mono text-[12px] text-ink-2" aria-live="polite">
+          {Math.round(viewport.zoom * 100)}%
+        </span>
+      </div>
+    )}
+    </div>
   )
 }
