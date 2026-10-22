@@ -6,6 +6,7 @@
 #   bash deploy/shared-host.sh update   # git pull, rebuild, restart backend + frontend (the tunnel and URL stay)
 #   bash deploy/shared-host.sh stop     # stop everything (the next start gets a new URL)
 #   bash deploy/shared-host.sh status   # what is running, and the URL
+#   bash deploy/shared-host.sh tunnel   # start only the tunnel again (after a network drop)
 #
 # Ports: API_PORT (default 8765) and WEB_PORT (default 4765). Logs and pid files: ~/.briefforge/
 set -euo pipefail
@@ -39,7 +40,7 @@ launch() {
 port_free() { ! (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 
 wait_http() {
-  for _ in $(seq 1 60); do curl -fsS -o /dev/null "$1" && return 0; sleep 1; done
+  for _ in $(seq 1 60); do curl -fs -o /dev/null "$1" && return 0; sleep 1; done
   return 1
 }
 
@@ -87,14 +88,15 @@ start_app() {
   curl -fsS -o /dev/null "http://127.0.0.1:$WEB_PORT/api/health" || { echo "frontend cannot reach the backend" >&2; exit 1; }
 }
 
-url() { grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$STATE/tunnel.log" 2>/dev/null | head -1; }
+# The quick-tunnel URL, not api.trycloudflare.com from an error line.
+url() { grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$STATE/tunnel.log" 2>/dev/null | grep -v '//api\.' | head -1; }
 
 start_tunnel() {
   if running tunnel; then return; fi
   echo "== cloudflare tunnel"
   launch tunnel cloudflared tunnel --no-autoupdate --url "http://127.0.0.1:$WEB_PORT"
   for _ in $(seq 1 30); do [[ -n "$(url)" ]] && break; sleep 1; done
-  [[ -n "$(url)" ]] || { echo "no tunnel URL, see $STATE/tunnel.log" >&2; exit 1; }
+  [[ -n "$(url)" ]] || { stop_one tunnel; echo "no tunnel URL, see $STATE/tunnel.log" >&2; exit 1; }
 }
 
 status() {
@@ -128,8 +130,12 @@ case "${1:-}" in
   status)
     status
     ;;
+  tunnel)
+    start_tunnel
+    status
+    ;;
   *)
-    sed -n 2,11p "$0"
+    sed -n 2,12p "$0"
     exit 1
     ;;
 esac
