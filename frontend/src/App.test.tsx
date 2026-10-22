@@ -1,8 +1,10 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import App from './App'
+import App, { Home } from './App'
+import { EMPTY_PROJECT } from './api/client'
+import { renderWithProject } from './test/render'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -37,7 +39,7 @@ describe('App', () => {
     expect((await screen.findAllByText('Backend unreachable')).length).toBeGreaterThan(0)
   })
 
-  it('opens on Checks (the default route) with the shell: product, market, verdict line, rail', async () => {
+  it('opens on Checks when the project has files, with the shell: product, market, verdict line, rail', async () => {
     healthy()
     renderAt('/')
     expect(screen.getByText('Granola — Berry Crunch · 480 g')).toBeInTheDocument()
@@ -45,6 +47,19 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: /Print verdict: not ready to print, 4 fail and 2 to review/ })).toHaveTextContent('Not ready to print: 4 fail · 2 review')
     expect(screen.getByRole('heading', { name: 'Checks', level: 1 })).toBeInTheDocument()
     await screen.findAllByText('Backend OK')
+  })
+
+  it('opens on Files when nothing is uploaded yet', () => {
+    renderWithProject(
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/evidence" element={<p>Files screen</p>} />
+        <Route path="/checks" element={<p>Checks screen</p>} />
+      </Routes>,
+      '/',
+      EMPTY_PROJECT,
+    )
+    expect(screen.getByText('Files screen')).toBeInTheDocument()
   })
 
   it('rail: Files, What we read, Rules, Checks, Marked-up artwork, Report, then 3D pack under More tools; no Questions', async () => {
