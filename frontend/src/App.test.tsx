@@ -62,13 +62,13 @@ describe('App', () => {
     expect(screen.getByText('Files screen')).toBeInTheDocument()
   })
 
-  it('rail: Files, What we read, Rules, Checks, Marked-up artwork, Report, then 3D pack under More tools; no Questions', async () => {
+  it('rail: Files, What we read, Rules, Checks, Marked-up artwork, Report, Print brief, then 3D pack under More tools; no Questions', async () => {
     healthy()
     renderAt('/checks')
     const nav = screen.getByRole('navigation', { name: 'Steps' })
     const links = within(nav).getAllByRole('link')
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/evidence', '/facts', '/rules', '/checks', '/markup', '/report', '/pack'])
-    const names = ['1 Files', '2 What we read', '3 Rules', '4 Checks', '5 Marked-up artwork', '6 Report', '3D pack']
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/evidence', '/facts', '/rules', '/checks', '/markup', '/report', '/print-brief', '/pack'])
+    const names = ['1 Files', '2 What we read', '3 Rules', '4 Checks', '5 Marked-up artwork', '6 Report', '7 Print brief', '3D pack']
     names.forEach((n, i) => expect(links[i]).toHaveTextContent(n.replace(/^\d /, '')))
     expect(within(nav).queryByRole('link', { name: /Questions/ })).toBeNull()
     expect(within(nav).getByRole('separator')).toBeInTheDocument()

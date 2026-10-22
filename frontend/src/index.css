@@ -121,6 +121,12 @@ body {
 
 @media print {
   @page { margin: 16mm 16mm 18mm; }
+  .print-brief { border: 0 !important; border-radius: 0 !important; padding: 0 !important; background: #fff !important; }
+  .print-brief { font-size: 9pt; }
+  .print-brief .pb-rows > div { font-size: 9pt !important; padding-top: 2px; padding-bottom: 2px; break-inside: avoid; }
+  .print-brief .pb-h2 { font-size: 11pt !important; break-after: avoid; }
+  .print-brief .pb-section { margin-top: 10pt; }
+  .print-brief .pb-keep { break-inside: avoid; }
   .no-print { display: none !important; }
   .print-only { display: revert; }
   html, body { background: #fff; }

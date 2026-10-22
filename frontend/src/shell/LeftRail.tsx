@@ -1,4 +1,4 @@
-import { BookCheck, Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, ListChecks, PenLine, type LucideIcon } from 'lucide-react'
+import { BookCheck, Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, ListChecks, PenLine, Printer, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
 import { printVerdict } from '../lib/checks'
 import { usePersistedFlag } from '../lib/usePersistedFlag'
@@ -88,6 +88,7 @@ export function LeftRail() {
     { to: '/checks', label: 'Checks', Icon: ClipboardCheck, step: 4, ...checks },
     { to: '/markup', label: 'Marked-up artwork', Icon: PenLine, step: 5 },
     { to: '/report', label: 'Report', Icon: FileText, step: 6 },
+    { to: '/print-brief', label: 'Print brief', Icon: Printer, step: 7 },
   ]
   const more: Item[] = [{ to: '/pack', label: '3D pack', Icon: Box }]
 
