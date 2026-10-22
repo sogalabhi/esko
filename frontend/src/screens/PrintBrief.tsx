@@ -1,14 +1,19 @@
-import { Check, CircleCheck, CircleX, FileText, Pencil, Printer, RotateCcw } from 'lucide-react'
-import { useState, type ChangeEvent, type ReactNode } from 'react'
+import { Check, CircleCheck, CircleX, FileSearch, FileText, Pencil, Printer, RotateCcw } from 'lucide-react'
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { Link } from 'react-router'
 import { printVerdict } from '../lib/checks'
-import { DEFAULT_BRIEF, ILLUSTRATIVE, type BriefData, type BriefRow } from '../lib/printBrief'
+import { DEFAULT_BRIEF, ILLUSTRATIVE, type Approval, type BriefData, type BriefRow } from '../lib/printBrief'
+import { stamp } from '../lib/time'
 import { useProject } from '../state/project'
 
 const HEADER_KEY = 'bf.printBrief.header'
-const DATA_KEY = 'bf.printBrief.data'
+const EDITS_KEY = 'bf.printBrief.edits'
 const MAX_LOGO_BYTES = 500_000
+
+/** A person's edits, by field key ("print:Spot inks", "company:name", "approval:0:by"...). They win over values
+ * read from the artwork PDF and over the defaults. */
+type Edits = Record<string, string>
 
 function readHeader(): boolean {
   try {
@@ -18,26 +23,89 @@ function readHeader(): boolean {
   }
 }
 
-/** The saved brief, or the defaults when nothing was saved (or it no longer has the expected shape). */
-function readData(): BriefData {
+function readEdits(): Edits {
   try {
-    const raw = window.localStorage.getItem(DATA_KEY)
-    if (!raw) return DEFAULT_BRIEF
-    const saved = JSON.parse(raw) as Partial<BriefData>
-    const merged = { ...DEFAULT_BRIEF, ...saved, company: { ...DEFAULT_BRIEF.company, ...saved.company } }
-    return Array.isArray(merged.job) && Array.isArray(merged.print) && Array.isArray(merged.approvals) ? merged : DEFAULT_BRIEF
+    const raw = window.localStorage.getItem(EDITS_KEY)
+    const parsed = raw ? (JSON.parse(raw) as unknown) : {}
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Edits) : {}
   } catch {
-    return DEFAULT_BRIEF
+    return {}
   }
 }
 
-function saveData(data: BriefData | null) {
+function saveEdits(edits: Edits) {
   try {
-    if (data) window.localStorage.setItem(DATA_KEY, JSON.stringify(data))
-    else window.localStorage.removeItem(DATA_KEY)
+    if (Object.keys(edits).length) window.localStorage.setItem(EDITS_KEY, JSON.stringify(edits))
+    else window.localStorage.removeItem(EDITS_KEY)
   } catch {
     /* the edits just aren't remembered */
   }
+}
+
+/** What the backend read from the artwork PDF (GET /api/print-spec). */
+interface PrintSpec {
+  fileName: string
+  pdfVersion: string | null
+  creator: string | null
+  pageWMm: number
+  pageHMm: number
+  outputCondition: string | null
+  outputProfile: string | null
+  pdfx: string | null
+  processInks: string[]
+  spotInks: string[]
+  finishes: string[]
+  technical: string[]
+  fonts: { name: string; embedded: boolean }[]
+  panels: string[]
+  images: { panel: string | null; count: number; ppi: number; result: 'fail' | 'review' | 'pass' | null; limit: string | null; stretched: boolean }[]
+}
+
+function usePrintSpec(enabled: boolean, key: string): PrintSpec | null {
+  const [spec, setSpec] = useState<PrintSpec | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    let live = true
+    fetch('/api/print-spec')
+      .then((r) => (r.ok ? (r.json() as Promise<PrintSpec>) : null))
+      .then((s) => live && setSpec(s))
+      .catch(() => live && setSpec(null))
+    return () => {
+      live = false
+    }
+  }, [enabled, key])
+  return spec
+}
+
+const IMAGE_WORD = { fail: 'below the minimum', review: 'below the recommended', pass: 'OK' } as const
+
+/** Print specification rows read from the artwork PDF, by row label. */
+function fromPdf(s: PrintSpec): Record<string, string> {
+  const notEmbedded = s.fonts.filter((f) => !f.embedded).map((f) => f.name)
+  const limit = s.images.find((i) => i.limit)?.limit
+  return {
+    'Process inks': s.processInks.join(', ') || 'None',
+    'Spot inks': s.spotInks.join(', ') || 'None',
+    Finish: s.finishes.join(', ') || 'None in the file',
+    'Not printed': s.technical.length ? `${s.technical.join(', ')} (dieline and technical layers)` : 'None',
+    'Flat size': `${s.pageWMm} × ${s.pageHMm} mm, ${s.panels.length} panels`,
+    'Output intent': [s.outputProfile ?? 'Not set', s.outputCondition ? `(${s.outputCondition})` : ''].join(' ').trim(),
+    'File format': [s.pdfVersion, s.pdfx ? s.pdfx : 'no PDF/X declared', s.creator ? `made with ${s.creator}` : ''].filter(Boolean).join(', '),
+    Fonts: `${s.fonts.length} fonts, ${notEmbedded.length ? `not embedded: ${notEmbedded.join(', ')}` : 'all embedded'}`,
+    Images: s.images.length
+      ? `${s.images.map((i) => `${i.panel ?? 'page'} ${Math.round(i.ppi)} ppi${i.result ? ` (${IMAGE_WORD[i.result]})` : ''}${i.stretched ? ', stretched' : ''}`).join('; ')}${limit ? `. Limit: ${limit}` : ''}`
+      : 'No placed images',
+  }
+}
+
+/** Approvals from the project's history ("Approved: ..." steps); none when the project has no history. */
+function historyApprovals(history: { by: string; role: string; title: string; at: string }[] | undefined): Approval[] {
+  return (history ?? [])
+    .filter((h) => /^approved\b/i.test(h.title))
+    .map((h) => {
+      const rest = h.title.replace(/^approved:\s*/i, '')
+      return { by: h.by, role: h.role, what: rest === h.title ? h.title : rest.charAt(0).toUpperCase() + rest.slice(1), at: stamp(h.at) }
+    })
 }
 
 const inputCls =
@@ -109,7 +177,21 @@ function Letterhead({ data, editing, set }: { data: BriefData; editing: boolean;
   )
 }
 
-function Rows({ rows, editing, onChange }: { rows: BriefRow[]; editing: boolean; onChange: (i: number, value: string) => void }) {
+type Origin = 'pdf' | 'edited' | undefined
+
+function OriginTag({ origin }: { origin: Origin }) {
+  if (origin === 'pdf')
+    return (
+      <span data-origin="pdf" className="ml-1.5 inline-flex items-center gap-1 whitespace-nowrap rounded-chip bg-info/10 px-1.5 align-middle text-[11px] font-medium text-info">
+        <FileSearch size={11} aria-hidden="true" />
+        from the artwork PDF
+      </span>
+    )
+  if (origin === 'edited') return <span data-origin="edited" className="ml-1.5 whitespace-nowrap rounded-chip bg-bg px-1.5 align-middle text-[11px] text-ink-2">edited</span>
+  return null
+}
+
+function Rows({ rows, editing, onChange, origin }: { rows: BriefRow[]; editing: boolean; onChange: (i: number, value: string) => void; origin?: (label: string) => Origin }) {
   return (
     <dl className="pb-rows divide-y divide-border border-y border-border">
       {rows.map((r, i) => (
@@ -117,6 +199,7 @@ function Rows({ rows, editing, onChange }: { rows: BriefRow[]; editing: boolean;
           <dt className="font-medium text-ink-2">{r.label}</dt>
           <dd className="min-w-0">
             <Field value={r.value} editing={editing} label={r.label} onChange={(v) => onChange(i, v)} long={r.value.length > 80} />
+            {!editing && <OriginTag origin={origin?.(r.label)} />}
           </dd>
         </div>
       ))}
@@ -141,22 +224,55 @@ type RowSection = 'job' | 'print' | 'critical' | 'order'
  * changes, order, approvals. Every value starts from the defaults and can be edited; edits stay in this browser.
  */
 export function PrintBrief() {
-  const { project } = useProject()
+  const { project, source } = useProject()
   const [header, setHeader] = useState(readHeader)
-  const [data, setData] = useState(readData)
+  const [edits, setEdits] = useState(readEdits)
   const [editing, setEditing] = useState(false)
   const verdict = printVerdict(project.findings)
   const passes = project.findings.filter((f) => f.verdict === 'pass').length
-  const edited = data !== DEFAULT_BRIEF
+  const artwork = project.files.find((f) => f.role === 'artwork')
+  const spec = usePrintSpec(source === 'api' && !!artwork, artwork?.id ?? '')
+  const pdf = spec ? fromPdf(spec) : {}
+  const approvalsFromHistory = historyApprovals(project.history)
 
-  const update = (next: BriefData) => {
-    setData(next)
-    saveData(next)
+  // What shows: a person's edit, else what the PDF or the history says, else the default.
+  const rowsOf = (section: RowSection): BriefRow[] =>
+    DEFAULT_BRIEF[section].map((r) => ({ label: r.label, value: edits[`${section}:${r.label}`] ?? (section === 'print' ? pdf[r.label] : undefined) ?? r.value }))
+  const approvalsBase = approvalsFromHistory.length ? approvalsFromHistory : DEFAULT_BRIEF.approvals
+  const data: BriefData = {
+    company: {
+      name: edits['company:name'] ?? DEFAULT_BRIEF.company.name,
+      line: edits['company:line'] ?? DEFAULT_BRIEF.company.line,
+      unit: edits['company:unit'] ?? DEFAULT_BRIEF.company.unit,
+      logo: edits['company:logo'] ?? DEFAULT_BRIEF.company.logo,
+    },
+    number: edits['meta:number'] ?? DEFAULT_BRIEF.number,
+    version: edits['meta:version'] ?? DEFAULT_BRIEF.version,
+    approvedOn: edits['meta:approvedOn'] ?? DEFAULT_BRIEF.approvedOn,
+    job: rowsOf('job'),
+    print: rowsOf('print'),
+    critical: rowsOf('critical'),
+    changes: edits['changes'] ?? DEFAULT_BRIEF.changes,
+    order: rowsOf('order'),
+    approvals: approvalsBase.map((a, i) => ({
+      by: edits[`approval:${i}:by`] ?? a.by,
+      role: edits[`approval:${i}:role`] ?? a.role,
+      what: edits[`approval:${i}:what`] ?? a.what,
+      at: edits[`approval:${i}:at`] ?? a.at,
+    })),
   }
-  const setRow = (section: RowSection) => (i: number, value: string) =>
-    update({ ...data, [section]: data[section].map((r, k) => (k === i ? { ...r, value } : r)) })
-  const setApproval = (i: number, key: keyof BriefData['approvals'][number], value: string) =>
-    update({ ...data, approvals: data.approvals.map((a, k) => (k === i ? { ...a, [key]: value } : a)) })
+  const edited = Object.keys(edits).length > 0
+  const printOrigin = (label: string): Origin => (edits[`print:${label}`] !== undefined ? 'edited' : label in pdf ? 'pdf' : undefined)
+
+  const edit = (key: string, value: string | null) => {
+    const next = { ...edits }
+    if (value === null) delete next[key]
+    else next[key] = value
+    setEdits(next)
+    saveEdits(next)
+  }
+  const setRow = (section: RowSection) => (i: number, value: string) => edit(`${section}:${DEFAULT_BRIEF[section][i].label}`, value)
+  const setApproval = (i: number, key: keyof Approval, value: string) => edit(`approval:${i}:${key}`, value)
 
   const toggleHeader = () => {
     const next = !header
@@ -168,8 +284,8 @@ export function PrintBrief() {
     }
   }
   const reset = () => {
-    setData(DEFAULT_BRIEF)
-    saveData(null)
+    setEdits({})
+    saveEdits({})
   }
   // The printed brief is always the finished view, never the inputs.
   const print = () => {
@@ -219,7 +335,7 @@ export function PrintBrief() {
       )}
 
       <article aria-label="Print brief" className="print-brief rounded-card border border-border bg-surface p-8 text-ink">
-        {header && <Letterhead data={data} editing={editing} set={(c) => update({ ...data, company: { ...data.company, ...c } })} />}
+        {header && <Letterhead data={data} editing={editing} set={(c) => Object.entries(c).forEach(([k, v]) => edit(`company:${k}`, v ?? null))} />}
 
         <div className={`flex flex-wrap items-start justify-between gap-4 ${header ? 'mt-5' : ''}`}>
           <div className="min-w-0 flex-1">
@@ -227,9 +343,9 @@ export function PrintBrief() {
             <p className="mt-1 text-[24px] font-bold leading-tight">{data.job[0]?.value}</p>
             {editing ? (
               <div className="mt-1 grid max-w-[520px] grid-cols-3 gap-2">
-                <Field value={data.number} editing label="Brief number" onChange={(v) => update({ ...data, number: v })} />
-                <Field value={data.version} editing label="Version" onChange={(v) => update({ ...data, version: v })} />
-                <Field value={data.approvedOn} editing label="Approved on" onChange={(v) => update({ ...data, approvedOn: v })} />
+                <Field value={data.number} editing label="Brief number" onChange={(v) => edit('meta:number', v)} />
+                <Field value={data.version} editing label="Version" onChange={(v) => edit('meta:version', v)} />
+                <Field value={data.approvedOn} editing label="Approved on" onChange={(v) => edit('meta:approvedOn', v)} />
               </div>
             ) : (
               <p className="mt-1 font-mono text-[12px] text-ink-2">
@@ -251,6 +367,16 @@ export function PrintBrief() {
         </div>
 
         <p className="mt-3 rounded-chip border border-warn/50 bg-warn/10 px-3 py-1.5 text-[12px]">{ILLUSTRATIVE}</p>
+        <p data-pdf-legend className="mt-2 text-[12px] leading-relaxed text-ink-2">
+          {spec ? (
+            <>
+              Rows tagged <OriginTag origin="pdf" /> are read by code from <span className="font-mono">{spec.fileName}</span>: inks, finish, layers, size, output
+              intent, file format, fonts and image resolution. Everything else is typed in; {approvalsFromHistory.length ? 'approvals come from the project history.' : 'approvals are typed in.'}
+            </>
+          ) : (
+            <>Nothing could be read from an artwork PDF here, so every value is typed in.</>
+          )}
+        </p>
         {!verdict.ready && (
           <p className="mt-2 text-[13px] text-bad">
             The artwork has open findings, so this brief is a draft. See the{' '}
@@ -266,7 +392,7 @@ export function PrintBrief() {
         </Section>
 
         <Section title="2 · Print specification">
-          <Rows rows={data.print} editing={editing} onChange={setRow('print')} />
+          <Rows rows={data.print} editing={editing} onChange={setRow('print')} origin={printOrigin} />
         </Section>
 
         <Section title="3 · Critical items: print as approved" keep>
@@ -275,7 +401,7 @@ export function PrintBrief() {
         </Section>
 
         <Section title={`4 · What changed since the previous version`} keep>
-          <Field value={data.changes} editing={editing} label="What changed" onChange={(v) => update({ ...data, changes: v })} long className="text-[13px]" />
+          <Field value={data.changes} editing={editing} label="What changed" onChange={(v) => edit('changes', v)} long className="text-[13px]" />
         </Section>
 
         <Section title="5 · Order and delivery" keep>

@@ -112,6 +112,25 @@ def _exempt(im: PlacedImage, rules: Sequence[Rule]) -> bool:
 RANK = {"fail": 0, "review": 1, "pass": 2}
 
 
+def image_results(pack: MarketPack, images: Sequence[PlacedImage], on_date: date | None = None
+                  ) -> list[tuple[list[PlacedImage], Verdict | None, str | None, list[str]]]:
+    """Per group of placements drawn together: (placements, verdict, limit in words, rule ids). The verdict is None
+    when no rule covers the image kind or the image is exempt (too few pixels to judge)."""
+    rules = _rules(pack, on_date)
+    out: list[tuple[list[PlacedImage], Verdict | None, str | None, list[str]]] = []
+    for group in _groups(images):
+        im = group[0]
+        applicable = rules.get(_kind(im), [])
+        if not applicable or _exempt(im, applicable):
+            out.append((group, None, None, []))
+            continue
+        verdicts = [(_verdict(im.ppi, r), r) for r in applicable]
+        worst = min((v for v, _ in verdicts), key=RANK.__getitem__)
+        cited = [r for v, r in verdicts if v == worst]
+        out.append((group, worst, _limit(cited[0]), [r.id for r in cited]))
+    return out
+
+
 def check_images(project: Project, pack: MarketPack, images: Mapping[str, Sequence[PlacedImage]],
                  on_date: date | None = None) -> tuple[list[Finding], list[Cleared]]:
     """(findings, cleared) for every placed image on the artwork files in `images` (file id -> placements)."""
@@ -170,4 +189,4 @@ def check_images(project: Project, pack: MarketPack, images: Mapping[str, Sequen
     return findings, cleared
 
 
-__all__ = ["STRETCH_TOLERANCE", "check_images"]
+__all__ = ["STRETCH_TOLERANCE", "check_images", "image_results"]
