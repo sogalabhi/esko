@@ -91,7 +91,9 @@ export function LeftRail() {
     { to: '/print-brief', label: 'Print brief', Icon: Printer, step: 7 },
   ]
   const more: Item[] = [
-    ...(change ? [{ to: '/changes', label: 'What changed', Icon: GitCompareArrows, dot: (stale ? 'warn' : 'ok') as Dot, word: stale ? 'checks out of date' : `v${change.versionTo}` }] : []),
+    ...(change || (project.history?.length ?? 0) > 0
+      ? [{ to: '/changes', label: change ? 'What changed' : 'Version history', Icon: GitCompareArrows, dot: (stale ? 'warn' : 'ok') as Dot, word: stale ? 'checks out of date' : change ? `v${change.versionTo}` : 'versions' }]
+      : []),
     { to: '/pack', label: '3D pack', Icon: Box },
   ]
 

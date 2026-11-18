@@ -63,6 +63,21 @@ function VersionCard({ change, latest }: { change: ChangeReport; latest: boolean
 export function Changes() {
   const { changes, project, stale } = useProject()
   const history = project.history ?? []
+  if (changes.length === 0 && history.length > 0) {
+    return (
+      <div className="mx-auto max-w-[960px]">
+        <h1 className="text-[20px] font-semibold">What changed</h1>
+        <p className="mt-1 text-[13px] text-ink-2">The versions of this artwork: who did what, when, and how the checks moved.</p>
+        {project.scenario && <p className="mt-2 rounded-chip border border-warn px-2 py-1 text-[12px] font-semibold text-warn">{project.scenario}</p>}
+        <div className="mt-4">
+          <VersionTimeline history={history} />
+        </div>
+        <p className="mt-4 text-[13px] text-ink-2">
+          The file-by-file changes appear here after a file is updated. Open the version-history demo to see them.
+        </p>
+      </div>
+    )
+  }
   if (changes.length === 0) {
     return (
       <section className="mx-auto mt-16 max-w-md rounded-card border border-border bg-surface p-8 text-center">
