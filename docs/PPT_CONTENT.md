@@ -225,6 +225,12 @@ markets/
 
 **A7. Why not RAG for the rulebook?** 21 rules fit in one AI call, so there is nothing to retrieve. We turn the rulebook into structured rules once and code applies them the same way every run; RAG would put the AI in the verdict path, which we only allow to produce Needs review. Every rule's quote is checked against the whole document, not a retrieved chunk. Market rules are curated YAML with exact quotes. Limit: a very long rulebook is read in one call and could exceed the model's context. Next step: retrieval only to find candidate clauses, with the quote check and the code triage unchanged.
 
+**A8. How two values are compared.** Number and unit read by one regex; pint converts both sides to a base unit (g, kJ, ml); different kinds (g against kcal) are not compared; same kind conflicts above 2%. % Daily Value = amount ÷ official daily value × 100, within 1 point (calories 10%, servings 5%). Example: 15 g ÷ 78 g = 19.2% against 2.2% printed. Limits: tolerances are product defaults; two printed percentages are compared exactly; no FDA rounding model; "2 x 40 g" is not parsed (goes to a person).
+
+**A9. When we match exactly, and when we don't.** Values: by number after conversion. A quote with digits must appear exactly (case, spacing, letter spacing ignored). A quote with no digits: fuzzy, score 92+, 12+ characters. Ingredient lists: singular names, only descriptor words (dried, organic, roasted...) ignored. Rule to field: word and fuzzy match (90 / 80), to find a field, never to decide a Fail.
+
+**A10. Where a fact is on the artwork.** Code reads each text piece with page, panel and position in mm; panels come from the dieline outlines; the AI returns value, quote and piece ids; code finds the quote in those pieces (and the next line on the same panel); the location is the union of their boxes. Image-only facts stay AI-suggested until the sheet says the same.
+
 ---
 
 ## Design notes for building the deck

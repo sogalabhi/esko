@@ -228,7 +228,7 @@ slides.push(() => {
     { x: rx + 0.35, y: 2.5, w: rw - 0.7, h: 3.0, fontSize: 18, color: C.text1, valign: "top", objectName: "limits list" });
   text(s, [{ text: "520+ ", options: { bold: true, color: C.accent1 } }, { text: "backend tests  ·  ", options: {} }, { text: "400+ ", options: { bold: true, color: C.accent1 } }, { text: "frontend tests  ·  end-to-end checks  ·  none call the network", options: {} }],
     { x: M, y: 6.1, w: CW, h: 0.5, fontSize: 18, color: C.text1, objectName: "tests line" });
-  text(s, "Sources: test counts from this project\u2019s own test run on 27 October 2026. Every market rule cites its regulation, clause, URL and exact quote in markets/ (US: 21 CFR; India: FSSAI and Legal Metrology). See the Sources slide.", { x: M, y: 6.8, w: CW, h: 0.5, fontSize: 11, color: C.text2, valign: "top", objectName: "sources note" });
+  text(s, "Sources: test counts from this project\u2019s own test run on 28 October 2026. Every market rule cites its regulation, clause, URL and exact quote in markets/ (US: 21 CFR; India: FSSAI and Legal Metrology). See the Sources slide.", { x: M, y: 6.8, w: CW, h: 0.5, fontSize: 11, color: C.text2, valign: "top", objectName: "sources note" });
   notes(s, "Adding a country means adding a folder of rule records, each with the regulation, the clause and an exact quote. India is already written this way. No engine code changes, and a test enforces that. The honest limits: text inside images is read by a vision model, so it's lower trust and always goes to a person. Anything that needs evidence from outside the artwork, like a certificate, stays Needs review. We've tested on one product, and the India market switch isn't in the interface yet. (50 s)\n\nSay also: the market rules are drafted from the regulations with exact quotes, but most are marked approved: false, so a regulatory person should confirm them before real use.");
 });
 
@@ -299,7 +299,7 @@ slides.push(() => {
     ["4", "Esko\u2019s sample files for the AIForge hackathon: Dancing Fish Granola Berry Crunch US carton (PDF) and content sheet (Excel).", "samples/ in the project"],
     ["5", "Dancing Fish US Label and Artwork Rulebook, rules DF-01 to DF-21: our own demo rulebook, written for this project (not a real company document).", "rulebooks/ in the project"],
     ["6", "Market rules (US FDA, India FSSAI and Legal Metrology): drafted from the regulations, each with clause, URL and exact quote. Most are marked approved: false until a regulatory person confirms them.", "markets/ in the project"],
-    ["7", "Test counts: 523 backend, 402 frontend, 7 end-to-end, run on 27 October 2026.", "backend/tests, frontend/src, e2e/ in the project"],
+    ["7", "Test counts: 547 backend, 403 frontend, 7 end-to-end, run on 28 October 2026.", "backend/tests, frontend/src, e2e/ in the project"],
   ];
   rows.forEach(([n, t, u], i) => {
     const y = 1.4 + i * 0.75;
@@ -419,7 +419,7 @@ slides.push(() => {
 slides.push(() => {
   const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
   s.addText("How we know it’s sound", { placeholder: "title" });
-  const cols = [["Tested without the network", ["523 backend tests, 402 frontend tests, 7 end-to-end", "AI answers replayed from recordings, so every run is the same"]], ["Marked against answer keys", ["31 known issues in Esko’s files, written before the code (26 to catch, 5 that must not be flagged)", "21 rulebook rules, each with its expected verdict"]], ["Guarded at every step", ["Quotes checked by code; digits never fuzzy", "Every AI answer validated against a schema", "A final guard re-checks every Fail"]], ["Proven by named tests", ["No market logic in the engine", "An invented rule never fails", "The 5 must-not-flag items never produce a Fail", "A decision survives adding or removing a rulebook"]]];
+  const cols = [["Tested without the network", ["547 backend tests, 403 frontend tests, 7 end-to-end", "AI answers replayed from recordings, so every run is the same"]], ["Marked against answer keys", ["31 known issues in Esko’s files, written before the code (26 to catch, 5 that must not be flagged)", "21 rulebook rules, each with its expected verdict"]], ["Guarded at every step", ["Quotes checked by code; digits never fuzzy", "Every AI answer validated against a schema", "A final guard re-checks every Fail"]], ["Proven by named tests", ["No market logic in the engine", "An invented rule never fails", "The 5 must-not-flag items never produce a Fail", "A decision survives adding or removing a rulebook"]]];
   const cw = (CW - 3 * 0.25) / 4, h = 4.0;
   cols.forEach(([t, bl], i) => {
     const x = M + i * (cw + 0.25);
@@ -428,7 +428,117 @@ slides.push(() => {
     text(s, bl.map((b, j) => ({ text: b, options: { bullet: true, breakLine: j < bl.length - 1, paraSpaceAfter: 8 } })), { x: x + 0.25, y: 2.6, w: cw - 0.5, h: h - 1.3, fontSize: 14, color: C.text1, valign: "top", objectName: `sound ${i + 1} list` });
   });
   text(s, "Honest gaps: tested on one product; the market rules are not yet approved by a regulatory person.", { x: M, y: 5.85, w: CW, h: 0.5, fontSize: 16, italic: true, color: C.text1, objectName: "sound note" });
-  notes(s, "How do we know it is sound? First, it is tested without the network: 523 backend tests, 402 frontend tests and 7 end-to-end tests, with the AI answers replayed from recordings so every run is the same. Second, two answer keys written before the code, like an exam: 31 known issues in Esko's files, 26 to catch and 5 that must not be flagged, and the expected verdict for each of the 21 rulebook rules. Third, guards at every step: quotes checked by code, every AI answer validated against a schema, and a final guard that re-checks every Fail. Fourth, named tests for the things that matter: no market logic in the engine, an invented rule never fails, the must-not-flag items never produce a Fail. And the honest gaps: one product so far, and the market rules are not yet approved by a regulatory person. (40 s)");
+  notes(s, "How do we know it is sound? First, it is tested without the network: 547 backend tests, 403 frontend tests and 7 end-to-end tests, with the AI answers replayed from recordings so every run is the same. Second, two answer keys written before the code, like an exam: 31 known issues in Esko's files, 26 to catch and 5 that must not be flagged, and the expected verdict for each of the 21 rulebook rules. Third, guards at every step: quotes checked by code, every AI answer validated against a schema, and a final guard that re-checks every Fail. Fourth, named tests for the things that matter: no market logic in the engine, an invented rule never fails, the must-not-flag items never produce a Fail. And the honest gaps: one product so far, and the market rules are not yet approved by a regulatory person. (40 s)");
+});
+
+// ---- Appendix: how values are compared, matched and located (backup for technical questions)
+slides.push(() => {
+  const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
+  s.addText("Numbers compared by value, not spelling", { placeholder: "title" });
+  const steps = [["Read", "“15 g”, “1,5 g” and “15G” each become a number and a unit"], ["Convert", "Both sides go to a base unit (g, kJ or ml) with pint, a units library"], ["Different kinds", "Grams against kcal are not compared, so no false conflict"], ["Same kind", "A conflict if they differ by more than 2%"], ["% Daily Value", "Amount ÷ official daily value × 100, within 1 point"]];
+  steps.forEach(([t, b], i) => {
+    const y = 1.5 + i * 0.98;
+    s.addShape(pres.shapes.OVAL, { x: M, y, w: 0.5, h: 0.5, fill: { color: C.accent1 }, line: { type: "none" }, objectName: `value step ${i + 1} badge` });
+    text(s, String(i + 1), { x: M, y, w: 0.5, h: 0.5, fontSize: 18, bold: true, color: C.background2, align: "center", valign: "middle", objectName: `value step ${i + 1} number` });
+    text(s, [{ text: t, options: { bold: true, fontSize: 19, fontFace: "Cambria", breakLine: true } }, { text: b, options: { fontSize: 15 } }], { x: M + 0.75, y: y - 0.05, w: 6.3, h: 0.9, color: C.text1, valign: "top", objectName: `value step ${i + 1} text` });
+  });
+  const lx = 7.7, lw = W - M - lx;
+  card(s, lx, 1.5, lw, 4.7, "worked example card");
+  text(s, "A worked example", { x: lx + 0.3, y: 1.7, w: lw - 0.6, h: 0.45, fontSize: 19, bold: true, fontFace: "Cambria", color: C.accent1, objectName: "example heading" });
+  text(s, [
+    { text: "Total fat on the carton", options: { fontSize: 14, color: C.text2, breakLine: true } },
+    { text: "15 g  ÷  78 g  =  19.2%", options: { fontSize: 22, bold: true, fontFace: "Cambria", breakLine: true, paraSpaceAfter: 10 } },
+    { text: "78 g is the daily value from 21 CFR 101.9(c)(9), kept as data in the market pack.", options: { fontSize: 13, color: C.text2, breakLine: true, paraSpaceAfter: 12 } },
+    { text: "The label prints 2.2%", options: { fontSize: 14, color: C.text2, breakLine: true } },
+    { text: "19.2 against 2.2: outside 1 point", options: { fontSize: 16, bold: true, breakLine: true, paraSpaceAfter: 10 } },
+  ], { x: lx + 0.3, y: 2.3, w: lw - 0.6, h: 3.0, color: C.text1, valign: "top", objectName: "example working" });
+  chip(s, "fail", lx + 0.3, 5.1, lw - 0.6, 0.9, "with this working line as the proof", 18);
+  text(s, "The AI never converts a unit or does a sum. Other checks use their own tolerance: calories 10%, servings 5%.", { x: M, y: 6.55, w: 6.9, h: 0.6, fontSize: 14, italic: true, color: C.text2, valign: "top", objectName: "value note" });
+  notes(s, "BACKUP for 'how do you compare two values?' The AI never converts a unit or does a sum. pint is a units library: it knows ounces from grams and refuses to compare grams with calories, which is why we never raise a false conflict between a weight and an energy value. Two values of the same kind are converted to a base unit and compared with a 2 percent relative tolerance, so 480 g and 16.93 oz match. For percent daily value, the amount is divided by the official daily value from the market pack and compared with the printed percent within one point. Honest limits: the tolerances are product defaults, not regulation; two printed percentages from two files are compared exactly; we do not model FDA rounding rules; a value like '2 x 40 g' is not parsed, so it goes to a person instead of passing.");
+});
+slides.push(() => {
+  const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
+  s.addText("When we match exactly, and when we don’t", { placeholder: "title" });
+  const rows = [
+    ["Numbers and units", "By value after conversion, never fuzzy", "“8 g” must never match “18 g”"],
+    ["A quote with digits", "Must appear exactly; case, spacing and letter-spacing ignored", "A number can’t come from another label"],
+    ["A quote with no digits", "Fuzzy: score 92 or more, 12+ characters", "Forgives a typo or a reading slip"],
+    ["Ingredient lists", "Names made singular, then compared; only words like dried, organic, roasted are ignored", "“Blueberries” = “Dried blueberries”; “Sugar” ≠ “Coconut sugar”"],
+    ["Rule to field", "Word and fuzzy match (90 for names, 80 for pack items), to find which field a rule means", "Matching finds; it never decides a Fail"],
+  ];
+  const hdr = (t) => ({ text: t, options: { bold: true, color: C.background2, fill: { color: C.accent5 }, fontSize: 15, fontFace: "Cambria", valign: "middle" } });
+  const cell = (t, b) => ({ text: t, options: { color: C.text1, fontSize: 14, bold: !!b, valign: "middle", fill: { color: C.background2 } } });
+  s.addTable([[hdr("What"), hdr("How"), hdr("Why")], ...rows.map(([a, b, c]) => [cell(a, true), cell(b), cell(c)])],
+    { x: M, y: 1.4, w: CW, colW: [2.7, 5.1, CW - 7.8], border: { type: "solid", color: HEX.accent6, pt: 1 }, rowH: [0.42, ...rows.map(() => 0.85)], margin: [0.05, 0.12, 0.05, 0.12], objectName: "matching table" });
+  text(s, "Fuzzy matching locates; it never decides. A Fail still needs a code-checked quote and a rule.", { x: M, y: 6.25, w: CW, h: 0.5, fontSize: 17, bold: true, fontFace: "Cambria", color: C.accent1, valign: "top", objectName: "matching takeaway" });
+  text(s, "Limits: the descriptor words and unit words are a fixed English list; “Sodium” and “Salt” are different nutrients; the thresholds are tuned defaults.", { x: M, y: 6.85, w: CW, h: 0.4, fontSize: 12, color: C.text2, valign: "top", objectName: "matching limits" });
+  notes(s, "BACKUP for 'are you comparing tokens or exact spelling?' Four methods, chosen on purpose. Values are compared by number after unit conversion. A quote that contains digits must appear exactly in the source text, after ignoring case, spacing and letter spacing, so a number can never come from the wrong label. Only quotes with no digits get fuzzy matching, to forgive a small reading slip. Ingredient lists are compared name by name after making them singular; only a short fixed list of descriptor words such as dried or organic is ignored, so blueberries matches dried blueberries but sugar does not match coconut sugar. Finally, to find which field a rule is talking about we use word and fuzzy matching, but that only locates a field. It never decides a Fail.");
+});
+slides.push(() => {
+  const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
+  s.addText("Every fact points back to a box on the artwork", { placeholder: "title" });
+  const steps = [["Code reads every text piece", "With its page, panel and position in mm. Letter-spaced text is rebuilt."], ["Panels come from the dieline", "Closed outlines on the artwork-panel layer, named from the printed labels"], ["The AI returns a fact", "A value, a quote, and the pieces it read from"], ["Code finds the quote in those pieces", "Wrapped lines are covered; a wrong panel never confirms"], ["The box is the union of the pieces", "Drawn on the carton in the app. Hidden and guide text never counts."]];
+  steps.forEach(([t, b], i) => {
+    const y = 1.5 + i * 0.98;
+    s.addShape(pres.shapes.OVAL, { x: M, y, w: 0.5, h: 0.5, fill: { color: C.accent1 }, line: { type: "none" }, objectName: `locate step ${i + 1} badge` });
+    text(s, String(i + 1), { x: M, y, w: 0.5, h: 0.5, fontSize: 18, bold: true, color: C.background2, align: "center", valign: "middle", objectName: `locate step ${i + 1} number` });
+    text(s, [{ text: t, options: { bold: true, fontSize: 19, fontFace: "Cambria", breakLine: true } }, { text: b, options: { fontSize: 15 } }], { x: M + 0.75, y: y - 0.05, w: 6.3, h: 0.9, color: C.text1, valign: "top", objectName: `locate step ${i + 1} text` });
+  });
+  const lx = 7.7, lw = W - M - lx;
+  card(s, lx, 1.5, lw, 4.7, "locate limits card");
+  text(s, "Limits", { x: lx + 0.3, y: 1.7, w: lw - 0.6, h: 0.45, fontSize: 19, bold: true, fontFace: "Cambria", color: C.accent3, objectName: "locate limits heading" });
+  const lim = ["Text that is only a picture has nothing to check a quote against: the fact stays AI-suggested until the sheet says the same", "A fact read by the AI cannot be placed by the AI: the position always comes from code", "A PDF with no panel layer falls back to the printed panel labels, so positions are less precise"];
+  text(s, lim.map((t, i) => ({ text: t, options: { bullet: true, breakLine: i < lim.length - 1, paraSpaceAfter: 10 } })), { x: lx + 0.3, y: 2.3, w: lw - 0.6, h: 3.8, fontSize: 14, color: C.text1, valign: "top", objectName: "locate limits list" });
+  text(s, "The AI never invents a location.", { x: M, y: 6.55, w: 6.9, h: 0.5, fontSize: 15, italic: true, color: C.text2, objectName: "locate note" });
+  notes(s, "BACKUP for 'how do you know where the ingredients are on the artwork?' The code reads every piece of text from the PDF with its page, panel and position in millimetres. The panels come from the dieline's own outlines. The AI returns a fact with a quote and the pieces it read from; code then finds the quote in those pieces, including the next line on the same panel for wrapped text, and the fact's location is the combined box of the matched pieces. If the AI cites the wrong panel, the quote does not confirm. If a mark is only an image, the fact stays AI-suggested until the sheet states the same value.");
+});
+
+slides.push(() => { // 23: updating a file
+  const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
+  s.addText("Update a file: read only what changed", { placeholder: "title" });
+  const steps = [["Compare", "The new file against the version the last run read: cell by cell for a sheet, panel by panel (text and picture) for a carton"], ["Keep", "Facts from everything that did not change stay, and their quotes are checked against the new file again by code"], ["Read", "Only the changed cells or panels go to the AI"], ["Replay", "Your decisions are kept where the finding is the same, and handed back where it changed"]];
+  steps.forEach(([t, b], i) => {
+    const y = 1.5 + i * 1.2;
+    s.addShape(pres.shapes.OVAL, { x: M, y, w: 0.5, h: 0.5, fill: { color: C.accent1 }, line: { type: "none" }, objectName: `update step ${i + 1} badge` });
+    text(s, String(i + 1), { x: M, y, w: 0.5, h: 0.5, fontSize: 18, bold: true, color: C.background2, align: "center", valign: "middle", objectName: `update step ${i + 1} number` });
+    text(s, [{ text: t, options: { bold: true, fontSize: 19, fontFace: "Cambria", breakLine: true } }, { text: b, options: { fontSize: 15 } }], { x: M + 0.75, y: y - 0.05, w: 6.2, h: 1.1, color: C.text1, valign: "top", objectName: `update step ${i + 1} text` });
+  });
+  const lx = 7.7, lw = W - M - lx;
+  card(s, lx, 1.5, lw, 4.7, "saving card");
+  text(s, "One cell edited (Honey 9% \u2192 1%)", { x: lx + 0.3, y: 1.7, w: lw - 0.6, h: 0.45, fontSize: 18, bold: true, fontFace: "Cambria", color: C.accent1, objectName: "saving heading" });
+  text(s, "86%", { x: lx + 0.3, y: 2.25, w: lw - 0.6, h: 1.1, fontSize: 66, bold: true, fontFace: "Cambria", color: C.accent4, objectName: "saving figure" });
+  text(s, "fewer tokens to read the content sheet again (79\u201387% whichever cell is edited)", { x: lx + 0.3, y: 3.4, w: lw - 0.6, h: 0.7, fontSize: 15, color: C.text1, valign: "top", objectName: "saving figure note" });
+  text(s, [
+    { text: "Carton, one text panel changed: 74\u201387% fewer", options: { bullet: true, breakLine: true, paraSpaceAfter: 4 } },
+    { text: "Carton unchanged: 0 tokens, 11 pictures not sent", options: { bullet: true, breakLine: true, paraSpaceAfter: 4 } },
+    { text: "Whole update run: about 55\u201370% fewer", options: { bullet: true } },
+  ], { x: lx + 0.3, y: 4.2, w: lw - 0.6, h: 1.4, fontSize: 14, color: C.text1, valign: "top", objectName: "saving list" });
+  text(s, "Estimates: characters \u00f7 4, on the real prompts and demo files. The meaning and wording calls still run.", { x: lx + 0.3, y: 5.55, w: lw - 0.6, h: 0.55, fontSize: 11, italic: true, color: C.text2, valign: "top", objectName: "saving note" });
+  text(s, "The AI is never asked what changed. Code compares, and code re-checks every reused quote.", { x: M, y: 6.55, w: 6.9, h: 0.5, fontSize: 15, italic: true, color: C.text2, objectName: "update note" });
+  notes(s, "This is the part we think is new. When a file is updated, we do not read the whole thing again. Code compares the new version with the one the last run read: cell by cell for a sheet, panel by panel for a carton, and for a carton a panel counts as changed if its text or its picture changed. Facts from everything that did not change are kept, and their quotes are checked against the new file again by code, so nothing is trusted just because it was read before. Only the changed cells or panels are sent to the AI. On the demo, editing one cell of the content sheet sends about 14 percent of the tokens: 86 percent fewer, and between 79 and 87 percent whichever cell it is. One changed carton panel is 74 to 87 percent fewer; an unchanged carton costs nothing and none of its 11 pictures are sent. Honest figure for the whole update run: about 55 to 70 percent fewer, because the meaning-conflict and question-wording calls still run; making those incremental too is the next step. These are estimates, characters divided by four, on the real prompts and the real demo files; backend/scripts/measure_delta.py reproduces them. Your earlier decisions are kept where the finding is the same and handed back where it changed.");
+});
+slides.push(() => { // 24: version history
+  const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
+  s.addText("Version history, with every change", { placeholder: "title" });
+  const pts = [["Every version", "Who changed it and when, and how the verdicts moved"], ["In the file", "The numbers that changed come first: Honey 9% \u2192 1%"], ["In the checks", "2 fixed, 2 changed, 0 new, each listed by name"], ["Your decisions", "Kept where they still apply; one handed back, never resolved silently"]];
+  pts.forEach(([a, b], i) => {
+    const y = 1.55 + i * 1.15;
+    text(s, [{ text: a, options: { bold: true, fontSize: 19, fontFace: "Cambria", color: C.accent1, breakLine: true } }, { text: b, options: { fontSize: 15 } }], { x: M, y, w: 4.4, h: 1.05, color: C.text1, valign: "top", objectName: `history point ${i + 1}` });
+  });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 5.3, y: 1.45, w: W - M - 5.3, h: 5.4, rectRadius: 0.12, fill: { color: C.background2 }, line: { color: C.accent6, width: 1 }, objectName: "image frame" });
+  s.addImage({ path: img("assets/versions-changes.png"), x: 5.4, y: 1.55, w: W - M - 5.5, h: 5.2, sizing: { type: "contain", w: W - M - 5.5, h: 5.2 }, altText: "The What changed screen: three versions, what was fixed, and a decision handed back", objectName: "IMAGE what changed (replace)" });
+  notes(s, "This is the second demo: Load demo, version history. It shows a content sheet corrected twice, so there are three versions. Every version has who and when and how the verdicts moved. In the file, the numbers that changed come first. In the checks, what was fixed. And your earlier decisions: this one was kept, and this one was handed back to a person because the finding it was about changed. The three sheet files and the text that changed between them are real; which findings move is staged from the real first check, and the screen says so. To do it live, use Update this file on the Files screen.");
+});
+slides.push(() => { // 25: token savings, measured
+  const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: SECTION });
+  s.addText("Token savings, measured", { placeholder: "title" });
+  const rows = [["Content sheet: 1 cell changed", "4.2k", "0.6k", "86%  (79\u201387%)"], ["Content sheet: 5 cells changed", "4.2k", "0.8k", "81%"], ["Content sheet: 20 cells changed", "4.2k", "1.7k", "60%"], ["Content sheet: everything changed", "4.2k", "4.1k", "3%"], ["Carton: 1 text panel changed", "7.0k\u201316.5k", "1.1k\u20133.4k", "74\u201387%"], ["Carton: nothing changed", "11 pictures", "0", "100%"], ["A whole update run (one cell edited)", "21k\u201331k", "about 10k", "55\u201370%"]];
+  const hdr = (t) => ({ text: t, options: { bold: true, color: C.background2, fill: { color: C.accent5 }, fontSize: 15, fontFace: "Cambria", valign: "middle" } });
+  const cell = (t, b) => ({ text: t, options: { color: C.text1, fontSize: 14, bold: !!b, valign: "middle", fill: { color: C.background2 } } });
+  s.addTable([[hdr("Update"), hdr("Full read"), hdr("Changed only"), hdr("Fewer tokens")], ...rows.map(([a, b, c, d]) => [cell(a, true), cell(b), cell(c), cell(d, true)])],
+    { x: M, y: 1.4, w: CW, colW: [5.2, 2.2, 2.2, CW - 9.6], border: { type: "solid", color: HEX.accent6, pt: 1 }, rowH: [0.42, ...rows.map(() => 0.6)], margin: [0.05, 0.12, 0.05, 0.12], objectName: "token savings table" });
+  text(s, "Estimates: characters \u00f7 4 on the real prompts and demo files; a panel picture counts 255\u20131,118 tokens. Every cell is tried as the edit; the figure is the mean. The meaning-conflict and question-wording calls still run on every update (making them incremental is next). Reproduce: backend/scripts/measure_delta.py.", { x: M, y: 6.1, w: CW, h: 0.9, fontSize: 12, italic: true, color: C.text2, valign: "top", objectName: "token savings note" });
+  notes(s, "The measurement behind the update slide. Real prompts, real demo files, no AI calls. The saving is large for a small edit and shrinks as more of the file changes, down to about nothing if everything changed, which is as it should be. For the whole run it is about 55 to 70 percent, because two calls still run in full.");
 });
 
 // Part 1 is the product, as a user sees it: title, problem, solution, LIVE DEMO.
@@ -437,8 +547,8 @@ slides.push(() => {
 // Appendix: kept for questions.
 const ORDER = [
   ["Part 1: The product", [0, 1, 2, 5]],
-  ["Part 2: Under the hood", [17, 12, 3, 18, 13, 14, 15, 19, 6, 7]],
-  ["Appendix", [4, 16, 8, 9, 10, 11]],
+  ["Part 2: Under the hood", [17, 12, 3, 18, 23, 24, 13, 14, 15, 19, 6, 7]],
+  ["Appendix", [4, 16, 8, 20, 21, 22, 25, 9, 10, 11]],
 ];
 ORDER.forEach(([title, idx]) => {
   SECTION = title;

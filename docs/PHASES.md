@@ -124,6 +124,45 @@ On 20 Oct the project moved from Problem 1 (idea → design brief) to **Problem 
 ### P2 Phase 9 — video and submit (22 Oct afternoon)
 - 4 minutes: problem (20 s) → drop artwork, sheet, rulebook (20 s) → "Not ready: X fail, Y review" (20 s) → a math Fail with proof (40 s) → not flagged and why (30 s) → hidden-table X-ray (20 s) → a rulebook rule quote-checked, a made-up one rejected (30 s) → a person decides a review item (20 s) → switch to India (20 s) → report (20 s) → limits (15 s).
 
+### P2 Phase 10 — update a file, version 2 and review the changes · `backend-engine`, `ui-builder`, `e2e-tester`
+
+**Why.** Today an upload only ever adds: `POST /api/files` calls `store.put`, which keeps the old file beside the new one (there is no remove route) and clears the run and every decision (`_project = _base = None; _log.clear()`). Fixing one number on the carton therefore means a second artwork file, two sets of facts and all decisions lost. The "version history" in the staged approved demo is hand-written (`backend/scripts/make_demo_approved.py`); this phase makes it real. The `history` field, `HistoryEntry` and `HistoryPanel` already exist and are reused.
+
+**Scope: explicit update only.** A person picks the file to replace. No guessing which file is the "same" one, and no partial AI re-runs (both are Phase 11).
+
+**Backend** (`backend-engine`)
+- `POST /api/files/{file_id}/update` (upload): reads the new file with the existing readers and swaps it into the old file's slot.
+  - Same role and file type only (artwork by artwork, sheet by sheet); otherwise 409 with a plain reason. Unknown id: 404. Identical bytes (same file id): nothing changes, answered as "no changes".
+  - The old file leaves `list_files()` (so it is not extracted again) but its bytes and pieces stay on disk and in the store, so it can be previewed and diffed.
+  - The run is marked stale (checks must be run again) but the decision log is **kept**, unlike `store.put`.
+- Version chain in the store: for each slot, the ordered file ids. The upload folder `data/uploads/<id>/` already keeps every version's bytes. The chain itself is in memory like the rest of the store; it does not survive a server restart (a database is a next step, noted in the limits).
+- `backend/app/versions/diff.py`, pure code, no AI: `diff_pieces(old, new)`.
+  - Sheets match by (sheet, cell). PDFs match by (page, panel, normalised text), using `quote_check.norm`, so case, spacing and letter-spacing are not changes.
+  - Leftover pieces on the same panel pair up by text similarity (`rapidfuzz.ratio`, threshold set in the plan's first test). Result per piece: unchanged, changed (old and new text, `numbers_changed` from `quote_check.numbers`), added, removed.
+  - Hidden and ignored pieces are not diffed.
+- `diff_findings(before, after)`: compares the previous run with the new one by a stable key (rule id, kind, field, expected and found values, panel; not the per-run `c-N` ids). Result: new, resolved, changed, unchanged.
+- Decisions: a decision on a finding whose key is unchanged is kept. A decision whose finding's expected or found value changed is **reopened**, and a log entry says why (non-negotiable 4: nothing resolved silently).
+- `GET /api/changes`: the last update's file, from and to versions, piece diff, finding movement, decisions kept and reopened.
+- On the next run, `Project.history` gets a real `HistoryEntry` per version: version, time, who (the name given at update), what was updated, and the fail, review and pass counts. `scenario` stays empty for live runs.
+- Token use: the pipeline already caches each file's AI scan by `fingerprint(file_id, prompt, images)`, so an unchanged file is a cache hit. Updating the sheet costs the sheet scan, the meaning-conflicts call and the question wording, and **not** the carton scan. This phase proves that with a test and shows the call count on the Review changes screen. It does not reduce the cost of the changed file itself.
+
+**Frontend** (`ui-builder`)
+- Files screen: an "Update file" button on each artwork and approved-information file (the rulebook already has its own replace), a name field for who updated it, a version chip (v1, v2), and the existing `HistoryPanel` fed from the real history.
+- Review changes (after an update, before "Check again"): old and new text side by side with the changed numbers marked; counts of added, removed, changed; then, after the run, findings new, resolved and unchanged, and decisions kept and reopened. Icon plus word, never colour alone. Not chat-first.
+- "Check again" stays a deliberate click and shows which files will be read again and which come from the cache.
+
+**Tests** (no network; AI through the fake adapter)
+- Unit: `diff_pieces` (identical, whitespace and letter-spacing only, one number changed, a line added, a line removed, a moved panel); `diff_findings`; stable key survives a re-numbered conflict id.
+- Unit: store: an update keeps the log, hides the old file from `list_files`, keeps its pieces, extends the chain; identical bytes are a no-op; a different type is refused.
+- Integration: update the sheet only → the carton scan is a cache hit (`RunReport.calls` counts the sheet scan, meaning conflicts and wording only); a changed value reopens its decision and logs why; an unchanged one stays decided; every Fail still has a rule and code-checked evidence; no market logic in the engine (market-leak test green).
+- Frontend: Update button and version chip; Review changes content and accessible names; history list from real entries; reopened decisions shown.
+- E2E: update the sheet on the demo, review the changes, check again, see the history show v1 and v2.
+- Manual check (a person): change one number in a copy of the sheet, update, review, check again, confirm the old finding resolves.
+
+**Done when:** updating a file gives v2 in the history, shows exactly what changed, keeps the decisions that still apply and reopens the ones that do not, and re-reads only the changed file.
+
+**Not in this phase (Phase 11):** suggesting that an upload is a new version of an existing file; sending the AI only the changed pieces (and only the changed panels' images); image-only changes (compare per-panel image hashes); a database for history across restarts; replacing the rulebook through the same flow.
+
 **Campus round prep:** "What if the AI misses something?" · "How do you add a country?" (`markets/in/`) · "Does it work on other files?" (the changed copies) · "How do you avoid false alarms?" (the cleared list) · "Why Gemini?"
 
 ---
