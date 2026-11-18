@@ -1,4 +1,4 @@
-import { BookCheck, Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, ListChecks, PenLine, Printer, type LucideIcon } from 'lucide-react'
+import { BookCheck, Box, ChevronsLeft, ChevronsRight, ClipboardCheck, FileText, FolderOpen, GitCompareArrows, ListChecks, PenLine, Printer, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router'
 import { printVerdict } from '../lib/checks'
 import { usePersistedFlag } from '../lib/usePersistedFlag'
@@ -57,7 +57,7 @@ function RailLink({ item, collapsed }: { item: Item; collapsed: boolean }) {
 }
 
 export function LeftRail() {
-  const { project } = useProject()
+  const { project, change, stale } = useProject()
   const [collapsed, toggleCollapsed] = usePersistedFlag('bf.rail.collapsed')
   const openConflicts = project.conflicts.filter((c) => !c.resolution).length
   const filesDone = project.files.every((f) => f.status === 'done')
@@ -90,7 +90,10 @@ export function LeftRail() {
     { to: '/report', label: 'Report', Icon: FileText, step: 6 },
     { to: '/print-brief', label: 'Print brief', Icon: Printer, step: 7 },
   ]
-  const more: Item[] = [{ to: '/pack', label: '3D pack', Icon: Box }]
+  const more: Item[] = [
+    ...(change ? [{ to: '/changes', label: 'What changed', Icon: GitCompareArrows, dot: (stale ? 'warn' : 'ok') as Dot, word: stale ? 'checks out of date' : `v${change.versionTo}` }] : []),
+    { to: '/pack', label: '3D pack', Icon: Box },
+  ]
 
   return (
     <nav

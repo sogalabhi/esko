@@ -1,6 +1,6 @@
-import { ArrowRight, BookPlus, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react'
+import { ArrowRight, BookPlus, Circle, CircleAlert, CircleCheck, FileText, LoaderCircle, Play, RefreshCw, RotateCcw, Upload } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type DragEvent } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { ACCEPT_ATTR, AI_BUSY_REASON } from '../api/client'
 import { AiBusyNotice } from '../components/AiBusyNotice'
 import { LoadDemoButton } from '../components/LoadDemoButton'
@@ -90,14 +90,17 @@ function FileCard({
   facts,
   panels,
   onRetry,
+  onUpdate,
 }: {
   file: ProjectFile
   shown: Shown
   facts: Fact[]
   panels: PackPanel[]
   onRetry: () => void
+  onUpdate?: (f: File) => void
 }) {
   const titleId = useId()
+  const updateId = useId()
   const st = STATUS[shown]
   const meta = FILE_META[file.type]
   return (
@@ -119,6 +122,29 @@ function FileCard({
             </span>
           )}
         </p>
+
+        {onUpdate && shown === 'done' && (
+          <div className="mt-3">
+            <label
+              htmlFor={updateId}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-chip border border-border bg-surface px-3 py-1 text-[13px] font-medium hover:border-ink-2 focus-within:outline-2 focus-within:outline-info"
+            >
+              <RefreshCw size={14} aria-hidden="true" />
+              Update this file
+              <input
+                id={updateId}
+                type="file"
+                accept={ACCEPT_ATTR}
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  e.target.value = ''
+                  if (f) onUpdate(f)
+                }}
+              />
+            </label>
+          </div>
+        )}
 
         {shown === 'error' && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -206,12 +232,15 @@ const retryBtn =
   'inline-flex items-center gap-1 rounded-chip border border-border bg-surface px-3 py-1 text-[13px] font-medium hover:border-ink-2 focus-visible:outline-2 focus-visible:outline-info'
 
 export function Evidence({ readMs = 2000 }: { readMs?: number }) {
-  const { project, source, load, run, ingest, retryFailed, runAnalysis, reload } = useProject()
+  const { project, source, load, run, ingest, retryFailed, runAnalysis, reload, updateFile: updateOne } = useProject()
+  const navigate = useNavigate()
   const live = source === 'api'
   const { progress, restart } = useReadProgress(live ? 0 : readMs)
   const [notice, setNotice] = useState('')
   const [dragging, setDragging] = useState(false)
+  const [by, setBy] = useState('')
   const inputId = useId()
+  const byId = useId()
 
   const readable = project.files.filter((f) => f.status !== 'error')
   const readableIds = new Set(readable.map((f) => f.id))
@@ -245,6 +274,15 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
     setNotice(`Upload is not connected yet, so ${plural(names.length, 'file')} were not sent. Showing the sample files being read again.`)
     restart()
   }
+  const updateFile = async (file: ProjectFile, next: File) => {
+    try {
+      const r = await updateOne(file.id, next, by.trim() || 'user')
+      if (r.unchanged) setNotice(`${next.name} is the same as the current file, so nothing changed.`)
+      else navigate('/changes')
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : 'The file could not be updated.')
+    }
+  }
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
     setDragging(false)
@@ -257,6 +295,7 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
         <h1 className="text-[20px] font-semibold">Files</h1>
         <div className="flex flex-wrap items-start gap-2">
           <LoadDemoButton label="Load demo" />
+          <LoadDemoButton label="Load demo: version history" name="versions" toast={false} />
           <LoadDemoButton label="Load demo: approved final version" name="approved" toast={false} />
           <Link
             to="/checks"
@@ -417,9 +456,23 @@ export function Evidence({ readMs = 2000 }: { readMs?: number }) {
                 facts={readableIds.has(f.id) ? shownFacts.filter((x) => x.sources.some((s) => s.fileId === f.id)) : []}
                 panels={project.pack.panels}
                 onRetry={live ? () => void runAnalysis() : restart}
+                onUpdate={live && (f.role === 'artwork' || f.role === 'approved_info') ? (next) => void updateFile(f, next) : undefined}
               />
             ))}
           </div>
+          {live && (
+            <p className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-ink-2">
+              <label htmlFor={byId}>Updating a file as</label>
+              <input
+                id={byId}
+                value={by}
+                onChange={(e) => setBy(e.target.value)}
+                placeholder="your name"
+                className="rounded-chip border border-border bg-surface px-2 py-1 text-ink"
+              />
+              <span>(kept in the version history)</span>
+            </p>
+          )}
         </>
       )}
     </div>

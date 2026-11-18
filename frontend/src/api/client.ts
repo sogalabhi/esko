@@ -1,4 +1,4 @@
-import type { AskResult, Brief, BriefSentence, ChecksResult, Project, ResolutionChoice } from '../types/project'
+import type { AskResult, Brief, BriefSentence, ChangeReport, ChecksResult, Project, ResolutionChoice } from '../types/project'
 
 /** Where the app gets its project: the real backend, or the bundled mock (VITE_USE_MOCK=1, and in tests). */
 export type DataSource = 'api' | 'mock'
@@ -291,6 +291,24 @@ export const api = {
     const body = new FormData()
     body.append('file', file)
     return request<UploadedFile>('/api/files', { method: 'POST', body })
+  },
+
+  /** POST /api/files/{id}/update (multipart): a new version of one file, in the same place. */
+  updateFile(fileId: string, file: File, by: string): Promise<{ unchanged: boolean; change?: ChangeReport | null }> {
+    const body = new FormData()
+    body.append('file', file)
+    body.append('by', by)
+    return request(`/api/files/${encodeURIComponent(fileId)}/update`, { method: 'POST', body })
+  },
+
+  /** GET /api/changes/all: what each file update changed, oldest first. Empty when no file has been updated. */
+  async getAllChanges(): Promise<ChangeReport[]> {
+    try {
+      return await request<ChangeReport[]>('/api/changes/all')
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 404 || isRouteMissing(e))) return []
+      throw e
+    }
   },
 
   listFiles(): Promise<UploadedFile[]> {

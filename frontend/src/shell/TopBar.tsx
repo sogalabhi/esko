@@ -104,7 +104,7 @@ export function VerdictLine({ findings }: { findings: Project['findings'] }) {
 }
 
 export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: () => void } = {}) {
-  const { project, market, reset } = useProject()
+  const { project, market, reset, change, stale } = useProject()
   const marketLabel = MARKETS.find((m) => m.id === market)?.label ?? market
 
   // §9 has no product block; derive the name from the identity and net quantity facts.
@@ -134,6 +134,16 @@ export function TopBar({ askOpen = false, onAsk }: { askOpen?: boolean; onAsk?: 
       <span className="shrink-0 rounded-chip border border-border px-2.5 py-1 text-[13px] font-medium text-ink" aria-label={`Market: ${marketLabel}`}>
         {marketLabel}
       </span>
+      {change && (
+        <Link
+          to="/changes"
+          data-version-chip
+          aria-label={`Version ${change.versionTo}, ${stale ? 'checks out of date' : 'checked'}. Open what changed`}
+          className={`inline-flex shrink-0 items-center gap-1 rounded-chip border px-2 py-0.5 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-info ${stale ? 'border-warn text-warn' : 'border-ok text-ok'}`}
+        >
+          {stale ? <CircleDashed size={13} aria-hidden="true" /> : <CircleCheck size={13} aria-hidden="true" />}v{change.versionTo} · {stale ? 'Out of date' : 'Checked'}
+        </Link>
+      )}
       {project.scenario && (
         <span title={project.scenario} className="shrink-0 rounded-chip border border-warn px-2 py-0.5 text-[12px] font-semibold text-warn">
           Illustrative scenario

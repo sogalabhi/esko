@@ -318,6 +318,54 @@ export interface HistoryEntry {
   counts?: { fail?: number; review?: number; pass?: number } | null
 }
 
+export interface PieceChange {
+  kind: 'changed' | 'added' | 'removed'
+  where: string
+  label?: string | null
+  old?: string | null
+  new?: string | null
+  numbersChanged: boolean
+}
+
+export interface FindingMove {
+  id: string
+  title: string
+  verdict: Verdict
+  was?: string | null
+  now?: string | null
+  wasVerdict?: Verdict | null
+}
+
+/** What the AI was sent after an update, against a full read of the same files (estimates: characters / 4). */
+export interface TokenSaving {
+  fullTokens: number
+  sentTokens: number
+  savedTokens: number
+  savedPercent: number
+  imagesFull: number
+  imagesSent: number
+  reusedFacts: number
+  rereadFacts: number
+  files: { file: string; unit: string; total: number; changed: number }[]
+}
+
+/** What replacing a file with a new version changed (GET /api/changes). findings is null until the checks are run again. */
+export interface ChangeReport {
+  fileName: string
+  oldName: string
+  versionFrom: number
+  versionTo: number
+  by: string
+  at: string
+  pieces: { unchanged: number; changed: number; added: number; removed: number; changes: PieceChange[] }
+  findings: { new: FindingMove[]; resolved: FindingMove[]; changed: FindingMove[]; unchanged: number } | null
+  decisionsKept: number | null
+  reopened: { findingId?: string | null; title: string; was: string; note?: string | null }[]
+  aiCalls: number | null
+  tokens?: TokenSaving | null
+  counts: { fail: number; review: number; pass: number } | null
+}
+
 export interface Project {
   /** Checker results. */
   findings: Finding[]

@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { api, ApiError, defaultDataSource, EMPTY_PROJECT, isAccepted, isAiBusy, type BriefReply, type DataSource } from '../api/client'
 import { auditSentence } from '../lib/briefAudit'
 import mock from '../mocks/project.json'
-import type { Brief, FindingDecision, Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
+import type { Brief, ChangeReport, FindingDecision, Project, Question, QuestionStatus, Resolution, ResolutionChoice, Source } from '../types/project'
 
 export const mockProject = mock as unknown as Project
 
@@ -212,19 +212,33 @@ function useStore(initial: Project, source: DataSource) {
   const latest = useRef(state)
   latest.current = state
   const failedFiles = useRef<File[]>([])
+  // A file was updated: what changed, and the results from before it (shown, marked out of date, until the checks are run again).
+  const [changes, setChanges] = useState<ChangeReport[]>([])
+  const [before, setBefore] = useState<Project | null>(null)
+  const refreshChange = useCallback(async () => {
+    try {
+      setChanges(await api.getAllChanges())
+    } catch {
+      setChanges([])
+    }
+  }, [])
 
   const reload = useCallback(async () => {
     dispatch({ type: 'loading' })
     try {
       dispatch({ type: 'loaded', project: await api.getProject() })
+      void refreshChange()
     } catch (e) {
       dispatch({ type: 'loadFailed', reason: message(e) })
     }
-  }, [])
+  }, [refreshChange])
 
   useEffect(() => {
-    if (source === 'api') void reload()
-  }, [source, reload])
+    if (source === 'api') {
+      void reload()
+      void refreshChange()
+    }
+  }, [source, reload, refreshChange])
 
   /** Fetch the project again without showing the loading state, so the screen matches the backend after a failed decision. */
   const resync = useCallback(async () => {
@@ -346,6 +360,8 @@ function useStore(initial: Project, source: DataSource) {
     dispatch({ type: 'run', run: { phase: 'running', total, uploaded, fileErrors } })
     try {
       dispatch({ type: 'setProject', project: await api.runProject() })
+      setBefore(null)
+      void refreshChange()
       dispatch({ type: 'run', run: { phase: 'done', total, uploaded, fileErrors } })
     } catch (e) {
       try {
@@ -356,7 +372,21 @@ function useStore(initial: Project, source: DataSource) {
       }
       dispatch({ type: 'run', run: { phase: 'error', total, uploaded, fileErrors, reason: message(e), busy: isAiBusy(e) } })
     }
-  }, [])
+  }, [refreshChange])
+
+  /** Replace one file with a new version. The results from before stay on screen, marked out of date, until the checks are run again. */
+  const updateFile = useCallback(
+    async (fileId: string, file: File, by: string) => {
+      const r = await api.updateFile(fileId, file, by)
+      if (!r.unchanged) {
+        if (latest.current.project.findings.length > 0) setBefore(latest.current.project)
+        await refreshChange()
+        await reload()
+      }
+      return r
+    },
+    [reload, refreshChange],
+  )
 
   /** Upload each file, then run the analysis. Per-file failures are listed; the rest still runs. */
   const ingest = useCallback(
@@ -506,8 +536,14 @@ function useStore(initial: Project, source: DataSource) {
     const answers: Record<string, string> = {}
     for (const q of state.project.questions) if (q.answer) answers[q.id] = q.answer
     Object.assign(answers, state.answers)
+    const stale = before !== null && state.project.findings.length === 0
     return {
       ...state,
+      project: stale ? before : state.project,
+      stale,
+      changes,
+      change: changes.length > 0 ? changes[changes.length - 1] : null,
+      updateFile,
       answers,
       source,
       reload,
@@ -534,7 +570,7 @@ function useStore(initial: Project, source: DataSource) {
       setLaunchDate,
       reset,
     }
-  }, [state, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, decideFinding, askAbout, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, openAsk, closeAsk, toggleAsk, setMarket, setLaunchDate, reset])
+  }, [state, before, changes, updateFile, source, reload, ingest, retryFailed, runAnalysis, draftBrief, editSentence, approveBrief, dismissBriefError, applyProject, resolveConflict, decideFinding, askAbout, answerQuestion, skipQuestion, undoAnswer, openSource, closeDrawer, openAsk, closeAsk, toggleAsk, setMarket, setLaunchDate, reset])
 }
 
 export type Store = ReturnType<typeof useStore>

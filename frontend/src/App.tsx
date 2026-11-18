@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { LoadGate, LoadingSkeleton } from './components/LoadGate'
+import { Changes } from './screens/Changes'
 import { Checks, EmptyChecks } from './screens/Checks'
 import { Evidence } from './screens/Evidence'
 import { Facts } from './screens/Facts'
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/evidence" element={<Evidence />} />
           <Route path="/rules" element={<Rules />} />
+          <Route path="/changes" element={<Changes />} />
           <Route path="/checks" element={<LoadGate empty={<EmptyChecks />}><Checks /></LoadGate>} />
           <Route path="/report" element={<LoadGate empty={<EmptyReport />}><Report /></LoadGate>} />
           <Route path="/print-brief" element={<LoadGate><PrintBrief /></LoadGate>} />
