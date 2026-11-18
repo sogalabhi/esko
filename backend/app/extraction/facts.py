@@ -74,7 +74,8 @@ def build_draft(ef: ExtractedFact, file: SourceFile, id_map: dict[str, SourcePie
     source = source_for(file.id, ef.quote, res.checked, shown, None if document else ef.panel, res.in_note)
     assumed = has_assumption_note(shown)
     state = fact_state(quote_checked=res.checked, image_only=image_only, assumed=assumed)
-    fact = Fact(id="", group=ef.group, field=ef.field.strip(), value=ef.value, unit=ef.unit, state=state, sources=[source])
+    fact = Fact(id="", group=ef.group, field=ef.field.strip(), value=ef.value, unit=ef.unit, state=state, sources=[source],
+                from_image=ef.from_image)
     return Draft(fact=fact, file_id=file.id, image_only=image_only, assumed=assumed, pieces=shown, note=note,
                  from_document=document)
 
@@ -96,7 +97,7 @@ def build_image_draft(ef: ImageFact, file: SourceFile, piece: SourcePiece) -> Dr
     where = SourceWhere(page=1, bbox=image_region_xywh(ef.region, piece))
     source = Source(file_id=file.id, where=where, quote=ef.quote, quote_checked=False)
     fact = Fact(id="", group=ef.group, field=ef.field.strip(), value=ef.value, unit=ef.unit,
-                state=fact_state(quote_checked=False, image_only=True), sources=[source])
+                state=fact_state(quote_checked=False, image_only=True), sources=[source], from_image=True)
     return Draft(fact=fact, file_id=file.id, image_only=True, pieces=[piece], note="read by vision; no text to check")
 
 

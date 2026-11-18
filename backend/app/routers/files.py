@@ -5,11 +5,14 @@ from pathlib import Path
 
 import pymupdf
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 
 from app import store
-from app.models.pieces import SourceFile, SourcePiece
+from app.models.pieces import CamelModel, SourceFile, SourcePiece
+from app.models.project import file_role, project_file_type
+from app.versions import service as versions
+from app.versions.diff import ChangeReport
 from app.readers import fingerprint, read_file
 
 router = APIRouter(prefix="/api/files", tags=["files"])
@@ -51,6 +54,45 @@ async def upload(file: UploadFile) -> SourceFileOut:
         raise HTTPException(status_code=415, detail=str(e)) from e
     store.put(source_file, pieces, dest)
     return _out(source_file)
+
+
+class UpdateOut(CamelModel):
+    unchanged: bool = False
+    file: SourceFileOut | None = None
+    change: ChangeReport | None = None
+
+
+@router.post("/{file_id}/update", response_model=UpdateOut, response_model_by_alias=True)
+async def update(file_id: str, file: UploadFile, by: str = Form("user")) -> UpdateOut:
+    """Replace one file with a new version of it: the same kind of file, in the same place. The old version is kept for
+    comparison, the decisions are kept, and the checks are run again with POST /api/project/run."""
+    old = next((f for f in store.list_files() if f.id == file_id), None)
+    if old is None:
+        raise HTTPException(status_code=404, detail="Unknown file")
+    data = await file.read()
+    name = Path(file.filename or "upload").name
+    new_id = fingerprint(data)
+    if new_id == file_id:
+        return UpdateOut(unchanged=True)
+    if any(f.id == new_id for f in store.list_files()):
+        raise HTTPException(status_code=409, detail="This file is already one of the project's files")
+    dest = UPLOAD_DIR / new_id / name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    try:
+        source_file, pieces = read_file(dest, new_id)
+    except ValueError as e:
+        raise HTTPException(status_code=415, detail=str(e)) from e
+    if source_file.status != "read":
+        raise HTTPException(status_code=415, detail=source_file.error or "The reader could not use this file.")
+    old_pieces = store.get_pieces(old.id) or []
+    was = file_role(project_file_type(old, old_pieces))
+    now = file_role(project_file_type(source_file, pieces))
+    if was != now:
+        raise HTTPException(status_code=409, detail=f"The new file is a different kind of file from the one it replaces ({now} instead of {was}).")
+    change = versions.start_update(old, old_pieces, store.get_path(old.id), source_file, pieces, (by or "").strip() or "user")
+    store.replace_file(old.id, source_file, pieces, dest, change)
+    return UpdateOut(file=_out(source_file), change=change)
 
 
 @router.get("", response_model=list[SourceFileOut])

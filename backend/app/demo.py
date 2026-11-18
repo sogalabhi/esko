@@ -13,12 +13,13 @@ from pathlib import Path
 
 from app import store
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import LogEntry, Project, Rulebook
+from app.models.project import HistoryEntry, LogEntry, Project, Rulebook
+from app.versions.diff import ChangeReport
 from app.pack import service as pack_service
 
 DEMO_DIR = Path(__file__).resolve().parents[1] / "demo"
 VERSION = 1
-VARIANTS = ("approved",)  # folders under demo/ that hold only a snapshot.json (the files come from the main demo)
+VARIANTS = ("approved", "versions")  # folders under demo/ that hold only a snapshot.json (the files come from the main demo)
 
 
 class SnapshotError(Exception):
@@ -79,6 +80,9 @@ def save_snapshot(directory: Path | None = None) -> dict:
         "base": _dump(base),
         "project": _dump(project),
         "log": [json.loads(e.model_dump_json()) for e in store.get_log()],
+        "changes": [_dump(c) for c in store.get_changes()],
+        "history": [_dump(h) for h in store.get_history()],
+        "projectVersion": store.project_version(),
         "pack": {"applied": list(pack_service._applied), "appliedFor": pack_service._applied_for},
     }
     directory.mkdir(parents=True, exist_ok=True)
@@ -128,14 +132,43 @@ def load_snapshot(directory: Path | None = None, upload_dir: Path | None = None)
     project = Project.model_validate(data["project"])
     base = Project.model_validate(data["base"])
     log = [LogEntry.model_validate(x) for x in data["log"]]
+    previous = []
+    for e in data.get("previous", []):  # earlier versions of a file: kept for previews, not listed
+        src = directory / e["upload"]
+        if not src.is_file():
+            src = DEMO_DIR / e["upload"]  # an earlier version that is also in the main demo
+        dest = upload_dir / e["file"]["id"] / src.name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        previous.append((SourceFile.model_validate(e["file"]), [SourcePiece.model_validate(p) for p in e["pieces"]], dest))
     store.clear()
     pack_service.clear()
     for file, pieces, dest in restored:
         store.put(file, pieces, dest)
+    for file, pieces, dest in previous:
+        store.keep_version(file, pieces, dest)
     if restored_book is not None:
         store.put_rulebook(*restored_book)
     store.set_project(base)  # base, empty log ...
     store.commit(project, log)  # ... then the project with every decision applied
+    store.restore_versions([ChangeReport.model_validate(c) for c in data.get("changes", [])], data.get("projectVersion", 1),
+                           [HistoryEntry.model_validate(h) for h in data.get("history", [])])
     pack_service._applied[:] = data.get("pack", {}).get("applied", [])
     pack_service._applied_for = data.get("pack", {}).get("appliedFor")
     return project
+
+
+def staged_run(files) -> tuple[Project, dict] | None:
+    """The prepared results for an uploaded version of the demo's content sheet (backend/demo/versions/upload/), so the
+    demo can update a file and check again with no AI call. None for any other set of files."""
+    path = DEMO_DIR / "versions" / "snapshot.json"
+    if not path.is_file():
+        return None
+    try:
+        stages = json.loads(path.read_text(encoding="utf-8")).get("stages", {})
+    except (OSError, ValueError):
+        return None
+    for f in files:
+        if f.id in stages:
+            return Project.model_validate(stages[f.id]["base"]), stages[f.id]["tokens"]
+    return None

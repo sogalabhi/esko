@@ -156,6 +156,7 @@ class Fact(OmitNone):
     state: FactState
     sources: list[Source] = []
     action: FactAction | None = None
+    from_image: bool = False  # read from a picture, not from text: its quote has nothing to be checked against
 
 
 class ConflictSide(CamelModel):

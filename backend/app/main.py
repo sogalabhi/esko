@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 
-from .routers import answers, ask, brief, checks, conflicts, demo, files, pack, print_brief, project, questions, rulebook
+from .routers import answers, ask, brief, changes, checks, conflicts, demo, files, pack, print_brief, project, questions, rulebook
 from .settings import get_settings
 
 app = FastAPI(title="BriefForge")
 app.include_router(files.router)
+app.include_router(changes.router)
 app.include_router(project.router)
 app.include_router(answers.router)
 app.include_router(questions.router)

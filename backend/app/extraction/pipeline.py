@@ -9,6 +9,7 @@ from app.ai.prompts import load_prompt
 from app.models.pieces import SourceFile, SourcePiece
 from app.models.project import Conflict, Fact, Project, project_file_type, to_project_file
 
+from .delta import DeltaInfo, DeltaPlan, UpdatedFile, plan_carton, plan_sheet
 from .facts import Draft, build_draft, build_image_draft, corroborate, fact_state, source_for
 from .ingredients import parse_ingredients
 from .inputs import FIELD_NAMES, ExtractionInput, carton_input, document_input, image_input, render_panels, sheet_input
@@ -32,12 +33,18 @@ class RunReport:
     unchecked: list[str] = field(default_factory=list)  # "file: field - reason" for facts left AI-suggested
     rejected_meaning: int = 0
     prompt_versions: dict[str, str] = field(default_factory=dict)
+    deltas: list[DeltaInfo] = field(default_factory=list)  # files read again only where they changed
 
 
-def _run(client: AIClient, name: str, inp: ExtractionInput, file_id: str, schema, report: RunReport):
+def _prompt(name: str, inp: ExtractionInput) -> tuple[str, str]:
     template, version = load_prompt(name)
     prompt = (template.replace("{{field_names}}", FIELD_NAMES).replace("{{artwork}}", inp.text)
               .replace("{{cells}}", inp.text).replace("{{pieces}}", inp.text).replace("{{image_note}}", inp.text))
+    return prompt, version
+
+
+def _run(client: AIClient, name: str, inp: ExtractionInput, file_id: str, schema, report: RunReport):
+    prompt, version = _prompt(name, inp)
     report.prompt_versions[name] = version
     before = client.calls_made
     result = client.run(task=name, prompt_version=version, prompt=prompt, schema=schema, images=inp.images,
@@ -86,8 +93,39 @@ def _dedupe(drafts: list[Draft], report: RunReport, file: SourceFile) -> list[Dr
     return out
 
 
+def _tokens(text: str) -> int:
+    return -(-len(text) // 4)  # characters / 4, the estimate the token slide uses
+
+
+def _extract_delta(client: AIClient, file: SourceFile, pieces: list[SourcePiece], plan: DeltaPlan,
+                   report: RunReport) -> list[Draft]:
+    """Facts of the unchanged cells and panels are kept; the changed ones go to the AI, whose answer is quote-checked as usual."""
+    pool = [p for p in pieces if p.status == "visible"]
+    fresh: list[Draft] = []
+    if plan.delta is not None and plan.delta.id_map:
+        extraction = _run(client, plan.delta.task, plan.delta, file.id, Extraction, report)
+        fresh = [build_draft(ef, file, plan.delta.id_map, pool) for ef in extraction.facts]
+    drafts = _dedupe(plan.reused + fresh, report, file)
+    full_prompt, _ = _prompt(plan.full.task, plan.full)
+    sent_prompt = _prompt(plan.delta.task, plan.delta)[0] if plan.delta is not None else ""
+    answer = lambda ds: sum(_tokens(d.fact.model_dump_json(include={"group", "field", "value", "unit"})) + _tokens(d.fact.sources[0].quote) + 20 for d in ds)
+    report.deltas.append(DeltaInfo(
+        file=file.name, unit=plan.unit, total=plan.total, changed=plan.changed, reused_facts=len(plan.reused),
+        new_facts=len(fresh), full_tokens=_tokens(full_prompt) + answer(drafts),
+        sent_tokens=(_tokens(sent_prompt) + answer(fresh)) if plan.delta is not None else 0,
+        images_full=len(plan.full.images), images_sent=len(plan.delta.images) if plan.delta is not None else 0))
+    return drafts
+
+
 def extract_file(client: AIClient, file: SourceFile, pieces: list[SourcePiece], path: Path | None,
-                 report: RunReport) -> list[Draft]:
+                 report: RunReport, updated: UpdatedFile | None = None, previous: list[Fact] | None = None) -> list[Draft]:
+    """updated: the version of this file the last run read, with that run's facts as `previous`: only what changed is read again."""
+    if updated is not None and previous:
+        if file.type == "xlsx":
+            return _extract_delta(client, file, pieces, plan_sheet(file, pieces, updated, previous), report)
+        if file.type == "pdf" and project_file_type(file, pieces) == "pdf":
+            images = render_panels(path) if path and Path(path).exists() else {}
+            return _extract_delta(client, file, pieces, plan_carton(file, pieces, updated, previous, images), report)
     document = False
     if file.type == "image":
         inp = image_input(pieces, path, file.name)
@@ -111,14 +149,16 @@ def extract_file(client: AIClient, file: SourceFile, pieces: list[SourcePiece], 
 
 
 def run_pipeline(client: AIClient, files: list[SourceFile], pieces: dict[str, list[SourcePiece]],
-                 paths: dict[str, Path | None] | None = None) -> tuple[Project, RunReport]:
+                 paths: dict[str, Path | None] | None = None, previous: list[Fact] | None = None,
+                 updated: dict[str, UpdatedFile] | None = None) -> tuple[Project, RunReport]:
     paths = paths or {}
     report = RunReport()
     drafts: list[Draft] = []
     for f in files:
         if f.status != "read":
             continue
-        drafts += extract_file(client, f, pieces.get(f.id, []), paths.get(f.id), report)
+        drafts += extract_file(client, f, pieces.get(f.id, []), paths.get(f.id), report,
+                               (updated or {}).get(f.id), previous)
     lists = [d for d in drafts if d.fact.group == "ingredients"]
     pools = {fid: [p for p in ps if p.status == "visible"] for fid, ps in pieces.items()}
     drafts += percent_drafts(lists, pools)

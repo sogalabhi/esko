@@ -3,7 +3,8 @@
 from pathlib import Path
 
 from app.models.pieces import SourceFile, SourcePiece
-from app.models.project import Brief, Fact, LogEntry, Project, ProjectFile, Rulebook, to_project_file
+from app.models.project import Brief, Fact, HistoryEntry, LogEntry, Project, ProjectFile, Rulebook, to_project_file
+from app.versions.diff import ChangeReport
 
 ASK_PREFIX = "ask-"  # ids of facts a person confirmed from an answer in the Ask panel
 
@@ -17,6 +18,13 @@ _log: list[LogEntry] = []  # the decisions, in order; project = replay(base, log
 # the files the analysis reads. Its pieces and upload stay reachable by file id (previews, source crops).
 _rulebook_file: SourceFile | None = None
 _rulebook: Rulebook | None = None
+# Updating a file (version 2): the earlier file ids of each file's slot (their bytes and pieces stay for previews and
+# the comparison), the decisions and last run to carry over to the next run, and what changed.
+_chain: dict[str, list[str]] = {}
+_carry: tuple[list[LogEntry], Project | None, Project | None] | None = None  # decisions, last run, last run before decisions
+_changes: list[ChangeReport] = []  # every update, oldest first
+_history: list[HistoryEntry] = []
+_version = 1
 
 
 def put(file: SourceFile, pieces: list[SourcePiece], path: Path | None = None) -> None:
@@ -27,6 +35,72 @@ def put(file: SourceFile, pieces: list[SourcePiece], path: Path | None = None) -
         _paths[file.id] = Path(path)
     _project = _base = None  # the file set changed: the last run is stale
     _log.clear()
+
+
+def replace_file(old_id: str, file: SourceFile, pieces: list[SourcePiece], path: Path | None, change: ChangeReport) -> None:
+    """The new file takes the old one's place. Unlike `put`, the decisions are kept: the next run replays them."""
+    global _project, _base, _carry, _version
+    items = [(file.id, file) if k == old_id else (k, v) for k, v in _files.items()]
+    _files.clear()
+    _files.update(items)
+    _pieces[file.id] = pieces
+    if path is not None:
+        _paths[file.id] = Path(path)
+    _chain[file.id] = [*_chain.pop(old_id, []), old_id]
+    if _carry is None or _project is not None:
+        _carry = (list(_log), _project, _base)
+    _changes.append(change)
+    _version = change.version_to
+    _project = _base = None  # the checks are stale until they are run again
+
+
+def peek_carry() -> tuple[list[LogEntry], Project | None, Project | None] | None:
+    return _carry
+
+
+def take_carry() -> tuple[list[LogEntry], Project | None, Project | None] | None:
+    global _carry
+    carry, _carry = _carry, None
+    return carry
+
+
+def get_change() -> ChangeReport | None:
+    return _changes[-1] if _changes else None
+
+
+def get_changes() -> list[ChangeReport]:
+    return list(_changes)
+
+
+def restore_versions(changes: list[ChangeReport], version: int, history: list[HistoryEntry]) -> None:
+    """Version state from a saved demo."""
+    global _version
+    _changes[:] = changes
+    _version = version
+    _history[:] = history
+
+
+def keep_version(file: SourceFile, pieces: list[SourcePiece], path: Path | None) -> None:
+    """An earlier version of a file: its bytes and pieces stay reachable (previews, source crops) but it is not listed."""
+    _pieces[file.id] = pieces
+    if path is not None:
+        _paths[file.id] = Path(path)
+
+
+def get_history() -> list[HistoryEntry]:
+    return list(_history)
+
+
+def set_history(history: list[HistoryEntry]) -> None:
+    _history[:] = history
+
+
+def project_version() -> int:
+    return _version
+
+
+def get_chain(file_id: str) -> list[str]:
+    return list(_chain.get(file_id, []))
 
 
 def put_rulebook(file: SourceFile, pieces: list[SourcePiece], path: Path | None, rulebook: Rulebook) -> None:
@@ -153,8 +227,13 @@ def get_pieces(file_id: str) -> list[SourcePiece] | None:
 
 
 def clear() -> None:
-    global _project, _base, _rulebook_file, _rulebook
+    global _project, _base, _rulebook_file, _rulebook, _carry, _version
     _rulebook_file = _rulebook = None
+    _chain.clear()
+    _history.clear()
+    _carry = None
+    _changes.clear()
+    _version = 1
     _project = _base = None
     _log.clear()
     _paths.clear()
