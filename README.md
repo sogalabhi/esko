@@ -52,6 +52,38 @@ Never commit that file. It is ignored by git.
 3. **Checks**: Fail / Needs review / Pass. Each card shows the rule, the evidence side by side and the proof. A person decides the review items here.
 4. **Marked-up artwork**: the carton with a mark on every problem.
 5. **Report**: the print-approval report, ready to print or save as PDF.
+6. **3D pack**: the dieline folds into a 3D carton, with the findings pinned to the panel they are on.
+7. **What changed**: update a file as a new version and see what changed, what that did to the checks, and what happened to earlier decisions. Only the changed cells or panels are sent to the AI again.
+
+## Screenshots
+
+Taken from the running app on the Dancing Fish sample files.
+
+**Checks.** The honey conflict: 9% on the content sheet, 1% on the carton, with both quotes checked by code.
+
+![Checks screen showing the honey conflict with evidence from the sheet and the carton](docs/screenshots/3-checks.png)
+
+**3D pack.** The carton folded in 3D, with the findings pinned to the panel they are on.
+
+![3D pack view of the folded carton with findings pinned to it](docs/screenshots/6-3d-pack.png)
+
+**Marked-up artwork.** The carton marked up like a senior reviewer did it. Every mark opens its sources.
+
+![Marked-up artwork with a numbered mark on every problem](docs/screenshots/4-marked-up-artwork.png)
+
+**What we read.** Every fact with its source, marked "checked by code" or "AI-suggested".
+
+![What we read screen listing every fact with its source](docs/screenshots/2-what-we-read.png)
+
+**What changed.** An updated file as a new version. This is an illustrative scenario: the three sheet files are real, and the findings that move between versions are staged from the real first check.
+
+![What changed screen comparing versions v1, v2 and v3](docs/screenshots/7-what-changed.png)
+
+**Files** and **Report**
+
+![Files screen after both samples were read](docs/screenshots/1-files.png)
+
+![Print approval report](docs/screenshots/5-report.png)
 
 ## Tests
 
